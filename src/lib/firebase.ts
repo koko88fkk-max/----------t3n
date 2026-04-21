@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -491,6 +491,73 @@ export function listenToNotifications(callback: (notifs: any[]) => void) {
 export async function deleteNotification(notifId: string) {
   const notifRef = doc(db, "notifications", notifId);
   await deleteDoc(notifRef);
+}
+
+// ==========================================
+// 📱 PHONE AUTHENTICATION
+// ==========================================
+
+export function initRecaptcha(containerId: string) {
+  // @ts-ignore
+  if (!window.recaptchaVerifier) {
+    try {
+      // @ts-ignore
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        'size': 'invisible',
+        'callback': () => {},
+        'expired-callback': () => {
+          // @ts-ignore
+          window.recaptchaVerifier?.clear();
+          // @ts-ignore
+          window.recaptchaVerifier = null;
+        }
+      });
+    } catch (e) {
+      console.error("Recaptcha Init Error", e);
+    }
+  }
+  // @ts-ignore
+  return window.recaptchaVerifier;
+}
+
+export async function sendPhoneSMS(phoneNumber: string, appVerifier: any) {
+  try {
+    auth.languageCode = 'ar';
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    return { success: true, confirmationResult };
+  } catch (error: any) {
+    console.error('SMS Error:', error);
+    let msg = 'حدث خطأ أثناء إرسال الرسالة';
+    if (error.code === 'auth/invalid-phone-number') msg = 'رقم الجوال غير صحيح تأكد من كتابته بشكل صحيح (مثال: +966500000000)';
+    if (error.code === 'auth/too-many-requests') msg = 'حدث خطأ، يرجى المحاولة بعد قليل';
+    return { success: false, error: msg };
+  }
+}
+
+export async function verifyPhoneOTP(confirmationResult: any, code: string) {
+  try {
+    const result = await confirmationResult.confirm(code);
+    const user = result.user;
+    
+    // Save or update user login in Firestore
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        email: user.phoneNumber, // Use phone number as identifier
+        isVIP: false,
+        verifiedOrder: null,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
+      });
+    } else {
+      await setDoc(userRef, { lastLoginAt: new Date().toISOString() }, { merge: true });
+    }
+    return { success: true, user };
+  } catch (error: any) {
+    console.error('OTP Verify Error:', error);
+    return { success: false, error: 'رمز التحقق غير صحيح، تأكد منه وحاول مجدداً' };
+  }
 }
 
 
