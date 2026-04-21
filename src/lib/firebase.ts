@@ -198,10 +198,7 @@ export async function activateOrder(orderId: string, uid: string, email: string)
       if (orderData.usedByUid === uid) {
         return { success: true };
       }
-    } else {
-      // Order doesn't exist in Firebase
-      return { success: false, error: 'رقم الطلب غير موجود، تأكد من الرقم وحاول مرة ثانية' };
-    }
+    
 
     // Activate the order (update existing)
     const now = new Date();
@@ -495,4 +492,5 @@ export async function deleteNotification(notifId: string) {
   const notifRef = doc(db, "notifications", notifId);
   await deleteDoc(notifRef);
 }
+
 
