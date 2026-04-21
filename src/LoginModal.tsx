@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Smartphone, ArrowRight, ShieldCheck, Loader2, AlertCircle, Search, ChevronDown } from 'lucide-react';
 import { loginWithGoogle, sendPhoneSMS, verifyPhoneOTP, initRecaptcha } from './lib/firebase';
@@ -163,7 +163,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                   {/* Country Selector Button */}
                   <div className="relative">
                     <button onClick={() => setShowCountrySelect(!showCountrySelect)} className="flex items-center justify-between min-w-[70px] gap-2 bg-white/5 hover:bg-white/10 px-2 py-2 rounded-lg transition-all shrink-0">
-                      <img src={https://flagcdn.com/w20/ + selectedCountry.id + .png} alt={selectedCountry.name} className="w-5 rounded-[2px]" />
+                      <img src={`https://flagcdn.com/w20/${selectedCountry.id}.png`} alt={selectedCountry.name} className="w-5 rounded-[2px]" />
                       <ChevronDown className="w-3 h-3 text-gray-500" />
                     </button>
                     {/* Enhanced Country Dropdown */}
@@ -191,7 +191,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                                 className="w-full flex items-center justify-between p-3 hover:bg-blue-500/20 hover:text-white text-gray-300 transition-colors border-b border-white/5 last:border-0"
                               >
                                 <div className="flex items-center gap-3">
-                                  <img src={https://flagcdn.com/w20/ + country.id + .png} alt={country.name} className="w-5 rounded-[2px]" />
+                                  <img src={`https://flagcdn.com/w20/${country.id}.png`} alt={country.name} className="w-5 rounded-[2px]" />
                                   <span className="text-sm font-bold">{country.name}</span>
                                 </div>
                                 <span className="text-gray-500 text-xs font-mono dir-ltr">{country.code}</span>
