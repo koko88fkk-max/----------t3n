@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Smartphone, ArrowRight, ShieldCheck, Loader2, AlertCircle, Search, ChevronDown } from 'lucide-react';
 import { loginWithGoogle, sendPhoneSMS, verifyPhoneOTP, initRecaptcha } from './lib/firebase';
 
 const ARAB_COUNTRIES = [
-  { name: 'السعودية', code: '+966', flag: '🇸🇦', id: 'sa' },
-  { name: 'الإمارات', code: '+971', flag: '🇦🇪', id: 'ae' },
-  { name: 'الكويت', code: '+965', flag: '🇰🇼', id: 'kw' },
-  { name: 'البحرين', code: '+973', flag: '🇧🇭', id: 'bh' },
-  { name: 'قطر', code: '+974', flag: '🇶🇦', id: 'qa' },
-  { name: 'عمان', code: '+968', flag: '🇴🇲', id: 'om' },
-  { name: 'مصر', code: '+20', flag: '🇪🇬', id: 'eg' },
-  { name: 'الأردن', code: '+962', flag: '🇯🇴', id: 'jo' },
-  { name: 'العراق', code: '+964', flag: '🇮🇶', id: 'iq' },
-  { name: 'المغرب', code: '+212', flag: '🇲🇦', id: 'ma' },
-  { name: 'الجزائر', code: '+213', flag: '🇩🇿', id: 'dz' },
-  { name: 'تونس', code: '+216', flag: '🇹🇳', id: 'tn' },
-  { name: 'اليمن', code: '+967', flag: '🇾🇪', id: 'ye' },
-  { name: 'السودان', code: '+249', flag: '🇸🇩', id: 'sd' },
-  { name: 'ليبيا', code: '+218', flag: '🇱🇾', id: 'ly' },
-  { name: 'فلسطين', code: '+970', flag: '🇵🇸', id: 'ps' },
-  { name: 'لبنان', code: '+961', flag: '🇱🇧', id: 'lb' },
-  { name: 'سوريا', code: '+963', flag: '🇸🇾', id: 'sy' }
+  { name: 'السعودية', code: '+966', id: 'sa' },
+  { name: 'الإمارات', code: '+971', id: 'ae' },
+  { name: 'الكويت', code: '+965', id: 'kw' },
+  { name: 'البحرين', code: '+973', id: 'bh' },
+  { name: 'قطر', code: '+974', id: 'qa' },
+  { name: 'عمان', code: '+968', id: 'om' },
+  { name: 'مصر', code: '+20', id: 'eg' },
+  { name: 'الأردن', code: '+962', id: 'jo' },
+  { name: 'العراق', code: '+964', id: 'iq' },
+  { name: 'المغرب', code: '+212', id: 'ma' },
+  { name: 'الجزائر', code: '+213', id: 'dz' },
+  { name: 'تونس', code: '+216', id: 'tn' },
+  { name: 'اليمن', code: '+967', id: 'ye' },
+  { name: 'السودان', code: '+249', id: 'sd' },
+  { name: 'ليبيا', code: '+218', id: 'ly' },
+  { name: 'فلسطين', code: '+970', id: 'ps' },
+  { name: 'لبنان', code: '+961', id: 'lb' },
+  { name: 'سوريا', code: '+963', id: 'sy' }
 ];
 
 export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -83,7 +83,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       } else {
         setError(res.error || 'فشل إرسال كود التحقق. يرجى التأكد من الرقم');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setError('حدث خطأ، تأكد من الاتصال وجرب مرة أخرى');
     }
@@ -121,7 +121,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       
       <motion.div 
         initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="relative w-full max-w-md bg-[#0F111A] border border-blue-500/20 rounded-3xl p-6 shadow-2xl overflow-hidden"
+        className="relative w-full max-w-md bg-[#0F111A] border border-blue-500/20 rounded-3xl p-6 shadow-2xl"
       >
         <button onClick={onClose} className="absolute top-4 left-4 p-2 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all z-10"><X className="w-5 h-5" /></button>
 
@@ -133,10 +133,6 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
           <p className="text-gray-400 text-sm">بوابة الدخول الرسمية لمتجر تعن T3N</p>
         </div>
 
-        {/* 
-          IMPORTANT FIX: Recaptcha MUST be inside its own container without animation mounting 
-          otherwise it crashes when recaptcha tries to redirect the page 
-        */}
         <div id="recaptcha-wrapper" className="flex justify-center mb-4"></div>
 
         <AnimatePresence mode="wait">
@@ -166,9 +162,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                   
                   {/* Country Selector Button */}
                   <div className="relative">
-                    <button onClick={() => setShowCountrySelect(!showCountrySelect)} className="flex items-center justify-between min-w-[80px] gap-1 bg-white/5 hover:bg-white/10 px-2 py-2 rounded-lg transition-all shrink-0">
-                      <span className="text-xl leading-none">{selectedCountry.flag}</span>
-                      <span className="text-gray-300 text-sm dir-ltr leading-none font-mono">{selectedCountry.code}</span>
+                    <button onClick={() => setShowCountrySelect(!showCountrySelect)} className="flex items-center justify-between min-w-[70px] gap-2 bg-white/5 hover:bg-white/10 px-2 py-2 rounded-lg transition-all shrink-0">
+                      <img src={https://flagcdn.com/w20/ + selectedCountry.id + .png} alt={selectedCountry.name} className="w-5 rounded-[2px]" />
                       <ChevronDown className="w-3 h-3 text-gray-500" />
                     </button>
                     {/* Enhanced Country Dropdown */}
@@ -176,9 +171,9 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                       {showCountrySelect && (
                         <motion.div 
                           initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                          className="absolute top-[110%] right-0 w-[240px] max-h-60 bg-[#141723] border border-blue-500/30 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[200] overflow-hidden flex flex-col"
+                          className="absolute top-[110%] right-0 w-[240px] max-h-[300px] bg-[#141723] border border-blue-500/30 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[200] overflow-hidden flex flex-col"
                         >
-                          <div className="p-2 border-b border-white/5 bg-black/20">
+                          <div className="p-2 border-b border-white/5 bg-black/20 shrink-0">
                             <div className="flex items-center gap-2 bg-[#0A0C13] border border-blue-500/20 rounded-lg p-2">
                               <Search className="w-4 h-4 text-gray-400 shrink-0" />
                               <input 
@@ -188,7 +183,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                               />
                             </div>
                           </div>
-                          <div className="overflow-y-auto no-scrollbar">
+                          <div className="overflow-y-auto no-scrollbar flex-grow">
                             {filteredCountries.map(country => (
                               <button 
                                 key={country.id}
@@ -196,7 +191,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                                 className="w-full flex items-center justify-between p-3 hover:bg-blue-500/20 hover:text-white text-gray-300 transition-colors border-b border-white/5 last:border-0"
                               >
                                 <div className="flex items-center gap-3">
-                                  <span className="text-xl">{country.flag}</span>
+                                  <img src={https://flagcdn.com/w20/ + country.id + .png} alt={country.name} className="w-5 rounded-[2px]" />
                                   <span className="text-sm font-bold">{country.name}</span>
                                 </div>
                                 <span className="text-gray-500 text-xs font-mono dir-ltr">{country.code}</span>
@@ -211,16 +206,17 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                     </AnimatePresence>
                   </div>
 
+                  <span className="text-gray-400 font-mono text-sm ml-1" dir="ltr">{selectedCountry.code}</span>
                   <input 
                     type="tel" dir="ltr" value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="5xxxxxxxxx"
+                    placeholder="xxxxxxxxx"
                     className="w-full bg-transparent text-white font-mono text-lg outline-none text-left px-2" autoFocus
                   />
                 </div>
               </div>
 
-              {error && <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20"><AlertCircle className="w-4 h-4 shrink-0" /><p>{error}</p></div>}
+              {error && <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20"><AlertCircle className="w-4 h-4 shrink-0" /><p className="text-xs">{error}</p></div>}
               
               <button onClick={handlePhoneSubmit} disabled={loading || phoneNumber.length < 8} className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:opacity-50 text-white rounded-2xl font-bold transition-all relative z-10">
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><span>إرسال الكود</span><ArrowRight className="w-5 h-5" style={{transform: "rotate(180deg)"}} /></>}
@@ -237,7 +233,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                   <input type="text" dir="ltr" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))} className="w-64 bg-[#0A0C13] border border-blue-500/40 p-4 rounded-2xl text-center text-4xl tracking-[0.3em] font-mono font-bold text-white outline-none focus:border-blue-400 transition-all shadow-inner" autoFocus />
                 </div>
               </div>
-              {error && <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20"><AlertCircle className="w-4 h-4 shrink-0" /><p>{error}</p></div>}
+              {error && <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20"><AlertCircle className="w-4 h-4 shrink-0" /><p className="text-xs">{error}</p></div>}
               <button onClick={handleVerifyOTP} disabled={loading || otp.length < 6} className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 disabled:opacity-50 text-white rounded-2xl font-bold transition-all">
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><span>تأكيد الدخول</span><ShieldCheck className="w-5 h-5" /></>}
               </button>
