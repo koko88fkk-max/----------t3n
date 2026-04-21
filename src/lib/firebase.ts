@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+﻿import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
 
@@ -495,3 +495,4 @@ export async function deleteNotification(notifId: string) {
   const notifRef = doc(db, "notifications", notifId);
   await deleteDoc(notifRef);
 }
+
