@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, ExternalLink, Server, FileArchive, AlertCircle, AlertTriangle, ChevronDown, HelpCircle, ChevronUp, Gamepad2, Shield, Cpu, Wrench, X, LogIn, LogOut, MonitorPlay, Maximize2, Youtube, Copy, Check, Sun, Moon, LayoutDashboard, Users, Package, Clock, RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, UserPlus, Key, Plus, Ban, Snowflake, Play, Search, Bell } from 'lucide-react';
@@ -364,7 +364,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
-                  <span className="text-sm font-bold hidden sm:block">دخول Google</span>
+                  <span className="text-sm font-bold hidden sm:block">تسجيل الدخول</span>
                 </motion.button>
               )
             )}
@@ -3551,7 +3551,7 @@ export default function App() {
         <Hero onSiteGuideClick={() => setShowSiteGuide(true)} />
         <OrderDelivery 
           user={user}
-          onLogin={loginWithGoogle}
+          onLogin={() => setShowLoginModal(true)}
           onVerify={async (orderId) => {
             setIsVerifiedCustomer(true);
           }} 
@@ -3656,3 +3656,4 @@ export default function App() {
     </div>
   );
 }
+
