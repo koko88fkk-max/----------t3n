@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
 
@@ -198,7 +198,7 @@ export async function activateOrder(orderId: string, uid: string, email: string)
       if (orderData.usedByUid === uid) {
         return { success: true };
       }
-    
+    }
 
     // Activate the order (update existing)
     const now = new Date();
