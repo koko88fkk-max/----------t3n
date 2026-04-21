@@ -174,51 +174,65 @@ export async function activateOrder(orderId: string, uid: string, email: string)
     return { success: false, error: 'رقم الطلب غير صحيح' };
   }
 
-  const orderRef = doc(db, "orders", cleaned);
-  const orderSnap = await getDoc(orderRef);
+  try {
+    const orderRef = doc(db, "orders", cleaned);
+    const orderSnap = await getDoc(orderRef);
 
-  if (orderSnap.exists()) {
-    const orderData = orderSnap.data();
+    if (orderSnap.exists()) {
+      const orderData = orderSnap.data();
 
-    if (orderData.status === 'banned') {
-      return { success: false, error: 'رقم الطلب هذا محظور' };
+      if (orderData.status === 'banned') {
+        return { success: false, error: 'رقم الطلب هذا محظور' };
+      }
+
+      if (orderData.status === 'frozen') {
+        return { success: false, error: 'رقم الطلب هذا مُجمّد مؤقتاً' };
+      }
+
+      // Already used by someone else
+      if (orderData.usedByUid && orderData.usedByUid !== uid) {
+        return { success: false, error: 'رقم الطلب هذا مرتبط بحساب آخر' };
+      }
+
+      // Same user re-entering - allow
+      if (orderData.usedByUid === uid) {
+        return { success: true };
+      }
+    } else {
+      // Order doesn't exist in Firebase
+      return { success: false, error: 'رقم الطلب غير موجود، تأكد من الرقم وحاول مرة ثانية' };
     }
 
-    if (orderData.status === 'frozen') {
-      return { success: false, error: 'رقم الطلب هذا مُجمّد مؤقتاً' };
-    }
+    // Activate the order (update existing)
+    const now = new Date();
+    
+    await setDoc(orderRef, {
+      status: 'active',
+      activatedAt: now.toISOString(),
+      usedByEmail: email,
+      usedByUid: uid
+    }, { merge: true });
 
-    // Already used by someone else
-    if (orderData.usedByUid && orderData.usedByUid !== uid) {
-      return { success: false, error: 'رقم الطلب هذا مرتبط بحساب آخر' };
-    }
+    // Mark user as VIP
+    const userRef = doc(db, "users", uid);
+    await setDoc(userRef, {
+      isVIP: true,
+      verifiedOrder: cleaned,
+      email: email,
+      verifiedAt: now.toISOString()
+    }, { merge: true });
 
-    // Same user re-entering - allow
-    if (orderData.usedByUid === uid) {
-      return { success: true };
+    return { success: true };
+  } catch (err: any) {
+    console.error('Firebase activateOrder error:', err);
+    if (err?.code === 'permission-denied') {
+      return { success: false, error: 'ليس لديك صلاحية لتفعيل هذا الطلب' };
     }
+    if (err?.code === 'unavailable' || err?.message?.includes('offline')) {
+      return { success: false, error: 'مشكلة في الاتصال، تأكد من الانترنت وحاول مرة ثانية' };
+    }
+    return { success: false, error: 'حدث خطأ: ' + (err?.message || 'غير معروف') };
   }
-
-  // Activate the order (create or update)
-  const now = new Date();
-  
-  await setDoc(orderRef, {
-    status: 'active',
-    activatedAt: now.toISOString(),
-    usedByEmail: email,
-    usedByUid: uid
-  }, { merge: true });
-
-  // Mark user as VIP
-  const userRef = doc(db, "users", uid);
-  await setDoc(userRef, {
-    isVIP: true,
-    verifiedOrder: cleaned,
-    email: email,
-    verifiedAt: now.toISOString()
-  }, { merge: true });
-
-  return { success: true };
 }
 
 // 📦 Delete an order
