@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+﻿import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
 
@@ -527,7 +527,7 @@ export async function sendPhoneSMS(phoneNumber: string, appVerifier: any) {
     return { success: true, confirmationResult };
   } catch (error: any) {
     console.error('SMS Error:', error);
-    let msg = 'حدث خطأ أثناء إرسال الرسالة';
+    let msg = error.code + ': ' + error.message;
     if (error.code === 'auth/invalid-phone-number') msg = 'رقم الجوال غير صحيح تأكد من كتابته بشكل صحيح (مثال: +966500000000)';
     if (error.code === 'auth/too-many-requests') msg = 'حدث خطأ، يرجى المحاولة بعد قليل';
     return { success: false, error: msg };
@@ -559,5 +559,6 @@ export async function verifyPhoneOTP(confirmationResult: any, code: string) {
     return { success: false, error: 'رمز التحقق غير صحيح، تأكد منه وحاول مجدداً' };
   }
 }
+
 
 
