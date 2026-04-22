@@ -1,11 +1,10 @@
-﻿import admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import axios from 'axios';
 
 // Initialize Firebase Admin (Only once)
 if (!admin.apps.length) {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY 
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "
-")
+    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
     : "";
 
   if (privateKey) {
