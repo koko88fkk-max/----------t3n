@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, ExternalLink, Server, FileArchive, AlertCircle, AlertTriangle, ChevronDown, HelpCircle, ChevronUp, Gamepad2, Shield, Cpu, Wrench, X, LogIn, LogOut, MonitorPlay, Maximize2, Youtube, Copy, Check, Sun, Moon, LayoutDashboard, Users, Package, Clock, RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, UserPlus, Key, Plus, Ban, Snowflake, Play, Search, Bell } from 'lucide-react';
@@ -3258,17 +3258,19 @@ export default function App() {
     }
   }, [toast]);
 
-  // Parse Discord OAuth hash manually so it doesn't get lost
+  // Parse Custom Token returned from Discord API Backend
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes("access_token")) {
-      const params = new URLSearchParams(hash.substring(1));
-      const tokenSrc = params.get('access_token');
-      if (tokenSrc) {
-        localStorage.setItem('discord_token_pending', tokenSrc);
-        // Clean the URL hash immediately
+    const params = new URLSearchParams(window.location.search);
+    const customToken = params.get('token');
+    if (customToken) {
+      setAuthLoading(true);
+      signInWithCustomToken(auth, customToken).then(() => {
         window.history.replaceState(null, '', window.location.pathname);
-      }
+      }).catch(err => {
+        console.error("Custom token login error:", err);
+      }).finally(() => {
+        setAuthLoading(false);
+      });
     }
   }, []);
 
