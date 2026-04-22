@@ -16,6 +16,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   const handleDiscordLogin = () => {
     setLoading(true);
     const clientId = '1462977086653464729';
+    const redirectUri = encodeURIComponent('https://t3n-2a2i.vercel.app/api/discord-auth');
+    const redirectUri = encodeURIComponent('https://t3n-2a2i.vercel.app/api/discord-auth');
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
     window.location.href = discordAuthUrl;
   };
@@ -72,4 +74,5 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
     </div>
   );
 }
+
 
