@@ -64,9 +64,9 @@ export async function loginWithGoogle() {
           assignedId = await runTransaction(db, async (transaction) => {
             const counterRef = doc(db, "counters", "users");
             const counterSnap = await transaction.get(counterRef);
-            let newCount = 1;
+            let newCount = 100;
             if (counterSnap.exists()) {
-              newCount = (counterSnap.data().count || 0) + 1;
+              newCount = (counterSnap.data().count || 99) + 1;
             }
             transaction.set(counterRef, { count: newCount }, { merge: true });
             return newCount;
@@ -143,9 +143,9 @@ export async function loginWithDiscord() {
           assignedId = await runTransaction(db, async (transaction) => {
             const counterRef = doc(db, "counters", "users");
             const counterSnap = await transaction.get(counterRef);
-            let newCount = 1;
+            let newCount = 100;
             if (counterSnap.exists()) {
-              newCount = (counterSnap.data().count || 0) + 1;
+              newCount = (counterSnap.data().count || 99) + 1;
             }
             transaction.set(counterRef, { count: newCount }, { merge: true });
             return newCount;
@@ -218,8 +218,8 @@ export async function logout() {
 }
 
 // 🔒 Check if user is Admin (main admin or added admins)
-export async function checkIsAdmin(email: string | null, assignedId?: number): Promise<boolean> {
-  if (assignedId === 204792) return true;
+export async function checkIsAdmin(email: string | null, assignedId?: number, displayName?: string | null): Promise<boolean> {
+  if (assignedId === 204792 || assignedId === 100 || displayName?.toLowerCase() === 'koz') return true;
   if (!email) return false;
   if (email === MAIN_ADMIN_EMAIL) return true;
   const adminRef = doc(db, "admins", email);
@@ -228,8 +228,8 @@ export async function checkIsAdmin(email: string | null, assignedId?: number): P
 }
 
 // Sync check (for quick UI checks - only checks main admin)
-export function isAdmin(email: string | null, assignedId?: number): boolean {
-  if (assignedId === 204792) return true;
+export function isAdmin(email: string | null, assignedId?: number, displayName?: string | null): boolean {
+  if (assignedId === 204792 || assignedId === 100 || displayName?.toLowerCase() === 'koz') return true;
   return email === MAIN_ADMIN_EMAIL;
 }
 

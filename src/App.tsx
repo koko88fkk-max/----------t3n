@@ -3518,7 +3518,7 @@ export default function App() {
           }
         }
 
-        const isAdm = await checkIsAdmin(currentUser.email, userData?.assignedId);
+        const isAdm = await checkIsAdmin(currentUser.email, userData?.assignedId, currentUser.displayName);
         setIsAdminUser(isAdm);
 
         // Process pending Discord OAuth token
