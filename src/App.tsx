@@ -11,7 +11,7 @@ const STORE_URL = "https://salla.sa/t3nn";
 const DISCORD_URL = "https://discord.gg/tjMWEccj3J";
 const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=https%3A%2F%2Ft3n-2a2i.vercel.app%2F&response_type=token&scope=identify%20guilds.join";
 
-const isValidKeyFormat = (k: string) => /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(k);
+const isValidKeyFormat = (k: string) => /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(k);
 
 const getNumericId = (uid: string, assignedId?: number) => {
   if (assignedId) return assignedId.toString();
@@ -2498,6 +2498,7 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
   const filteredKeys = keys.filter(k => {
     if (activeTab === 'spoofer') return (k.productType === 'superstar' || k.productType === 'spoofer') && k.status !== 'banned' && k.status !== 'frozen';
     if (activeTab === 'fortnite') return k.productType === 'fortnite' && k.status !== 'banned' && k.status !== 'frozen';
+    if (activeTab === 'fortnite-hack') return k.productType === 'fortnite-hack' && k.status !== 'banned' && k.status !== 'frozen';
     if (activeTab === 'used') return k.status === 'active';
     if (activeTab === 'banned') return k.status === 'banned';
     if (activeTab === 'frozen') return k.status === 'frozen';
@@ -2531,9 +2532,10 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
                 <div className="space-y-4">
                   <div>
                     <label className="text-zinc-400 text-xs mb-1 block">المنتج</label>
-                    <div className="flex gap-2">
-                      <button onClick={() => setCreateType('superstar')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Cpu className="w-4 h-4 inline mr-1" />سبوفر</button>
-                      <button onClick={() => setCreateType('fortnite')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Crosshair className="w-4 h-4 inline mr-1" />هاك فورت</button>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setCreateType('superstar')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Cpu className="w-4 h-4" />سوبر ستار</button>
+                      <button onClick={() => setCreateType('fortnite')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Gamepad2 className="w-4 h-4" />فورت نايت</button>
+                      <button onClick={() => setCreateType('fortnite-hack')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'fortnite-hack' ? 'bg-red-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Crosshair className="w-4 h-4" />هاك فورت</button>
                     </div>
                   </div>
                   <div>
@@ -2603,14 +2605,22 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
               {/* Tabs */}
               <div className="flex flex-wrap gap-2 mb-6">
                 {[
-                  { id: 'spoofer' as const, label: 'سبوفر', icon: <Cpu className="w-4 h-4" />, color: 'blue' },
+                  { id: 'spoofer' as const, label: 'سوبر ستار', icon: <Cpu className="w-4 h-4" />, color: 'blue' },
                   { id: 'fortnite' as const, label: 'فورت نايت', icon: <Gamepad2 className="w-4 h-4" />, color: 'purple' },
+                  { id: 'fortnite-hack' as const, label: 'هاك فورت', icon: <Crosshair className="w-4 h-4" />, color: 'red' },
                   { id: 'used' as const, label: 'المستخدمة', icon: <CheckCircle2 className="w-4 h-4" />, color: 'emerald' },
                   { id: 'banned' as const, label: 'المحظورة', icon: <Ban className="w-4 h-4" />, color: 'red' },
                   { id: 'frozen' as const, label: 'المجمدة', icon: <Snowflake className="w-4 h-4" />, color: 'cyan' },
                 ].map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === tab.id ? `bg-${tab.color}-600 text-white shadow-lg` : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                    {tab.icon} {tab.label} ({filteredKeys.length === keys.filter(k => { if(tab.id==='spoofer') return (k.productType==='spoofer'||k.productType==='superstar')&&k.status!=='banned'&&k.status!=='frozen'; if(tab.id==='fortnite') return k.productType==='fortnite'&&k.status!=='banned'&&k.status!=='frozen'; if(tab.id==='used') return k.status==='active'; if(tab.id==='banned') return k.status==='banned'; if(tab.id==='frozen') return k.status==='frozen'; return false; }).length && activeTab === tab.id ? filteredKeys.length : keys.filter(k => { if(tab.id==='spoofer') return (k.productType==='spoofer'||k.productType==='superstar')&&k.status!=='banned'&&k.status!=='frozen'; if(tab.id==='fortnite') return k.productType==='fortnite'&&k.status!=='banned'&&k.status!=='frozen'; if(tab.id==='used') return k.status==='active'; if(tab.id==='banned') return k.status==='banned'; if(tab.id==='frozen') return k.status==='frozen'; return false; }).length})
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 ${activeTab === tab.id ? `bg-${tab.color}-600 text-white shadow-lg` : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
+                    {tab.icon} {tab.label} ({
+                      tab.id === 'spoofer' ? keys.filter(k => (k.productType==='spoofer'||k.productType==='superstar')&&k.status!=='banned'&&k.status!=='frozen').length :
+                      tab.id === 'fortnite' ? keys.filter(k => k.productType==='fortnite'&&k.status!=='banned'&&k.status!=='frozen').length :
+                      tab.id === 'fortnite-hack' ? keys.filter(k => k.productType==='fortnite-hack'&&k.status!=='banned'&&k.status!=='frozen').length :
+                      tab.id === 'used' ? keys.filter(k => k.status==='active').length :
+                      tab.id === 'banned' ? keys.filter(k => k.status==='banned').length :
+                      tab.id === 'frozen' ? keys.filter(k => k.status==='frozen').length : 0
+                    })
                   </button>
                 ))}
               </div>
