@@ -11,6 +11,18 @@ const STORE_URL = "https://salla.sa/t3nn";
 const DISCORD_URL = "https://discord.gg/tjMWEccj3J";
 const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=https%3A%2F%2Ft3n-2a2i.vercel.app%2F&response_type=token&scope=identify%20guilds.join";
 
+const isValidKeyFormat = (k: string) => /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(k);
+
+const getNumericId = (uid: string) => {
+  if (!uid) return '000000';
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) {
+    hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString().padStart(6, '0').slice(0, 8);
+};
+
 // Capture Discord OAuth access_token from URL hash IMMEDIATELY on page load
 // Discord implicit grant returns: /#access_token=xxx&token_type=Bearer&...
 if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {
@@ -2472,17 +2484,7 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
     setIsSearching(false);
   };
 
-  const isValidKeyFormat = (k: string) => /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(k);
 
-  const getNumericId = (uid: string) => {
-    if (!uid) return '000000';
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) {
-      hash = ((hash << 5) - hash) + uid.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash).toString().padStart(6, '0').slice(0, 8);
-  };
 
   const getKeyStatus = (k: any) => {
     if (k.status === 'banned') return { text: 'محظور', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '🚫' };
