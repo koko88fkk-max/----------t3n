@@ -53,39 +53,55 @@ export async function loginWithGoogle() {
       countryCode: geo.countryCode
     } : {};
     
-    if (!docSnap.exists()) {
+    const data = docSnap.data();
+    
+    if (!docSnap.exists() || !data?.assignedId) {
       // Use transaction to get and increment user count
-      let assignedId = 1;
-      try {
-        assignedId = await runTransaction(db, async (transaction) => {
-          const counterRef = doc(db, "counters", "users");
-          const counterSnap = await transaction.get(counterRef);
-          let newCount = 1;
-          if (counterSnap.exists()) {
-            newCount = (counterSnap.data().count || 0) + 1;
-          }
-          transaction.set(counterRef, { count: newCount }, { merge: true });
-          return newCount;
-        });
-      } catch (e) { console.error('Transaction failed:', e); }
+      let assignedId = data?.assignedId;
+      
+      if (!assignedId) {
+        try {
+          assignedId = await runTransaction(db, async (transaction) => {
+            const counterRef = doc(db, "counters", "users");
+            const counterSnap = await transaction.get(counterRef);
+            let newCount = 1;
+            if (counterSnap.exists()) {
+              newCount = (counterSnap.data().count || 0) + 1;
+            }
+            transaction.set(counterRef, { count: newCount }, { merge: true });
+            return newCount;
+          });
+        } catch (e) { console.error('Transaction failed:', e); }
+      }
 
-      await setDoc(userRef, {
-        email: user.email,
-        isVIP: false,
-        verifiedOrder: null,
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-        displayName: user.displayName || 'عميل',
-        photoURL: user.photoURL || null,
-        provider: 'google',
-        assignedId: assignedId,
-        ...geoData
-      });
+      if (!docSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          isVIP: false,
+          verifiedOrder: null,
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString(),
+          displayName: user.displayName || 'عميل',
+          photoURL: user.photoURL || null,
+          provider: 'google',
+          assignedId: assignedId,
+          ...geoData
+        });
+      } else {
+        await setDoc(userRef, { 
+          lastLoginAt: new Date().toISOString(),
+          displayName: user.displayName || data.displayName,
+          photoURL: user.photoURL || data.photoURL,
+          provider: 'google',
+          assignedId: assignedId,
+          ...geoData
+        }, { merge: true });
+      }
     } else {
       await setDoc(userRef, { 
         lastLoginAt: new Date().toISOString(),
-        displayName: user.displayName || docSnap.data().displayName,
-        photoURL: user.photoURL || docSnap.data().photoURL,
+        displayName: user.displayName || data.displayName,
+        photoURL: user.photoURL || data.photoURL,
         provider: 'google',
         ...geoData
       }, { merge: true });
@@ -116,31 +132,45 @@ export async function loginWithDiscord() {
       countryCode: geo.countryCode
     } : {};
     
-    if (!docSnap.exists()) {
-      // Use transaction to get and increment user count
-      let assignedId = 1;
-      try {
-        assignedId = await runTransaction(db, async (transaction) => {
-          const counterRef = doc(db, "counters", "users");
-          const counterSnap = await transaction.get(counterRef);
-          let newCount = 1;
-          if (counterSnap.exists()) {
-            newCount = (counterSnap.data().count || 0) + 1;
-          }
-          transaction.set(counterRef, { count: newCount }, { merge: true });
-          return newCount;
-        });
-      } catch (e) { console.error('Transaction failed:', e); }
+    const data = docSnap.data();
 
-      await setDoc(userRef, {
-        email: user.email,
-        isVIP: false,
-        verifiedOrder: null,
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-        assignedId: assignedId,
-        ...geoData
-      });
+    if (!docSnap.exists() || !data?.assignedId) {
+      // Use transaction to get and increment user count
+      let assignedId = data?.assignedId;
+
+      if (!assignedId) {
+        try {
+          assignedId = await runTransaction(db, async (transaction) => {
+            const counterRef = doc(db, "counters", "users");
+            const counterSnap = await transaction.get(counterRef);
+            let newCount = 1;
+            if (counterSnap.exists()) {
+              newCount = (counterSnap.data().count || 0) + 1;
+            }
+            transaction.set(counterRef, { count: newCount }, { merge: true });
+            return newCount;
+          });
+        } catch (e) { console.error('Transaction failed:', e); }
+      }
+
+      if (!docSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          isVIP: false,
+          verifiedOrder: null,
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString(),
+          assignedId: assignedId,
+          ...geoData
+        });
+      } else {
+        await setDoc(userRef, { 
+          email: user.email,
+          lastLoginAt: new Date().toISOString(),
+          assignedId: assignedId,
+          ...geoData
+        }, { merge: true });
+      }
     } else {
       await setDoc(userRef, { 
         email: user.email,
