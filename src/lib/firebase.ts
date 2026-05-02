@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, OAuthProvider, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot, runTransaction } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB9mFTUF1_mBzTl3VvxNq5G-mdhrJvzI0A",
@@ -54,6 +54,21 @@ export async function loginWithGoogle() {
     } : {};
     
     if (!docSnap.exists()) {
+      // Use transaction to get and increment user count
+      let assignedId = 1;
+      try {
+        assignedId = await runTransaction(db, async (transaction) => {
+          const counterRef = doc(db, "counters", "users");
+          const counterSnap = await transaction.get(counterRef);
+          let newCount = 1;
+          if (counterSnap.exists()) {
+            newCount = (counterSnap.data().count || 0) + 1;
+          }
+          transaction.set(counterRef, { count: newCount }, { merge: true });
+          return newCount;
+        });
+      } catch (e) { console.error('Transaction failed:', e); }
+
       await setDoc(userRef, {
         email: user.email,
         isVIP: false,
@@ -63,6 +78,7 @@ export async function loginWithGoogle() {
         displayName: user.displayName || 'عميل',
         photoURL: user.photoURL || null,
         provider: 'google',
+        assignedId: assignedId,
         ...geoData
       });
     } else {
@@ -101,12 +117,28 @@ export async function loginWithDiscord() {
     } : {};
     
     if (!docSnap.exists()) {
+      // Use transaction to get and increment user count
+      let assignedId = 1;
+      try {
+        assignedId = await runTransaction(db, async (transaction) => {
+          const counterRef = doc(db, "counters", "users");
+          const counterSnap = await transaction.get(counterRef);
+          let newCount = 1;
+          if (counterSnap.exists()) {
+            newCount = (counterSnap.data().count || 0) + 1;
+          }
+          transaction.set(counterRef, { count: newCount }, { merge: true });
+          return newCount;
+        });
+      } catch (e) { console.error('Transaction failed:', e); }
+
       await setDoc(userRef, {
         email: user.email,
         isVIP: false,
         verifiedOrder: null,
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
+        assignedId: assignedId,
         ...geoData
       });
     } else {
@@ -634,6 +666,12 @@ export function listenToMaintenanceMode(callback: (isMaintenance: boolean) => vo
       callback(false);
     }
   });
+}
+
+export async function getUserData(uid: string) {
+  const userRef = doc(db, "users", uid);
+  const snap = await getDoc(userRef);
+  return snap.exists() ? snap.data() : null;
 }
 
 export async function toggleMaintenanceMode(currentState: boolean) {

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, ExternalLink, Server, FileArchive, AlertCircle, AlertTriangle, ChevronDown, HelpCircle, ChevronUp, Gamepad2, Shield, Cpu, Wrench, X, LogIn, LogOut, MonitorPlay, Maximize2, Youtube, Copy, Check, Sun, Moon, LayoutDashboard, Users, Package, Clock, RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, UserPlus, Key, Plus, Ban, Snowflake, Play, Search, Bell, List, Crosshair } from 'lucide-react';
-import { auth, loginWithDiscord, logout, checkUserVIP, activateKey, isAdmin, getAdminStats, banUser, unbanUser, removeVIP, deleteUserData, addAdminUser, removeAdminUser, checkIsAdmin, checkBanned, getAllKeys, deleteKey, deleteAllKeys, banKey, unbanKey, freezeKey, unfreezeKey, isValidKeyFormat, trackSiteVisit, checkKeyStatus, createKeys, listenToNotifications, deleteNotification, listenToMaintenanceMode, toggleMaintenanceMode } from './lib/firebase';
+import { auth, loginWithDiscord, logout, checkUserVIP, activateKey, isAdmin, getAdminStats, banUser, unbanUser, removeVIP, deleteUserData, addAdminUser, removeAdminUser, checkIsAdmin, checkBanned, getAllKeys, deleteKey, deleteAllKeys, banKey, unbanKey, freezeKey, unfreezeKey, isValidKeyFormat, trackSiteVisit, checkKeyStatus, createKeys, listenToNotifications, deleteNotification, listenToMaintenanceMode, toggleMaintenanceMode, getUserData } from './lib/firebase';
 import { onAuthStateChanged, User, signInWithCustomToken } from 'firebase/auth';
 import LoginModal from './LoginModal';
 
@@ -13,14 +13,15 @@ const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=14
 
 const isValidKeyFormat = (k: string) => /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(k);
 
-const getNumericId = (uid: string) => {
-  if (!uid) return '000000';
+const getNumericId = (uid: string, assignedId?: number) => {
+  if (assignedId) return assignedId.toString();
+  if (!uid) return '0';
   let hash = 0;
   for (let i = 0; i < uid.length; i++) {
     hash = ((hash << 5) - hash) + uid.charCodeAt(i);
     hash |= 0;
   }
-  return Math.abs(hash).toString().padStart(6, '0').slice(0, 8);
+  return Math.abs(hash).toString().slice(0, 6);
 };
 
 // Capture Discord OAuth access_token from URL hash IMMEDIATELY on page load
@@ -126,7 +127,7 @@ function TiltCard({ children, className = "", href, target, rel }: any) {
   return <div className="perspective-1000">{content}</div>;
 }
 
-function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSuperstarClick, onFortniteClick, onFortniteHackClick, onTroubleshootClick, notifications = [], unreadCount = 0, onReadNotifications, isAdminUser = false, activatedProducts = [] }: { isVerified?: boolean, user?: User | null, onLogin?: () => void, onLogout?: () => void, authLoading?: boolean, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, onTroubleshootClick?: () => void, notifications?: any[], unreadCount?: number, onReadNotifications?: () => void, isAdminUser?: boolean, activatedProducts?: string[] }) {
+function Navbar({ isVerified, user, userProfile, onLogin, onLogout, authLoading, onSuperstarClick, onFortniteClick, onFortniteHackClick, onTroubleshootClick, notifications = [], unreadCount = 0, onReadNotifications, isAdminUser = false, activatedProducts = [] }: { isVerified?: boolean, user?: User | null, userProfile?: any, onLogin?: () => void, onLogout?: () => void, authLoading?: boolean, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, onTroubleshootClick?: () => void, notifications?: any[], unreadCount?: number, onReadNotifications?: () => void, isAdminUser?: boolean, activatedProducts?: string[] }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifPopup, setShowNotifPopup] = useState(false);
   const [expandedNotif, setExpandedNotif] = useState<any>(null);
@@ -398,7 +399,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSuperstarC
               user ? (
                 <div className="flex items-center gap-2">
                   <div className="hidden lg:flex flex-col items-end mr-2">
-                    <span className="text-[10px] text-blue-400 font-bold tracking-widest uppercase">ID: {getNumericId(user.uid)}</span>
+                    <span className="text-[10px] text-blue-400 font-bold tracking-widest uppercase">ID: {getNumericId(user.uid, userProfile?.assignedId)}</span>
                     <span className="text-xs text-white font-medium truncate max-w-[100px]">{user.displayName || 'مستخدم T3N'}</span>
                   </div>
                   <motion.button 
@@ -3367,6 +3368,7 @@ export default function App() {
   const [isVerifiedCustomer, setIsVerifiedCustomer] = useState(false);
   const [activatedProducts, setActivatedProducts] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showSuperstarGuide, setShowSuperstarGuide] = useState(false);
@@ -3503,6 +3505,9 @@ export default function App() {
           setIsBanned(false);
           setBanReason(null);
         }
+
+        const userData = await getUserData(currentUser.uid);
+        setUserProfile(userData);
 
         const vipResult = await checkUserVIP(currentUser.uid);
         setIsVerifiedCustomer(vipResult.isVIP);
@@ -3719,6 +3724,7 @@ export default function App() {
       <Navbar 
         isVerified={isVerifiedCustomer} 
         user={user} 
+        userProfile={userProfile}
         onLogin={() => setShowLoginModal(true)} 
         onLogout={logout} 
         authLoading={authLoading}
