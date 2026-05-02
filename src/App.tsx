@@ -386,7 +386,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSuperstarC
               user ? (
                 <div className="flex items-center gap-2">
                   <div className="hidden lg:flex flex-col items-end mr-2">
-                    <span className="text-[10px] text-blue-400 font-bold tracking-widest uppercase">ID: {user.uid.slice(0, 7).toUpperCase()}</span>
+                    <span className="text-[10px] text-blue-400 font-bold tracking-widest uppercase">ID: {getNumericId(user.uid)}</span>
                     <span className="text-xs text-white font-medium truncate max-w-[100px]">{user.displayName || 'مستخدم T3N'}</span>
                   </div>
                   <motion.button 
@@ -2472,6 +2472,18 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
     setIsSearching(false);
   };
 
+  const isValidKeyFormat = (k: string) => /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(k);
+
+  const getNumericId = (uid: string) => {
+    if (!uid) return '000000';
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+      hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString().padStart(6, '0').slice(0, 8);
+  };
+
   const getKeyStatus = (k: any) => {
     if (k.status === 'banned') return { text: 'محظور', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '🚫' };
     if (k.status === 'frozen') return { text: 'مُجمّد', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30', icon: '❄️' };
@@ -2854,10 +2866,10 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.users.filter((u:any) => u.verifiedKey && (u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || u.id?.slice(0, 7).toUpperCase().includes(userSearchTerm))).map((u: any, i: number) => (
+                        {stats.users.filter((u:any) => u.verifiedKey && (u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || getNumericId(u.id).includes(userSearchTerm))).map((u: any, i: number) => (
                           <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                             <td className="px-4 py-3">
-                              <span className="text-[10px] text-blue-400 font-mono font-bold">{u.id?.slice(0, 7).toUpperCase()}</span>
+                              <span className="text-[10px] text-blue-400 font-mono font-bold">{getNumericId(u.id)}</span>
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
@@ -2930,10 +2942,10 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.users.filter((u:any) => u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || u.id?.slice(0, 7).toUpperCase().includes(userSearchTerm)).sort((a:any,b:any)=>(b.lastLoginAt||'').localeCompare(a.lastLoginAt||'')).map((u: any, i: number) => (
+                        {stats.users.filter((u:any) => u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || getNumericId(u.id).includes(userSearchTerm)).sort((a:any,b:any)=>(b.lastLoginAt||'').localeCompare(a.lastLoginAt||'')).map((u: any, i: number) => (
                           <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                             <td className="px-4 py-3">
-                              <span className="text-[10px] text-blue-400 font-mono font-bold">{u.id?.slice(0, 7).toUpperCase()}</span>
+                              <span className="text-[10px] text-blue-400 font-mono font-bold">{getNumericId(u.id)}</span>
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
