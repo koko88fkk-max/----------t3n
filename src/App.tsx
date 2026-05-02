@@ -11,7 +11,11 @@ const STORE_URL = "https://salla.sa/t3nn";
 const DISCORD_URL = "https://discord.gg/tjMWEccj3J";
 const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=https%3A%2F%2Ft3n-2a2i.vercel.app%2F&response_type=token&scope=identify%20guilds.join";
 
-const isValidKeyFormat = (k: string) => /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(k);
+const isValidKeyFormat = (k: string) => {
+  if (!k || typeof k !== 'string') return false;
+  const trimmed = k.trim().toUpperCase();
+  return /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(trimmed);
+};
 
 const getNumericId = (uid: string, assignedId?: number) => {
   if (assignedId) return assignedId.toString();
@@ -765,17 +769,50 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderInput.trim()) return;
-    if (!user) { setStatus('error'); setErrorMsg('يجب تسجيل الدخول بحساب ديسكورد أولاً'); return; }
-    if (!isValidKeyFormat(orderInput)) { setStatus('error'); setErrorMsg('صيغة المفتاح غير صحيحة. الصيغة: T3N-XXXXXX-XXXXXX'); return; }
+    const trimmedInput = orderInput.trim();
+    
+    if (!trimmedInput) {
+      setStatus('error');
+      setErrorMsg('يجب إدخال المفتاح أولاً');
+      return;
+    }
+    
+    if (!user) {
+      setStatus('error');
+      setErrorMsg('يجب تسجيل الدخول بحساب ديسكورد أولاً');
+      return;
+    }
+    
+    if (!isValidKeyFormat(trimmedInput)) {
+      setStatus('error');
+      setErrorMsg('صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX (6 أحرف-6 أحرف)');
+      return;
+    }
+    
     setStatus('loading');
     try {
-      const result = await activateKey(orderInput.trim(), user.uid, user.email || '', { displayName: user.displayName || undefined, photoURL: user.photoURL || undefined, provider: 'discord' });
+      // Normalize key to uppercase before sending
+      const normalizedKey = trimmedInput.toUpperCase();
+      const result = await activateKey(normalizedKey, user.uid, user.email || '', { 
+        displayName: user.displayName || undefined, 
+        photoURL: user.photoURL || undefined, 
+        provider: 'discord' 
+      });
+      
       if (result.success) {
         setLastActivatedType(result.productType || '');
-        setTimeout(() => { setStatus('success'); if (onVerify) onVerify(orderInput.trim(), result.activatedProducts || []); }, 1500);
-      } else { setStatus('error'); setErrorMsg(result.error || 'حدث خطأ'); }
-    } catch (e: any) { setStatus('error'); setErrorMsg(e?.message || 'حدث خطأ غير متوقع'); }
+        setTimeout(() => { 
+          setStatus('success'); 
+          if (onVerify) onVerify(normalizedKey, result.activatedProducts || []); 
+        }, 1500);
+      } else { 
+        setStatus('error'); 
+        setErrorMsg(result.error || 'حدث خطأ أثناء تفعيل المفتاح'); 
+      }
+    } catch (e: any) { 
+      setStatus('error'); 
+      setErrorMsg(e?.message || 'حدث خطأ غير متوقع. تأكد من اتصالك بالإنترنت'); 
+    }
   };
 
   return (
@@ -847,12 +884,21 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                       type="text"
                       value={orderInput}
                       onChange={(e) => {
-                        setOrderInput(e.target.value);
+                        // Auto-uppercase the input for better UX
+                        const upperValue = e.target.value.toUpperCase();
+                        setOrderInput(upperValue);
                         if (status === 'error') setStatus('idle');
                       }}
                       placeholder="T3N-XXXXXX-XXXXXX"
-                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-600 shadow-inner font-mono tracking-wider"
+                      maxLength={20}
+                      className={`w-full bg-black/60 border rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:ring-2 transition-all text-white placeholder:text-zinc-600 shadow-inner font-mono tracking-wider ${
+                        orderInput.length > 0 && !isValidKeyFormat(orderInput) 
+                          ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30' 
+                          : 'border-blue-500/30 focus:border-blue-500 focus:ring-blue-500/30'
+                      }`}
                       dir="ltr"
+                      spellCheck="false"
+                      autoComplete="off"
                     />
                   </div>
 

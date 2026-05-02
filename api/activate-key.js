@@ -17,57 +17,81 @@ if (!admin.apps.length) {
   }
 }
 
+// Validate key format
+function isValidKeyFormat(keyId) {
+  const trimmed = String(keyId).trim();
+  // Key format: T3N-XXXXXX-XXXXXX (where X is alphanumeric)
+  return /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(trimmed);
+}
+
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
+    return res.status(405).json({ success: false, error: 'طريقة الطلب غير مسموحة' });
   }
 
   // Ensure Firebase Admin is initialized
   if (!admin.apps.length) {
-    return res.status(500).json({ success: false, error: 'Server configuration error' });
+    return res.status(500).json({ success: false, error: 'خطأ في إعدادات الخادم' });
   }
 
   const { keyId, uid, email, userData } = req.body;
 
+  // Validate all required parameters
   if (!keyId || !uid || !email) {
-    return res.status(400).json({ success: false, error: 'Missing required parameters' });
+    return res.status(400).json({ success: false, error: 'معاملات مفقودة مطلوبة' });
   }
 
-  const cleaned = keyId.trim();
+  // Validate and clean key format
+  const cleaned = String(keyId).trim().toUpperCase();
+  
+  if (!isValidKeyFormat(cleaned)) {
+    return res.status(400).json({ success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' });
+  }
+
   const db = admin.firestore();
 
   try {
     const keyRef = db.collection('keys').doc(cleaned);
     const keySnap = await keyRef.get();
 
-    if (!keySnap.exists) {
-      return res.status(404).json({ success: false, error: 'المفتاح غير موجود' });
+    if (!keySnap.exists()) {
+      return res.status(404).json({ success: false, error: 'المفتاح غير موجود في النظام' });
     }
 
     const kd = keySnap.data();
 
-    if (kd.status === 'banned') return res.status(403).json({ success: false, error: 'هذا المفتاح محظور' });
-    if (kd.status === 'frozen') return res.status(403).json({ success: false, error: 'هذا المفتاح مُجمّد مؤقتاً' });
-    if (kd.usedByUid && kd.usedByUid !== uid) return res.status(403).json({ success: false, error: 'هذا المفتاح مرتبط بحساب آخر' });
-    
-    // Match existing frontend IDs: 'superstar' (Spoofer)
+    // Check key status
+    if (kd.status === 'banned') {
+      return res.status(403).json({ success: false, error: 'هذا المفتاح محظور ولا يمكن استخدامه' });
+    }
+    if (kd.status === 'frozen') {
+      return res.status(403).json({ success: false, error: 'هذا المفتاح مُجمّد مؤقتاً. اتصل بالدعم الفني' });
+    }
+
+    // Check if key is already used by another user (prevent key sharing)
+    if (kd.usedByUid && kd.usedByUid !== uid) {
+      return res.status(403).json({ success: false, error: 'هذا المفتاح مربوط بحساب آخر ولا يمكن استخدامه من قبل حساب مختلف' });
+    }
+
+    // Map product type: 'spoofer' -> 'superstar' for frontend compatibility
     let pt = kd.productType === 'spoofer' ? 'superstar' : (kd.productType || 'superstar');
 
-    // If already activated by the same user, just auto-repair products
+    // If already activated by the same user, just verify and return products
     if (kd.usedByUid === uid) {
       const userRef = db.collection('users').doc(uid);
       const userSnap = await userRef.get();
       let prods = userSnap.exists ? (userSnap.data().activatedProducts || []) : [];
       
+      // Ensure product is in list
       if (pt && !prods.includes(pt)) {
         prods.push(pt);
         await userRef.set({ activatedProducts: prods }, { merge: true });
       }
-      return res.status(200).json({ success: true, productType: pt, activatedProducts: prods });
+      return res.status(200).json({ success: true, productType: pt, activatedProducts: prods, message: 'المفتاح مفعل بالفعل' });
     }
 
-    // New Activation
+    // New Activation - Mark key as used
     const now = new Date();
     await keyRef.set({
       status: 'active',
@@ -77,29 +101,71 @@ export default async function handler(req, res) {
       usedByName: userData?.displayName || null,
       usedByPhoto: userData?.photoURL || null,
       usedByProvider: userData?.provider || 'discord',
-      productType: pt
+      productType: pt,
+      activationCount: (kd.activationCount || 0) + 1
     }, { merge: true });
 
+    // Update user document with activated key and products
     const userRef = db.collection('users').doc(uid);
     const userSnap = await userRef.get();
     
     const existingProducts = userSnap.exists ? (userSnap.data().activatedProducts || []) : [];
     const existingKeys = userSnap.exists ? (userSnap.data().activatedKeys || []) : [];
     
-    if (!existingProducts.includes(pt)) existingProducts.push(pt);
-    if (!existingKeys.includes(cleaned)) existingKeys.push(cleaned);
+    // Add product if not already there
+    if (!existingProducts.includes(pt)) {
+      existingProducts.push(pt);
+    }
+    
+    // Add key to user's keys list
+    if (!existingKeys.includes(cleaned)) {
+      existingKeys.push(cleaned);
+    }
 
     await userRef.set({
       isVIP: true,
       activatedProducts: existingProducts,
       activatedKeys: existingKeys,
       email,
+      displayName: userData?.displayName || null,
+      photoURL: userData?.photoURL || null,
+      provider: userData?.provider || 'discord',
       verifiedAt: now.toISOString()
     }, { merge: true });
 
-    return res.status(200).json({ success: true, productType: pt, activatedProducts: existingProducts });
+    return res.status(200).json({ 
+      success: true, 
+      productType: pt, 
+      activatedProducts: existingProducts,
+      message: 'تم تفعيل المفتاح بنجاح ومربط بحسابك'
+    });
   } catch (error) {
-    console.error("Activate Key Error:", error);
-    return res.status(500).json({ success: false, error: 'حدث خطأ في السيرفر أثناء التفعيل' });
+    console.error("Activate Key Error:", {
+      error: error instanceof Error ? error.message : String(error),
+      keyId: cleaned,
+      uid: uid,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Return user-friendly error message
+    if (error instanceof Error) {
+      if (error.message.includes('PERMISSION_DENIED')) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'خطأ في الصلاحيات. تأكد من أن الخادم مهيأ بشكل صحيح' 
+        });
+      }
+      if (error.message.includes('NOT_FOUND')) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'المفتاح غير موجود' 
+        });
+      }
+    }
+    
+    return res.status(500).json({ 
+      success: false, 
+      error: 'حدث خطأ في السيرفر أثناء التفعيل. يرجى محاولة مرة أخرى' 
+    });
   }
 }

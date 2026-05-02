@@ -301,36 +301,91 @@ function generateKeyId(): string {
 }
 
 export function isValidKeyFormat(value: string): boolean {
-  return /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(value.trim());
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim().toUpperCase();
+  // Key format: T3N-XXXXXX-XXXXXX (where X is alphanumeric)
+  return /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(trimmed);
 }
 
 export async function createKeys(count: number, productType: 'fortnite' | 'superstar' | 'fortnite-hack'): Promise<string[]> {
+  if (!count || count < 1 || count > 100) {
+    throw new Error('عدد المفاتيح يجب أن يكون بين 1 و 100');
+  }
+
+  if (!productType || !['fortnite', 'superstar', 'fortnite-hack'].includes(productType)) {
+    throw new Error('نوع المنتج غير صحيح');
+  }
+
   const created: string[] = [];
   const now = new Date().toISOString();
-  for (let i = 0; i < Math.min(count, 100); i++) {
+  
+  for (let i = 0; i < count; i++) {
     let keyId = generateKeyId();
+    let attemptCount = 0;
+    const maxAttempts = 50;
     let exists = true;
-    while (exists) {
+
+    // Try to generate a unique key
+    while (exists && attemptCount < maxAttempts) {
       const snap = await getDoc(doc(db, "keys", keyId));
-      if (!snap.exists()) { exists = false; } else { keyId = generateKeyId(); }
+      if (!snap.exists()) { 
+        exists = false; 
+      } else { 
+        keyId = generateKeyId();
+        attemptCount++;
+      }
     }
-    await setDoc(doc(db, "keys", keyId), {
-      keyId, productType, status: 'unused', createdAt: now,
-      activatedAt: null, usedByUid: null, usedByEmail: null,
-      usedByName: null, usedByPhoto: null, usedByProvider: null
-    });
-    created.push(keyId);
+
+    // If we couldn't generate a unique key after max attempts, skip
+    if (exists) {
+      console.error(`فشل في إنشاء مفتاح فريد بعد ${maxAttempts} محاولة`);
+      continue;
+    }
+
+    try {
+      await setDoc(doc(db, "keys", keyId), {
+        keyId, 
+        productType, 
+        status: 'unused', 
+        createdAt: now,
+        activatedAt: null, 
+        usedByUid: null, 
+        usedByEmail: null,
+        usedByName: null, 
+        usedByPhoto: null, 
+        usedByProvider: null,
+        activationCount: 0,
+        createdBy: null
+      });
+      created.push(keyId);
+    } catch (err) {
+      console.error(`فشل في إنشاء المفتاح ${keyId}:`, err);
+    }
   }
+
   return created;
 }
 
-export async function activateKey(keyId: string, uid: string, email: string, userData?: { displayName?: string; photoURL?: string; provider?: string }): Promise<{ success: boolean; error?: string; productType?: string; activatedProducts?: string[] }> {
-  const cleaned = keyId.trim();
-  if (!isValidKeyFormat(cleaned)) {
-    return { success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' };
-  }
-  
+export async function activateKey(keyId: string, uid: string, email: string, userData?: { displayName?: string; photoURL?: string; provider?: string }): Promise<{ success: boolean; error?: string; productType?: string; activatedProducts?: string[]; message?: string }> {
   try {
+    // Clean and normalize the input
+    if (!keyId || typeof keyId !== 'string') {
+      return { success: false, error: 'المفتاح لا يمكن أن يكون فارغاً' };
+    }
+
+    const cleaned = keyId.trim().toUpperCase();
+
+    // Validate key format
+    if (!isValidKeyFormat(cleaned)) {
+      return { success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX (6 أحرف-6 أحرف)' };
+    }
+
+    // Validate user info
+    if (!uid || !email) {
+      return { success: false, error: 'معلومات المستخدم ناقصة' };
+    }
+
+    // Call backend API
     const response = await fetch('/api/activate-key', {
       method: 'POST',
       headers: {
@@ -340,15 +395,23 @@ export async function activateKey(keyId: string, uid: string, email: string, use
         keyId: cleaned,
         uid,
         email,
-        userData
+        userData: userData || {}
       })
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { 
+        success: false, 
+        error: errorData.error || `خطأ من الخادم: ${response.status}` 
+      };
+    }
 
     const data = await response.json();
     return data;
   } catch (err: any) {
     console.error('activateKey error:', err);
-    return { success: false, error: 'فشل الاتصال بالسيرفر. تأكد من اتصالك بالإنترنت.' };
+    return { success: false, error: 'فشل الاتصال بالسيرفر. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.' };
   }
 }
 
@@ -451,16 +514,78 @@ export async function unfreezeKey(keyId: string) {
 }
 
 export async function checkKeyStatus(keyId: string): Promise<any> {
-  const cleaned = keyId.trim();
-  if (!isValidKeyFormat(cleaned)) throw new Error('صيغة المفتاح غير صحيحة');
+  const cleaned = keyId.trim().toUpperCase();
+  if (!isValidKeyFormat(cleaned)) {
+    throw new Error('صيغة المفتاح غير صحيحة');
+  }
   const ref = doc(db, "keys", cleaned);
   const snap = await getDoc(ref);
-  if (!snap.exists()) return { status: 'not_found' };
-  return { ...snap.data() };
+  if (!snap.exists()) {
+    return { status: 'not_found', error: 'المفتاح غير موجود' };
+  }
+  const data = snap.data();
+  return { 
+    id: cleaned,
+    status: data.status || 'unknown',
+    productType: data.productType,
+    usedByUid: data.usedByUid || null,
+    usedByEmail: data.usedByEmail || null,
+    usedByName: data.usedByName || null,
+    activatedAt: data.activatedAt || null,
+    createdAt: data.createdAt || null,
+    isActive: data.status === 'active' && !data.usedByUid === false
+  };
 }
 
 // ==========================================
-// 🔒 ADMIN ACTIONS
+// � KEY VERIFICATION & SECURITY
+// ==========================================
+
+/**
+ * Verifies that a key exists and can be used by the user
+ * Prevents key sharing and multiple usage across users
+ */
+export async function verifyKeyBelongsToUser(keyId: string, uid: string): Promise<{ valid: boolean; reason?: string; productType?: string }> {
+  try {
+    const cleaned = keyId.trim().toUpperCase();
+    if (!isValidKeyFormat(cleaned)) {
+      return { valid: false, reason: 'صيغة المفتاح غير صحيحة' };
+    }
+
+    const keyRef = doc(db, "keys", cleaned);
+    const keySnap = await getDoc(keyRef);
+
+    if (!keySnap.exists()) {
+      return { valid: false, reason: 'المفتاح غير موجود' };
+    }
+
+    const kd = keySnap.data();
+
+    // Check if key is banned
+    if (kd.status === 'banned') {
+      return { valid: false, reason: 'هذا المفتاح محظور' };
+    }
+
+    // Check if key is frozen
+    if (kd.status === 'frozen') {
+      return { valid: false, reason: 'هذا المفتاح مجمد مؤقتاً' };
+    }
+
+    // Key must belong to this user if already activated
+    if (kd.usedByUid && kd.usedByUid !== uid) {
+      return { valid: false, reason: 'هذا المفتاح مرتبط بحساب آخر ولا يمكن استخدامه' };
+    }
+
+    const productType = kd.productType === 'spoofer' ? 'superstar' : (kd.productType || 'superstar');
+    return { valid: true, productType };
+  } catch (err) {
+    console.error('Key verification error:', err);
+    return { valid: false, reason: 'حدث خطأ في التحقق من المفتاح' };
+  }
+}
+
+// ==========================================
+// �🔒 ADMIN ACTIONS
 // ==========================================
 
 // 📋 Admin Actions Logger
