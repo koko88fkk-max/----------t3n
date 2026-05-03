@@ -2478,12 +2478,12 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
   const [keys, setKeys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'superstar' | 'fortnite' | 'fortnite-hack' | 'used' | 'banned' | 'frozen'>('superstar');
+  const [activeTab, setActiveTab] = useState<'superstar' | 'fortnite' | 'used' | 'banned' | 'frozen'>('superstar');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [createCount, setCreateCount] = useState(1);
-  const [createType, setCreateType] = useState<'superstar' | 'fortnite' | 'fortnite-hack'>('superstar');
+  const [createType, setCreateType] = useState<'superstar' | 'fortnite'>('superstar');
   const [isCreating, setIsCreating] = useState(false);
   const [lastCreated, setLastCreated] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -2501,10 +2501,13 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
     if (createCount < 1 || createCount > 100) return;
     setIsCreating(true);
     try {
-      const created = await createKeys(createCount, createType);
+      const created = await createKeys(createCount, createType as any);
       setLastCreated(created);
       await loadKeys();
-    } catch (e) { console.error('Failed to create keys:', e); }
+    } catch (e: any) { 
+      console.error('Failed to create keys:', e);
+      alert('فشل في إنشاء المفاتيح: ' + (e.message || 'خطأ غير معروف'));
+    }
     setIsCreating(false);
   };
 
@@ -2544,7 +2547,6 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
   const filteredKeys = keys.filter(k => {
     if (activeTab === 'spoofer') return (k.productType === 'superstar' || k.productType === 'spoofer') && k.status !== 'banned' && k.status !== 'frozen';
     if (activeTab === 'fortnite') return k.productType === 'fortnite' && k.status !== 'banned' && k.status !== 'frozen';
-    if (activeTab === 'fortnite-hack') return k.productType === 'fortnite-hack' && k.status !== 'banned' && k.status !== 'frozen';
     if (activeTab === 'used') return k.status === 'active';
     if (activeTab === 'banned') return k.status === 'banned';
     if (activeTab === 'frozen') return k.status === 'frozen';
@@ -2578,10 +2580,9 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
                 <div className="space-y-4">
                   <div>
                     <label className="text-zinc-400 text-xs mb-1 block">المنتج</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button onClick={() => setCreateType('superstar')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Cpu className="w-4 h-4" />سوبر ستار</button>
-                      <button onClick={() => setCreateType('fortnite')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Gamepad2 className="w-4 h-4" />فورت نايت</button>
-                      <button onClick={() => setCreateType('fortnite-hack')} className={`py-3 rounded-xl font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'fortnite-hack' ? 'bg-red-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Crosshair className="w-4 h-4" />هاك فورت</button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => setCreateType('superstar')} className={`py-3 rounded-xl font-bold text-[11px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Gamepad2 className="w-4 h-4" />سوبر ستار</button>
+                      <button onClick={() => setCreateType('fortnite')} className={`py-3 rounded-xl font-bold text-[11px] transition-all flex flex-col items-center justify-center gap-1 ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-400 border border-white/10'}`}><Gamepad2 className="w-4 h-4" />فورت نايت</button>
                     </div>
                   </div>
                   <div>
@@ -2641,9 +2642,8 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
             <div className="lg:col-span-2 order-2">
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">الكل</p><p className="text-xl font-bold text-white">{keys.length}</p></div>
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">سوبر ستار</p><p className="text-xl font-bold text-blue-400">{keys.filter(k => k.productType === 'superstar').length}</p></div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">سوبر ستار</p><p className="text-xl font-bold text-blue-400">{keys.filter(k => k.productType === 'superstar' || k.productType === 'spoofer').length}</p></div>
                 <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">فورت نايت</p><p className="text-xl font-bold text-purple-400">{keys.filter(k => k.productType === 'fortnite').length}</p></div>
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">هاك فورت</p><p className="text-xl font-bold text-red-400">{keys.filter(k => k.productType === 'fortnite-hack').length}</p></div>
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">مُفعّل</p><p className="text-xl font-bold text-emerald-400">{keys.filter(k => k.status === 'active').length}</p></div>
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center"><p className="text-zinc-400 text-xs mb-1">غير مستخدم</p><p className="text-xl font-bold text-blue-400">{keys.filter(k => k.status === 'unused').length}</p></div>
               </div>
@@ -2651,9 +2651,8 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
               {/* Tabs */}
               <div className="flex flex-wrap gap-2 mb-6">
                 {[
-                  { id: 'spoofer' as const, label: 'سوبر ستار', icon: <Cpu className="w-4 h-4" />, color: 'blue' },
+                  { id: 'spoofer' as const, label: 'سوبر ستار', icon: <Gamepad2 className="w-4 h-4" />, color: 'blue' },
                   { id: 'fortnite' as const, label: 'فورت نايت', icon: <Gamepad2 className="w-4 h-4" />, color: 'purple' },
-                  { id: 'fortnite-hack' as const, label: 'هاك فورت', icon: <Crosshair className="w-4 h-4" />, color: 'red' },
                   { id: 'used' as const, label: 'المستخدمة', icon: <CheckCircle2 className="w-4 h-4" />, color: 'emerald' },
                   { id: 'banned' as const, label: 'المحظورة', icon: <Ban className="w-4 h-4" />, color: 'red' },
                   { id: 'frozen' as const, label: 'المجمدة', icon: <Snowflake className="w-4 h-4" />, color: 'cyan' },
@@ -2836,41 +2835,34 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
           ) : stats ? (
             <>
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-gradient-to-br from-blue-600/20 to-blue-800/10 border border-blue-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="w-5 h-5 text-blue-400" />
-                    <span className="text-zinc-400 text-xs">المستخدمين</span>
+                    <span className="text-zinc-400 text-xs font-bold">إجمالي المستخدمين</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-gradient-to-br from-yellow-600/20 to-amber-800/10 border border-blue-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-5 h-5 text-blue-400" />
-                    <span className="text-zinc-400 text-xs">VIP</span>
+                    <span className="text-zinc-400 text-xs font-bold">مفعلين (VIP)</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.vipUsers}</p>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-gradient-to-br from-emerald-600/20 to-green-800/10 border border-emerald-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Key className="w-5 h-5 text-emerald-400" />
-                    <span className="text-zinc-400 text-xs">المفاتيح</span>
+                    <span className="text-zinc-400 text-xs font-bold">إجمالي المفاتيح</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.totalKeys}</p>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-gradient-to-br from-red-600/20 to-red-800/10 border border-red-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <ShieldOff className="w-5 h-5 text-red-400" />
-                    <span className="text-zinc-400 text-xs">محظورين</span>
+                    <span className="text-zinc-400 text-xs font-bold">المحظورين</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.bannedCount}</p>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-gradient-to-br from-cyan-600/20 to-teal-800/10 border border-cyan-500/20 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MonitorPlay className="w-5 h-5 text-cyan-400" />
-                    <span className="text-zinc-400 text-xs">زيارات الموقع</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{stats.totalVisits?.toLocaleString() || 0}</p>
                 </motion.div>
               </div>
 
@@ -2901,7 +2893,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   </div>
                   <input 
                     type="text" 
-                    placeholder="ابحث بالإيميل أو الـ ID..." 
+                    placeholder="ابحث بالإيميل، الديسكورد، أو الـ ID..." 
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pr-12 pl-4 text-white focus:outline-none focus:border-blue-500 transition-all font-bold"
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
@@ -2915,8 +2907,9 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   <div className="overflow-x-auto">
                     <table className="w-full text-right">
                       <thead>
-                        <tr className="border-b border-white/10 bg-white/5">
+                        <tr className="border-b border-white/10 bg-white/5 text-center">
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">ID</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">المستخدم (ديسكورد)</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">المفتاح</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الحالة</th>
@@ -2925,10 +2918,21 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.users.filter((u:any) => u.verifiedKey && (u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || getNumericId(u.id).includes(userSearchTerm))).map((u: any, i: number) => (
-                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                        {stats.users.filter((u:any) => u.verifiedKey && (
+                          u.email?.includes(userSearchTerm) || 
+                          u.displayName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                          u.id?.includes(userSearchTerm.toLowerCase()) || 
+                          getNumericId(u.id, u.assignedId).includes(userSearchTerm)
+                        )).map((u: any, i: number) => (
+                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors text-center ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                             <td className="px-4 py-3">
-                              <span className="text-[10px] text-blue-400 font-mono font-bold">{getNumericId(u.id)}</span>
+                              <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-lg font-mono font-bold shadow-[0_0_10px_rgba(59,130,246,0.1)]">{getNumericId(u.id, u.assignedId)}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-2">
+                                {u.photoURL ? <img src={u.photoURL} className="w-6 h-6 rounded-full border border-white/10" alt="" /> : <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><Users className="w-3 h-3 text-zinc-500" /></div>}
+                                <span className="text-white text-xs font-bold truncate max-w-[120px]">{u.displayName || 'بدون اسم'}</span>
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
@@ -2990,21 +2994,32 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   <div className="overflow-x-auto">
                     <table className="w-full text-right">
                       <thead>
-                        <tr className="border-b border-white/10 bg-white/5">
+                        <tr className="border-b border-white/10 bg-white/5 text-center">
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">ID</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">المستخدم (ديسكورد)</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الدولة</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الحالة</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">آخر دخول</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">تاريخ التسجيل</th>
                           <th className="px-4 py-3 text-zinc-400 text-xs font-bold">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.users.filter((u:any) => u.email?.includes(userSearchTerm) || u.id?.includes(userSearchTerm.toLowerCase()) || getNumericId(u.id).includes(userSearchTerm)).sort((a:any,b:any)=>(b.lastLoginAt||'').localeCompare(a.lastLoginAt||'')).map((u: any, i: number) => (
-                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                        {stats.users.filter((u:any) => 
+                          u.email?.includes(userSearchTerm) || 
+                          u.displayName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                          u.id?.includes(userSearchTerm.toLowerCase()) || 
+                          getNumericId(u.id, u.assignedId).includes(userSearchTerm)
+                        ).sort((a:any,b:any)=>(b.lastLoginAt||'').localeCompare(a.lastLoginAt||'')).map((u: any, i: number) => (
+                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors text-center ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                             <td className="px-4 py-3">
-                              <span className="text-[10px] text-blue-400 font-mono font-bold">{getNumericId(u.id)}</span>
+                              <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-lg font-mono font-bold">{getNumericId(u.id, u.assignedId)}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-2">
+                                {u.photoURL ? <img src={u.photoURL} className="w-6 h-6 rounded-full border border-white/10" alt="" /> : <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><Users className="w-3 h-3 text-zinc-500" /></div>}
+                                <span className="text-white text-xs font-bold truncate max-w-[120px]">{u.displayName || 'بدون اسم'}</span>
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">

@@ -43,7 +43,7 @@ export default async function handler(req, res) {
   }
 
   // Validate and clean key format
-  const cleaned = String(keyId).trim().toUpperCase();
+  const cleaned = String(keyId).trim();
   
   if (!isValidKeyFormat(cleaned)) {
     return res.status(400).json({ success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' });

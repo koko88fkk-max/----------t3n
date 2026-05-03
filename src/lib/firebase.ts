@@ -291,7 +291,7 @@ export async function checkUserVIP(uid: string) {
 // ==========================================
 
 function generateKeyId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let part1 = '', part2 = '';
   for (let i = 0; i < 6; i++) {
     part1 += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -307,12 +307,12 @@ export function isValidKeyFormat(value: string): boolean {
   return /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(trimmed);
 }
 
-export async function createKeys(count: number, productType: 'fortnite' | 'superstar' | 'fortnite-hack'): Promise<string[]> {
+export async function createKeys(count: number, productType: 'fortnite' | 'superstar'): Promise<string[]> {
   if (!count || count < 1 || count > 100) {
     throw new Error('عدد المفاتيح يجب أن يكون بين 1 و 100');
   }
 
-  if (!productType || !['fortnite', 'superstar', 'fortnite-hack'].includes(productType)) {
+  if (!productType || !['fortnite', 'superstar'].includes(productType)) {
     throw new Error('نوع المنتج غير صحيح');
   }
 
