@@ -241,64 +241,12 @@ function Hero() {
 function CustomVideoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState('0:00');
-  const [durationText, setDurationText] = useState('0:00');
-  const [isMuted, setIsMuted] = useState(false);
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) videoRef.current.pause();
-      else videoRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const current = videoRef.current.currentTime;
-      const dur = videoRef.current.duration;
-      setProgress((current / dur) * 100);
-      setCurrentTime(formatTime(current));
-    }
-  };
-
-  const handleLoadedData = () => {
-    if (videoRef.current) {
-      setDurationText(formatTime(videoRef.current.duration));
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
-  };
-
-  const toggleFullScreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
-    }
-  };
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (videoRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const pos = (e.clientX - rect.left) / rect.width;
-      videoRef.current.currentTime = pos * videoRef.current.duration;
-    }
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play(); setIsPlaying(true); }
+    else { v.pause(); setIsPlaying(false); }
   };
 
   return (
@@ -309,19 +257,10 @@ function CustomVideoPlayer() {
         poster="/site-guide-poster.jpg"
         className="w-full aspect-video object-contain outline-none bg-black cursor-pointer"
         onClick={togglePlay}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedData={handleLoadedData}
-        onContextMenu={(e) => e.preventDefault()}
-        controlsList="nodownload"
-        playsInline
+        controls
         preload="metadata"
       />
->>>>>>> 1b7b926 (fix(hero): prevent blur covering title)
-      
-      <motion.button onClick={() => document.getElementById('delivery')?.scrollIntoView({ behavior: 'smooth' })} className="mt-8 w-full max-w-md px-6 flex items-center justify-center">
-        <div className="w-full py-4 glass border border-white/10 rounded-2xl text-zinc-500 font-bold hover:text-blue-400 transition-all flex items-center justify-center gap-2"># بوابة الاستلام</div>
-      </motion.button>
-    </section>
+    </div>
   );
 }
 
