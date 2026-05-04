@@ -137,18 +137,186 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
 
 function Hero() {
   return (
-    <section className="relative pt-40 pb-20 overflow-hidden flex flex-col items-center">
-      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="mb-6 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold animate-pulse-blue">وجهتك الأولى للمنتجات الرقمية</motion.div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-24 h-24 rounded-[20px] glass border-2 border-blue-500/50 flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.3)] mb-8">
-        <img src={LOGO_URL} className="w-16 h-16 object-contain" alt="" />
-      </motion.div>
-      <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight glow-text">تعن T3N</motion.h1>
-      <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-zinc-400 text-lg md:text-xl max-w-2xl text-center mb-12 px-6">وجهتك الأولى للمنتجات الرقمية الفاخرة. استمتع بتجربة استثنائية، جودة عالية، وموثوقية لا تضاهى.</motion.p>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      {/* Ambient Lighting */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.08, 0.15, 0.08]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-blue-500/30 blur-[120px] rounded-full mix-blend-screen" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.05, 0.12, 0.05]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen" 
+        />
+      </div>
       
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col sm:flex-row gap-4 w-full max-w-md px-6">
-        <a href={STORE_URL} target="_blank" className="btn-primary py-4 rounded-2xl flex-1 text-center font-bold flex items-center justify-center gap-2 shadow-lg"><ShoppingBag className="w-5 h-5" /> تصفح المتجر</a>
-        <a href={DISCORD_URL} target="_blank" className="btn-ghost py-4 rounded-2xl flex-1 text-center font-bold flex items-center justify-center gap-2"><MessageCircle className="w-5 h-5" /> مجتمع ديسكورد</a>
-      </motion.div>
+      <div className="container mx-auto px-4 relative z-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex flex-col items-center"
+        >
+          <motion.div 
+            animate={{ y: [-10, 10, -10] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="relative mb-8"
+          >
+            <div className="absolute inset-0 bg-blue-500/20 blur-[60px] rounded-full pointer-events-none -z-10" />
+            <div className="relative z-10 p-2 rounded-3xl bg-white/5 border border-blue-500/20 shadow-[0_20px_50px_rgba(59,130,246,0.15)] backdrop-blur-md">
+              <img src={LOGO_URL} alt="تعن T3N" className="w-40 h-40 md:w-48 md:h-48 object-contain rounded-2xl" />
+            </div>
+          </motion.div>
+          
+          <h1 className="relative z-20 text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text text-gradient-gold drop-shadow-2xl">
+            تعن T3N
+          </h1>
+          <p className="text-lg md:text-xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium px-4">
+            وجهتك الأولى للمنتجات الرقمية الفاخرة. استمتع بتجربة استثنائية، جودة عالية، وموثوقية لا تضاهى.
+          </p>
+          
+          <div className="flex flex-col gap-4 justify-center items-center mt-4 w-full max-w-md mx-auto">
+            {/* Site Guide Button */}
+            <motion.button 
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(255,255,255,0.1)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => document.getElementById('delivery')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-8 py-4 glass-panel text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all w-full relative overflow-hidden group border-white/20"
+            >
+              <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <Hash className="w-5 h-5 text-blue-400 relative z-10" />
+              <span className="relative z-10 tracking-wide">بوابة الاستلام</span>
+            </motion.button>
+            
+            {/* Store and Discord Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full">
+              <motion.a 
+                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59,130,246,0.4)" }}
+                whileTap={{ scale: 0.95 }}
+                href={STORE_URL} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="px-8 py-4 bg-gradient-gold text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(59,130,246,0.2)] transition-all w-full sm:flex-1 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-2xl" />
+                <ShoppingBag className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">تصفح المتجر</span>
+              </motion.a>
+              <motion.a 
+                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(88,101,242,0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                href={DISCORD_URL} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="px-8 py-4 glass-panel text-[#5865F2] font-bold rounded-2xl hover:bg-[#5865F2]/10 flex items-center justify-center gap-2 transition-colors w-full sm:flex-1"
+              >
+                <MessageCircle className="w-5 h-5" />
+                مجتمع ديسكورد
+              </motion.a>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="mt-20 flex justify-center w-full text-zinc-500 animate-bounce"
+        >
+          <ChevronDown className="w-8 h-8" />
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function CustomVideoPlayer() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState('0:00');
+  const [durationText, setDurationText] = useState('0:00');
+  const [isMuted, setIsMuted] = useState(false);
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const current = videoRef.current.currentTime;
+      const dur = videoRef.current.duration;
+      setProgress((current / dur) * 100);
+      setCurrentTime(formatTime(current));
+    }
+  };
+
+  const handleLoadedData = () => {
+    if (videoRef.current) {
+      setDurationText(formatTime(videoRef.current.duration));
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  const toggleFullScreen = () => {
+    if (videoRef.current) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        videoRef.current.requestFullscreen();
+      }
+    }
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (videoRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      videoRef.current.currentTime = pos * videoRef.current.duration;
+    }
+  };
+
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_40px_rgba(37,99,235,0.2)] bg-black/80 relative group">
+      <video
+        ref={videoRef}
+        src="/site-guide-vid.mp4"
+        poster="/site-guide-poster.jpg"
+        className="w-full aspect-video object-contain outline-none bg-black cursor-pointer"
+        onClick={togglePlay}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedData={handleLoadedData}
+        onContextMenu={(e) => e.preventDefault()}
+        controlsList="nodownload"
+        playsInline
+        preload="metadata"
+      />
+>>>>>>> 1b7b926 (fix(hero): prevent blur covering title)
       
       <motion.button onClick={() => document.getElementById('delivery')?.scrollIntoView({ behavior: 'smooth' })} className="mt-8 w-full max-w-md px-6 flex items-center justify-center">
         <div className="w-full py-4 glass border border-white/10 rounded-2xl text-zinc-500 font-bold hover:text-blue-400 transition-all flex items-center justify-center gap-2"># بوابة الاستلام</div>
