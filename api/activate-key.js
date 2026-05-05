@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     const keyRef = db.collection('keys').doc(cleaned);
     const keySnap = await keyRef.get();
 
-    if (!keySnap.exists()) {
+    if (!keySnap.exists) {
       return res.status(404).json({ success: false, error: 'المفتاح غير موجود في النظام' });
     }
 
