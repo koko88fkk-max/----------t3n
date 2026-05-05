@@ -133,6 +133,28 @@ export default async function handler(req, res) {
       verifiedAt: now.toISOString()
     }, { merge: true });
 
+    // ==== Auto-Assign Discord Role ====
+    if (uid.startsWith('discord_')) {
+      const discordId = uid.replace('discord_', '');
+      const BOT_TOKEN = process.env.BOT_TOKEN;
+      const GUILD_ID = process.env.GUILD_ID || '1396959491786018826';
+      const ROLE_ID = process.env.ROLE_ID || '1397221350095192074';
+      
+      if (BOT_TOKEN) {
+        try {
+          await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${ROLE_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bot ${BOT_TOKEN}`
+            }
+          });
+          console.log(`Assigned role ${ROLE_ID} to ${discordId} automatically.`);
+        } catch (err) {
+          console.error('Failed to assign Discord role automatically:', err);
+        }
+      }
+    }
+
     return res.status(200).json({ 
       success: true, 
       productType: pt, 

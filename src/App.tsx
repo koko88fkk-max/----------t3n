@@ -441,6 +441,65 @@ function Rules() {
   );
 }
 
+function VIPArea({ userProfile }: any) {
+  if (!userProfile?.isVIP) return null;
+
+  return (
+    <section id="vip-area" className="py-24 bg-gradient-to-b from-blue-900/20 to-transparent border-y border-blue-500/20 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+      <div className="container mx-auto px-6 text-center relative z-10">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="text-4xl md:text-5xl font-black text-white mb-6 flex justify-center items-center gap-4"
+        >
+          <ShieldCheck className="text-emerald-400 w-12 h-12" /> منطقة الأعضاء VIP
+        </motion.h2>
+        <p className="text-zinc-300 mb-12 max-w-2xl mx-auto text-lg font-medium">
+          مرحباً بك! لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الدخول لسيرفر الديسكورد برتبتك، تحميل الملفات، ومشاهدة الشروحات الحصرية.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Discord Card */}
+          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-[#5865F2]/50 transition-all flex flex-col items-center shadow-xl">
+            <div className="w-20 h-20 rounded-full bg-[#5865F2]/20 flex items-center justify-center text-[#5865F2] mb-6 shadow-inner">
+              <MessageCircle className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">رتبة الديسكورد</h3>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">تم منحك الرتبة تلقائياً! ادخل السيرفر الآن وتفاعل مع المشتركين واستمتع بالدعم المباشر.</p>
+            <a href={DISCORD_URL} target="_blank" className="w-full py-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(88,101,242,0.4)] hover:shadow-[0_0_30px_rgba(88,101,242,0.6)]">
+              دخول السيرفر
+            </a>
+          </motion.div>
+
+          {/* Download Card */}
+          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-emerald-500/50 transition-all flex flex-col items-center shadow-xl">
+            <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 shadow-inner">
+              <Download className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">تحميل الملفات</h3>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">حمل أحدث إصدارات اللودر والبرامج بضغطة زر واحدة عبر خوادمنا السريعة والمشفرة.</p>
+            <button className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)]">
+              التحميل الان
+            </button>
+          </motion.div>
+
+          {/* Tutorial Card */}
+          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-purple-500/50 transition-all flex flex-col items-center shadow-xl">
+            <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 shadow-inner">
+              <Play className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">الشروحات</h3>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">تعلم كيفية التركيب والاستخدام خطوة بخطوة من خلال فيديوهات شرح مفصلة وحصرية لك.</p>
+            <button className="w-full py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)]">
+              مشاهدة الشرح
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Footer() {
   return (
     <footer className="py-12 border-t border-white/5 container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -610,6 +669,7 @@ export default function App() {
           loading={activationLoading}
           result={activationResult}
         />
+        {userProfile?.isVIP && <VIPArea userProfile={userProfile} />}
         <Products />
         <Reviews />
         <Rules />
