@@ -135,7 +135,7 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
   const [createType, setCreateType] = useState<'superstar' | 'fortnite'>('superstar');
   const [lastCreated, setLastCreated] = useState<string[]>([]);
   const [createError, setCreateError] = useState('');
-  const [activeTab, setActiveTab] = useState<'superstar' | 'fortnite'>('superstar');
+  const [activeTab, setActiveTab] = useState<'superstar' | 'fortnite' | 'used'>('superstar');
 
   const load = async () => { setLoading(true); try { setKeys(await getAllKeys()); } catch(e){} setLoading(false); };
   useEffect(() => { load(); }, []);
@@ -145,15 +145,16 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
     setIsCreating(true); setCreateError('');
     try {
       const c = await createKeys(Math.min(100, Math.max(1, createCount)), createType);
-      if (c.length === 0) setCreateError('فشل في الإنشاء');
+      if (c.length === 0) setCreateError('فشل في الإنشاء: ربما بسبب الصلاحيات أو عدم الاتصال بقاعدة البيانات');
       else { setLastCreated(c); await load(); }
-    } catch (e: any) { setCreateError(e.message || 'خطأ'); }
+    } catch (e: any) { console.error(e); setCreateError(e.message || 'خطأ غير معروف أثناء الإنشاء'); }
     setIsCreating(false);
   };
 
-  const spooferKeys = keys.filter(k => k.productType === 'superstar' || k.productType === 'spoofer');
-  const fortniteKeys = keys.filter(k => k.productType === 'fortnite');
-  const currentKeys = activeTab === 'superstar' ? spooferKeys : fortniteKeys;
+  const spooferKeys = keys.filter(k => (k.productType === 'superstar' || k.productType === 'spoofer') && k.status !== 'active');
+  const fortniteKeys = keys.filter(k => k.productType === 'fortnite' && k.status !== 'active');
+  const usedKeys = keys.filter(k => k.status === 'active');
+  const currentKeys = activeTab === 'superstar' ? spooferKeys : activeTab === 'fortnite' ? fortniteKeys : usedKeys;
 
   const totalUnused = keys.filter(k => k.status === 'unused').length;
   const totalUsed = keys.filter(k => k.status === 'active').length;
@@ -214,12 +215,15 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Product Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <button onClick={() => setActiveTab('superstar')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
             <Gamepad2 className="w-4 h-4" /> مفاتيح السبوفر ({spooferKeys.length})
           </button>
           <button onClick={() => setActiveTab('fortnite')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
             <Gamepad2 className="w-4 h-4" /> مفاتيح فورت نايت ({fortniteKeys.length})
+          </button>
+          <button onClick={() => setActiveTab('used')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'used' ? 'bg-emerald-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+            <CheckCircle2 className="w-4 h-4" /> المستخدمة ({usedKeys.length})
           </button>
         </div>
 
@@ -233,7 +237,16 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
               <tbody>
                 {currentKeys.map(k => (
                   <tr key={k.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                    <td className="p-3"><span className="font-mono text-[11px] text-zinc-300">{k.id}</span></td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        {k.productType === 'fortnite' ? (
+                          <span title="مخصص لفورت نايت" className="bg-purple-500/20 text-purple-400 p-1 rounded-md"><Gamepad2 className="w-3 h-3" /></span>
+                        ) : (
+                          <span title="مخصص للسبوفر" className="bg-blue-500/20 text-blue-400 p-1 rounded-md"><Gamepad2 className="w-3 h-3" /></span>
+                        )}
+                        <span className="font-mono text-[11px] text-zinc-300">{k.id}</span>
+                      </div>
+                    </td>
                     <td className="p-3"><StatusBadge status={k.status} /></td>
                     <td className="p-3 text-zinc-500 text-[10px]">{k.usedByName || '-'}</td>
                     <td className="p-3 text-zinc-600 text-[10px]">{k.activatedAt ? new Date(k.activatedAt).toLocaleDateString('ar') : '-'}</td>
