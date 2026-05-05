@@ -64,9 +64,9 @@ export async function loginWithGoogle() {
           assignedId = await runTransaction(db, async (transaction) => {
             const counterRef = doc(db, "counters", "users");
             const counterSnap = await transaction.get(counterRef);
-            let newCount = 100;
+            let newCount = 1;
             if (counterSnap.exists()) {
-              newCount = (counterSnap.data().count || 99) + 1;
+              newCount = (counterSnap.data().count || 0) + 1;
             }
             transaction.set(counterRef, { count: newCount }, { merge: true });
             return newCount;
@@ -868,5 +868,45 @@ export async function wipeAllLegacyData() {
     }, { merge: true });
   }
 
+  return true;
+}
+
+// 🗑️ Reset all users and counter (admin only - fresh start)
+export async function resetAllUsersAndCounter() {
+  // Delete all user documents
+  const usersSnap = await getDocs(collection(db, "users"));
+  for (const userDoc of usersSnap.docs) {
+    await deleteDoc(doc(db, "users", userDoc.id));
+  }
+
+  // Delete all banned users
+  const bannedSnap = await getDocs(collection(db, "bannedUsers"));
+  for (const bannedDoc of bannedSnap.docs) {
+    await deleteDoc(doc(db, "bannedUsers", bannedDoc.id));
+  }
+
+  // Reset counter to 0 so next user gets ID 1
+  const counterRef = doc(db, "counters", "users");
+  await setDoc(counterRef, { count: 0 });
+
+  // Unlink all keys from users (but keep keys)
+  const keysSnap = await getDocs(collection(db, "keys"));
+  for (const keyDoc of keysSnap.docs) {
+    const kd = keyDoc.data();
+    if (kd.usedByUid) {
+      await setDoc(doc(db, "keys", keyDoc.id), {
+        status: 'unused',
+        usedByUid: null,
+        usedByEmail: null,
+        usedByName: null,
+        usedByPhoto: null,
+        usedByProvider: null,
+        activatedAt: null,
+        activationCount: 0
+      }, { merge: true });
+    }
+  }
+
+  await logAdminAction('WIPE_ALL_USERS', 'Wiped all user accounts and reset ID counter');
   return true;
 }

@@ -15,10 +15,11 @@ import {
   deleteKey, deleteAllKeys, banKey, unbanKey, freezeKey, unfreezeKey, 
   isValidKeyFormat, trackSiteVisit, checkKeyStatus, createKeys, 
   listenToNotifications, deleteNotification, listenToMaintenanceMode, 
-  toggleMaintenanceMode, getUserData 
+  toggleMaintenanceMode, getUserData, resetAllUsersAndCounter 
 } from './lib/firebase';
 import { onAuthStateChanged, User, signInWithCustomToken } from 'firebase/auth';
 import LoginModal from './LoginModal';
+import { AdminDashboard, KeyManagement } from './AdminComponents';
 
 const LOGO_URL = "/logo.png";
 const STORE_URL = "https://salla.sa/t3nn";
@@ -330,12 +331,7 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result }: any) 
               <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400"><MonitorPlay className="w-6 h-6" /></div>
               <div><h3 className="text-xl font-black text-white">فيديو الشرح</h3><p className="text-zinc-500 text-sm">شاهد هذا المقطع لمعرفة كيفية استلام المنتج</p></div>
             </div>
-            <div className="aspect-video bg-black rounded-2xl relative overflow-hidden group cursor-pointer border border-white/10 shadow-2xl">
-              <img src="/site-guide-poster.jpg" className="w-full h-full object-cover opacity-60" alt="" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600/80 backdrop-blur flex items-center justify-center text-white group-hover:scale-110 transition-transform"><Play className="w-6 h-6 fill-current" /></div>
-              </div>
-            </div>
+            <CustomVideoPlayer />
           </div>
 
           {/* Right Card: Activation */}
@@ -383,26 +379,32 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result }: any) 
 }
 
 function Reviews() {
+  const reviewImages = [
+    '0092536c-2359-46e6-9687-68bd8a63ab2a.jpg','148a0680-d94f-4872-8edc-baae55fb99c3.png',
+    '15b5fba4-c8cd-410a-ba44-a40b387006be.jpg','1cf6fde4-f699-48c1-b138-62b31d85481e.png',
+    '1edfc461-eafa-4876-9be9-de6b668c0410.jpg','3db92eae-f863-4bf2-b642-b1a7065e6141.jpg',
+    '5766c4f7-aabf-4859-a93f-809699dde917.jpg','666acf6b-07d4-4764-84ec-7ed1886e0dd7.jpg',
+    '6d44bcab-1467-4c02-bb58-6ac082c30616.png','6d8059c1-8fb0-4374-8825-72ef42b4e67a.jpg',
+    '8801a17d-01f2-4f58-9810-2155bc2ebdd2.jpg','93081051-6699-465a-a156-0f1d15b01a5a.jpg',
+    'a06a962f-6c53-488c-a8c8-af98e10ce1a7.jpg','d4c3fce5-32ea-4b0d-af20-f64fe1b66b8d.jpg',
+    'ef94177f-cb9c-42b1-8f54-995b3c33385d.jpg','f6cfed1a-8c23-41d9-85f7-e1d33961e2b8.jpg',
+  ];
   return (
     <section id="reviews" className="py-24 container mx-auto px-6">
-      <div className="text-center mb-16">
+      <div className="text-center mb-12">
+        <div className="flex justify-center gap-2 mb-4">{[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />)}</div>
         <h2 className="text-4xl font-black text-white mb-2">آراء العملاء</h2>
-        <p className="text-zinc-500">تقييمات عملائنا من متجر سلة</p>
+        <p className="text-zinc-500">تقييمات حقيقية من عملائنا الكرام</p>
       </div>
-      
-      <div className="max-w-4xl mx-auto glass rounded-[40px] p-20 border border-white/5 relative overflow-hidden flex flex-col items-center justify-center group">
-        <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full" />
-        <div className="relative z-10 flex flex-col items-center gap-6">
-          <div className="flex gap-2">
-            {[1,2,3,4,5].map(i => <Star key={i} className="w-6 h-6 text-yellow-500 fill-yellow-500" />)}
-          </div>
-          <h3 className="text-4xl md:text-5xl font-black text-white text-center">مئات التقييمات الإيجابية</h3>
-          <a href={STORE_URL} target="_blank" className="btn-primary px-8 py-4 rounded-2xl font-bold flex items-center gap-2 mt-4">عرض التقييمات</a>
-        </div>
-        
-        {/* Decorative reviews behind */}
-        <div className="absolute -bottom-10 -right-10 w-64 h-32 glass opacity-20 rotate-12 rounded-2xl border border-white/20 blur-[2px]" />
-        <div className="absolute top-10 -left-10 w-64 h-32 glass opacity-20 -rotate-12 rounded-2xl border border-white/20 blur-[2px]" />
+      <div className="columns-2 md:columns-3 lg:columns-4 gap-4 max-w-6xl mx-auto">
+        {reviewImages.map((img, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="mb-4 break-inside-avoid">
+            <img src={`/reviews/${img}`} className="w-full rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all hover:scale-[1.02] pointer-events-auto" alt={`تقييم ${i+1}`} style={{pointerEvents:'auto'}} />
+          </motion.div>
+        ))}
+      </div>
+      <div className="text-center mt-10">
+        <a href={STORE_URL} target="_blank" className="btn-primary px-8 py-4 rounded-2xl font-bold inline-flex items-center gap-2">عرض المزيد من التقييمات</a>
       </div>
     </section>
   );
@@ -500,9 +502,9 @@ export default function App() {
               assignedId = await runTransaction(db, async (transaction: any) => {
                 const counterRef = doc(db, 'counters', 'users');
                 const counterSnap = await transaction.get(counterRef);
-                let newCount = 100;
+                let newCount = 1;
                 if (counterSnap.exists()) {
-                  newCount = (counterSnap.data().count || 99) + 1;
+                  newCount = (counterSnap.data().count || 0) + 1;
                 }
                 transaction.set(counterRef, { count: newCount }, { merge: true });
                 return newCount;
@@ -633,163 +635,5 @@ export default function App() {
         {showKeyManagement && <KeyManagement onClose={() => setShowKeyManagement(false)} />}
       </AnimatePresence>
     </div>
-  );
-}
-
-// ==========================================
-// 🛡️ Admin Components (Minimal implementation to keep logic alive)
-// ==========================================
-
-function AdminDashboard({ onClose }: { onClose: () => void }) {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'logins' | 'keys' | 'admins'>('users');
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-
-  const loadStats = async () => {
-    setLoading(true);
-    const data = await getAdminStats();
-    setStats(data);
-    setLoading(false);
-  };
-
-  useEffect(() => { loadStats(); }, []);
-
-  return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-xl p-6 md:p-12 overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-black text-white flex items-center gap-3"><LayoutDashboard className="text-red-500" /> لوحة التحكم</h2>
-          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-red-500/20"><X /></button>
-        </div>
-        
-        {loading ? <div className="flex justify-center py-20"><RefreshCw className="animate-spin text-white w-10 h-10" /></div> : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="glass p-6 rounded-3xl border border-white/5"><span className="text-zinc-500 text-xs font-bold">المستخدمين</span><p className="text-3xl font-black text-white">{stats.totalUsers}</p></div>
-              <div className="glass p-6 rounded-3xl border border-white/5"><span className="text-zinc-500 text-xs font-bold">VIP</span><p className="text-3xl font-black text-white">{stats.vipUsers}</p></div>
-              <div className="glass p-6 rounded-3xl border border-white/5"><span className="text-zinc-400 text-xs font-bold">المفاتيح</span><p className="text-3xl font-black text-white">{stats.totalKeys}</p></div>
-              <div className="glass p-6 rounded-3xl border border-white/5"><span className="text-zinc-500 text-xs font-bold">المحظورين</span><p className="text-3xl font-black text-white">{stats.bannedCount}</p></div>
-            </div>
-            
-            <div className="flex gap-2 bg-white/5 p-1 rounded-2xl w-fit">
-              <button onClick={() => setActiveTab('users')} className={`px-6 py-2 rounded-xl font-bold text-sm ${activeTab === 'users' ? 'bg-white/10 text-white' : 'text-zinc-500'}`}>أصحاب المفاتيح</button>
-              <button onClick={() => setActiveTab('logins')} className={`px-6 py-2 rounded-xl font-bold text-sm ${activeTab === 'logins' ? 'bg-white/10 text-white' : 'text-zinc-500'}`}>تسجيلات الدخول</button>
-            </div>
-
-            <input type="text" placeholder="ابحث بالإيميل أو الاسم أو الـ ID..." className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold" value={userSearchTerm} onChange={(e) => setUserSearchTerm(e.target.value)} />
-
-            <div className="glass rounded-3xl overflow-hidden border border-white/5">
-              <table className="w-full text-right text-sm">
-                <thead><tr className="bg-white/5 text-zinc-400 border-b border-white/10"><th className="p-4">ID</th><th className="p-4">المستخدم</th><th className="p-4">المفتاح</th><th className="p-4">إجراءات</th></tr></thead>
-                <tbody>
-                  {stats.users.filter((u:any) => u.email?.includes(userSearchTerm) || u.displayName?.toLowerCase().includes(userSearchTerm.toLowerCase())).map((u:any) => (
-                    <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="p-4"><span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md font-mono">{getNumericId(u.id, u.assignedId)}</span></td>
-                      <td className="p-4 flex items-center gap-2"><img src={u.photoURL} className="w-6 h-6 rounded-full" /> {u.displayName}</td>
-                      <td className="p-4 text-zinc-400 font-mono">{u.verifiedKey || '-'}</td>
-                      <td className="p-4">
-                        <button onClick={async () => { if(confirm('حظر؟')) { await banUser(u.id, u.email, 'Admin'); loadStats(); } }} className="text-red-500 p-2 hover:bg-red-500/10 rounded-lg"><ShieldOff className="w-4 h-4" /></button>
-                        <button onClick={async () => { if(confirm('حذف؟')) { await deleteUserData(u.id); loadStats(); } }} className="text-zinc-500 p-2 hover:bg-white/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>, document.body
-  );
-}
-
-function KeyManagement({ onClose }: { onClose: () => void }) {
-  const [keys, setKeys] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createCount, setCreateCount] = useState(1);
-  const [createType, setCreateType] = useState<'superstar' | 'fortnite'>('superstar');
-  const [lastCreated, setLastCreated] = useState<string[]>([]);
-  const [createError, setCreateError] = useState('');
-
-  const loadKeys = async () => {
-    setLoading(true);
-    try {
-      const data = await getAllKeys();
-      setKeys(data);
-    } catch (e) { console.error('Failed to load keys:', e); }
-    setLoading(false);
-  };
-
-  useEffect(() => { loadKeys(); }, []);
-
-  const handleCreate = async () => {
-    if (isCreating) return;
-    if (createCount < 1 || createCount > 100) { setCreateError('العدد يجب أن يكون بين 1 و 100'); return; }
-    setIsCreating(true);
-    setCreateError('');
-    try {
-      const created = await createKeys(createCount, createType);
-      if (created.length === 0) {
-        setCreateError('فشل في إنشاء المفاتيح. تأكد من صلاحيات قاعدة البيانات.');
-      } else {
-        setLastCreated(created);
-        await loadKeys();
-      }
-    } catch (e: any) {
-      console.error('Key creation error:', e);
-      setCreateError(e.message || 'حدث خطأ غير متوقع أثناء إنشاء المفاتيح');
-    }
-    setIsCreating(false);
-  };
-
-  return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-xl p-6 md:p-12 overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-black text-white flex items-center gap-3"><Key className="text-emerald-500" /> إدارة المفاتيح</h2>
-          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-red-500/20"><X /></button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="glass p-8 rounded-[32px] border border-white/5 space-y-6">
-            <h3 className="text-xl font-bold text-white">إنشاء مفاتيح</h3>
-            <div className="flex gap-2">
-              <button onClick={() => setCreateType('superstar')} className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> سوبر ستار</button>
-              <button onClick={() => setCreateType('fortnite')} className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> فورت نايت</button>
-            </div>
-            <input type="number" min="1" max="100" value={createCount} onChange={(e) => setCreateCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-center font-black" />
-            <button onClick={handleCreate} disabled={isCreating} className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3">
-              {isCreating ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري الإنشاء...</> : <>إنشاء {createCount} مفتاح</>}
-            </button>
-            
-            {createError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-bold text-center">{createError}</div>}
-            
-            {lastCreated.length > 0 && (
-              <div className="p-4 bg-black/50 rounded-2xl border border-emerald-500/20 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-emerald-400 text-xs font-bold">✅ تم إنشاء {lastCreated.length} مفتاح</span>
-                  <button onClick={() => navigator.clipboard.writeText(lastCreated.join('\n'))} className="text-emerald-400 text-xs font-bold underline hover:text-emerald-300">نسخ الكل</button>
-                </div>
-                <div className="max-h-32 overflow-y-auto text-xs font-mono text-zinc-400">{lastCreated.map(k => <div key={k} className="py-0.5">{k}</div>)}</div>
-              </div>
-            )}
-          </div>
-
-          <div className="glass p-8 rounded-[32px] border border-white/5 flex flex-col gap-4">
-            <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-white">المفاتيح المتاحة</h3><button onClick={loadKeys}><RefreshCw className={`w-4 h-4 text-zinc-500 ${loading ? 'animate-spin' : ''}`} /></button></div>
-            <div className="max-h-96 overflow-y-auto space-y-2">
-              {keys.filter(k => k.status === 'unused').map(k => (
-                <div key={k.id} className="p-3 bg-white/5 rounded-xl flex items-center justify-between border border-white/5">
-                  <span className="text-xs font-mono text-zinc-300">{k.id}</span>
-                  <button onClick={async () => { if(confirm('حذف؟')) { await deleteKey(k.id); loadKeys(); } }} className="text-red-400"><Trash2 className="w-3 h-3" /></button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>, document.body
   );
 }
