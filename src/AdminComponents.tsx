@@ -252,11 +252,11 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
                     <td className="p-3 text-zinc-600 text-[10px]">{k.activatedAt ? new Date(k.activatedAt).toLocaleDateString('ar') : '-'}</td>
                     <td className="p-3 flex gap-1">
                       <button onClick={() => navigator.clipboard.writeText(k.id)} className="p-1 rounded hover:bg-white/10 text-zinc-500"><Copy className="w-3 h-3" /></button>
-                      {k.status !== 'banned' && <button onClick={async () => { await banKey(k.id); load(); }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Ban className="w-3 h-3" /></button>}
-                      {k.status === 'banned' && <button onClick={async () => { await unbanKey(k.id); load(); }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
-                      {k.status !== 'frozen' && k.status !== 'banned' && <button onClick={async () => { await freezeKey(k.id); load(); }} className="p-1 rounded hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400"><Snowflake className="w-3 h-3" /></button>}
-                      {k.status === 'frozen' && <button onClick={async () => { await unfreezeKey(k.id); load(); }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
-                      <button onClick={async () => { if(confirm('حذف المفتاح؟')) { await deleteKey(k.id); load(); } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                      {k.status !== 'banned' && <button onClick={async () => { try { await banKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Ban className="w-3 h-3" /></button>}
+                      {k.status === 'banned' && <button onClick={async () => { try { await unbanKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
+                      {k.status !== 'frozen' && k.status !== 'banned' && <button onClick={async () => { try { await freezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400"><Snowflake className="w-3 h-3" /></button>}
+                      {k.status === 'frozen' && <button onClick={async () => { try { await unfreezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
+                      <button onClick={async () => { if(confirm('حذف المفتاح؟')) { try { await deleteKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                     </td>
                   </tr>
                 ))}
