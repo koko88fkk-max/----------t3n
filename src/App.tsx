@@ -17,7 +17,7 @@ import {
   listenToNotifications, deleteNotification, listenToMaintenanceMode, 
   toggleMaintenanceMode, getUserData 
 } from './lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithCustomToken } from 'firebase/auth';
 import LoginModal from './LoginModal';
 
 const LOGO_URL = "/logo.png";
@@ -475,7 +475,58 @@ export default function App() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
-  // Maintenance & Site Visits
+  // Discord Auth: capture ?token= from URL after redirect from /api/discord-auth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      // Clean the URL immediately
+      window.history.replaceState(null, '', window.location.pathname);
+      // Sign in with the custom token from our backend
+      signInWithCustomToken(auth, token)
+        .then(async (result) => {
+          console.log('[T3N] Discord login successful via custom token');
+          // Save/update user profile in Firestore
+          const user = result.user;
+          const { doc, setDoc, getDoc, runTransaction } = await import('firebase/firestore');
+          const { db } = await import('./lib/firebase');
+          const userRef = doc(db, 'users', user.uid);
+          const snap = await getDoc(userRef);
+          const existingData = snap.data();
+          
+          let assignedId = existingData?.assignedId;
+          if (!assignedId) {
+            try {
+              assignedId = await runTransaction(db, async (transaction: any) => {
+                const counterRef = doc(db, 'counters', 'users');
+                const counterSnap = await transaction.get(counterRef);
+                let newCount = 100;
+                if (counterSnap.exists()) {
+                  newCount = (counterSnap.data().count || 99) + 1;
+                }
+                transaction.set(counterRef, { count: newCount }, { merge: true });
+                return newCount;
+              });
+            } catch (e) { console.error('ID Transaction failed:', e); }
+          }
+
+          await setDoc(userRef, {
+            displayName: user.displayName || existingData?.displayName || 'مستخدم',
+            photoURL: user.photoURL || existingData?.photoURL || null,
+            email: user.email || existingData?.email || null,
+            provider: 'discord',
+            lastLoginAt: new Date().toISOString(),
+            ...(assignedId ? { assignedId } : {}),
+            ...(!snap.exists() ? { isVIP: false, createdAt: new Date().toISOString() } : {})
+          }, { merge: true });
+        })
+        .catch((err) => {
+          console.error('[T3N] Custom token sign-in failed:', err);
+        });
+    }
+  }, []);
+
+  // Auth state + site visits + notifications
   useEffect(() => {
     trackSiteVisit();
     const unsubAuth = onAuthStateChanged(auth, async (currentUser) => {
@@ -485,6 +536,9 @@ export default function App() {
         setUserProfile(profile);
         const isAdm = await checkIsAdmin(currentUser.email, profile?.assignedId, currentUser.displayName);
         setIsAdminUser(isAdm);
+      } else {
+        setUserProfile(null);
+        setIsAdminUser(false);
       }
       setAuthLoading(false);
     });
@@ -547,7 +601,6 @@ export default function App() {
       
       <main>
         <Hero />
-        <Products />
         <ActivationGateway 
           user={user} 
           onLogin={() => setShowLoginModal(true)} 
@@ -555,6 +608,7 @@ export default function App() {
           loading={activationLoading}
           result={activationResult}
         />
+        <Products />
         <Reviews />
         <Rules />
       </main>

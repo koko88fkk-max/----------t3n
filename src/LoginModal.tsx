@@ -9,9 +9,8 @@ export default function LoginModal({ onClose, loading: externalLoading }: { onCl
   const handleDiscordLogin = () => {
     setInternalLoading(true);
     const clientId = '1462977086653464729';
-    const redirectUri = encodeURIComponent('https://t3n-2a2i.vercel.app/');
-    // Implicit grant for easier client-side handling if needed, or stick to code
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20guilds.join`;
+    const redirectUri = encodeURIComponent('https://t3n-2a2i.vercel.app/api/discord-auth');
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
     window.location.href = discordAuthUrl;
   };
 
