@@ -126,7 +126,7 @@ export default async function handler(req, res) {
       isVIP: true,
       activatedProducts: existingProducts,
       activatedKeys: existingKeys,
-      email,
+      email: email || null,
       displayName: userData?.displayName || null,
       photoURL: userData?.photoURL || null,
       provider: userData?.provider || 'discord',
