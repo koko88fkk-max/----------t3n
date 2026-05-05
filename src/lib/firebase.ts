@@ -134,6 +134,14 @@ export async function loginWithDiscord() {
     
     const data = docSnap.data();
 
+    // Discord profile data - always save/update
+    const discordProfile = {
+      displayName: user.displayName || data?.displayName || 'مستخدم',
+      photoURL: user.photoURL || data?.photoURL || null,
+      provider: 'discord',
+      email: user.email || data?.email || null,
+    };
+
     if (!docSnap.exists() || !data?.assignedId) {
       // Use transaction to get and increment user count
       let assignedId = data?.assignedId;
@@ -155,7 +163,7 @@ export async function loginWithDiscord() {
 
       if (!docSnap.exists()) {
         await setDoc(userRef, {
-          email: user.email,
+          ...discordProfile,
           isVIP: false,
           verifiedOrder: null,
           createdAt: new Date().toISOString(),
@@ -165,7 +173,7 @@ export async function loginWithDiscord() {
         });
       } else {
         await setDoc(userRef, { 
-          email: user.email,
+          ...discordProfile,
           lastLoginAt: new Date().toISOString(),
           assignedId: assignedId,
           ...geoData
@@ -173,7 +181,7 @@ export async function loginWithDiscord() {
       }
     } else {
       await setDoc(userRef, { 
-        email: user.email,
+        ...discordProfile,
         lastLoginAt: new Date().toISOString(),
         ...geoData
       }, { merge: true });
@@ -181,7 +189,7 @@ export async function loginWithDiscord() {
     
     return user;
   } catch (error) {
-    console.error("Error signing in with Google", error);
+    console.error("Error signing in with Discord:", error);
     return null;
   }
 }

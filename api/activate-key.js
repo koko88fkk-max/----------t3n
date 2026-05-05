@@ -17,11 +17,11 @@ if (!admin.apps.length) {
   }
 }
 
-// Validate key format
+// Validate key format (case-insensitive, normalizes to uppercase)
 function isValidKeyFormat(keyId) {
-  const trimmed = String(keyId).trim();
-  // Key format: T3N-XXXXXX-XXXXXX (where X is alphanumeric)
-  return /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(trimmed);
+  const trimmed = String(keyId).trim().toUpperCase();
+  // Key format: T3N-XXXXXX-XXXXXX (where X is alphanumeric uppercase)
+  return /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(trimmed);
 }
 
 export default async function handler(req, res) {
@@ -42,8 +42,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'معاملات مفقودة مطلوبة' });
   }
 
-  // Validate and clean key format
-  const cleaned = String(keyId).trim();
+  // Validate and clean key format - ALWAYS uppercase for consistency
+  const cleaned = String(keyId).trim().toUpperCase();
   
   if (!isValidKeyFormat(cleaned)) {
     return res.status(400).json({ success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' });

@@ -5,7 +5,7 @@ import {
   ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, 
   ExternalLink, AlertTriangle, ChevronDown, Gamepad2, X, LogIn, LogOut, 
   MonitorPlay, Maximize2, Copy, Check, LayoutDashboard, Users, Clock, 
-  RefreshCw, Mail, Trash2, UserX, ShieldOff, Crown, Key, Plus, Ban, 
+  RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, Key, Plus, Ban, 
   Snowflake, Play, Search, Bell, List, Crosshair, Cpu, Shield, HelpCircle
 } from 'lucide-react';
 import { 
@@ -653,25 +653,41 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
 function KeyManagement({ onClose }: { onClose: () => void }) {
   const [keys, setKeys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [createCount, setCreateCount] = useState(1);
   const [createType, setCreateType] = useState<'superstar' | 'fortnite'>('superstar');
   const [lastCreated, setLastCreated] = useState<string[]>([]);
+  const [createError, setCreateError] = useState('');
 
   const loadKeys = async () => {
     setLoading(true);
-    const data = await getAllKeys();
-    setKeys(data);
+    try {
+      const data = await getAllKeys();
+      setKeys(data);
+    } catch (e) { console.error('Failed to load keys:', e); }
     setLoading(false);
   };
 
   useEffect(() => { loadKeys(); }, []);
 
   const handleCreate = async () => {
+    if (isCreating) return;
+    if (createCount < 1 || createCount > 100) { setCreateError('العدد يجب أن يكون بين 1 و 100'); return; }
+    setIsCreating(true);
+    setCreateError('');
     try {
       const created = await createKeys(createCount, createType);
-      setLastCreated(created);
-      loadKeys();
-    } catch (e:any) { alert(e.message); }
+      if (created.length === 0) {
+        setCreateError('فشل في إنشاء المفاتيح. تأكد من صلاحيات قاعدة البيانات.');
+      } else {
+        setLastCreated(created);
+        await loadKeys();
+      }
+    } catch (e: any) {
+      console.error('Key creation error:', e);
+      setCreateError(e.message || 'حدث خطأ غير متوقع أثناء إنشاء المفاتيح');
+    }
+    setIsCreating(false);
   };
 
   return createPortal(
@@ -686,16 +702,23 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
           <div className="glass p-8 rounded-[32px] border border-white/5 space-y-6">
             <h3 className="text-xl font-bold text-white">إنشاء مفاتيح</h3>
             <div className="flex gap-2">
-              <button onClick={() => setCreateType('superstar')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}>سوبر ستار</button>
-              <button onClick={() => setCreateType('fortnite')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>فورت نايت</button>
+              <button onClick={() => setCreateType('superstar')} className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> سوبر ستار</button>
+              <button onClick={() => setCreateType('fortnite')} className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> فورت نايت</button>
             </div>
-            <input type="number" min="1" max="100" value={createCount} onChange={(e) => setCreateCount(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-center font-black" />
-            <button onClick={handleCreate} className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-lg">إنشاء المفاتيح</button>
+            <input type="number" min="1" max="100" value={createCount} onChange={(e) => setCreateCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-center font-black" />
+            <button onClick={handleCreate} disabled={isCreating} className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+              {isCreating ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري الإنشاء...</> : <>إنشاء {createCount} مفتاح</>}
+            </button>
+            
+            {createError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-bold text-center">{createError}</div>}
             
             {lastCreated.length > 0 && (
-              <div className="p-4 bg-black/50 rounded-2xl border border-white/10 space-y-2">
-                <button onClick={() => navigator.clipboard.writeText(lastCreated.join('\n'))} className="text-emerald-400 text-xs font-bold underline">نسخ الكل</button>
-                <div className="max-h-32 overflow-y-auto text-xs font-mono text-zinc-400">{lastCreated.map(k => <div key={k}>{k}</div>)}</div>
+              <div className="p-4 bg-black/50 rounded-2xl border border-emerald-500/20 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-400 text-xs font-bold">✅ تم إنشاء {lastCreated.length} مفتاح</span>
+                  <button onClick={() => navigator.clipboard.writeText(lastCreated.join('\n'))} className="text-emerald-400 text-xs font-bold underline hover:text-emerald-300">نسخ الكل</button>
+                </div>
+                <div className="max-h-32 overflow-y-auto text-xs font-mono text-zinc-400">{lastCreated.map(k => <div key={k} className="py-0.5">{k}</div>)}</div>
               </div>
             )}
           </div>
