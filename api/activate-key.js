@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   const { keyId, uid, email, userData } = req.body;
 
   // Validate all required parameters
-  if (!keyId || !uid || !email) {
+  if (!keyId || !uid) {
     return res.status(400).json({ success: false, error: 'معاملات مفقودة مطلوبة' });
   }
 
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
       status: 'active',
       activatedAt: now.toISOString(),
       usedByUid: uid,
-      usedByEmail: email,
+      usedByEmail: email || null,
       usedByName: userData?.displayName || null,
       usedByPhoto: userData?.photoURL || null,
       usedByProvider: userData?.provider || 'discord',

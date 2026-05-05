@@ -389,8 +389,8 @@ export async function activateKey(keyId: string, uid: string, email: string, use
     }
 
     // Validate user info
-    if (!uid || !email) {
-      return { success: false, error: 'معلومات المستخدم ناقصة' };
+    if (!uid) {
+      return { success: false, error: 'معلومات المستخدم ناقصة (UID)' };
     }
 
     // Call backend API
