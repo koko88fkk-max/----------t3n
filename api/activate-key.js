@@ -165,7 +165,7 @@ export default async function handler(req, res) {
     
     return res.status(500).json({ 
       success: false, 
-      error: 'حدث خطأ في السيرفر أثناء التفعيل. يرجى محاولة مرة أخرى' 
+      error: 'حدث خطأ في السيرفر أثناء التفعيل: ' + (error instanceof Error ? error.message : String(error))
     });
   }
 }
