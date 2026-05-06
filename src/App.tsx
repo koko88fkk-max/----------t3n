@@ -363,17 +363,17 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
               {/* Cards Container */}
               <div className="w-full flex flex-col gap-4">
                 {/* Product Card */}
-                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-yellow-500/30 transition-all">
+                <div className={`bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group transition-all ${result.productType === 'fortnite' ? 'hover:border-blue-500/30' : 'hover:border-yellow-500/30'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col text-right">
                       <h4 className="text-xl font-bold text-white mb-1">{result.productType === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
                       <p className="text-sm text-zinc-500">منتج {result.productType === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${result.productType === 'fortnite' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'}`}>
                       {result.productType === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
                     </div>
                   </div>
-                  <button onClick={() => onShowGuide?.(result.productType)} className="w-full py-4 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-bold transition-all flex items-center justify-center gap-2">
+                  <button onClick={() => onShowGuide?.(result.productType)} className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${result.productType === 'fortnite' ? 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 text-blue-500' : 'bg-yellow-500/10 hover:bg-yellow-500/20 border-yellow-500/30 text-yellow-500'}`}>
                     <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
                   </button>
                 </div>
@@ -757,16 +757,17 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] overflow-y-auto"
-      style={{ background: 'radial-gradient(ellipse at center, #1a0a3d 0%, #0d0020 50%, #060010 100%)' }}
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ backgroundImage: 'url("/fortnite-bg.jpg")' }}
     >
+      <div className="fixed inset-0 z-0 bg-[#040c2e]/70 pointer-events-none mix-blend-overlay" />
       <div className="fixed inset-0 z-0 opacity-20 pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(rgba(147,51,234,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.4) 1px, transparent 1px)',
+        backgroundImage: 'linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)',
         backgroundSize: '60px 60px'
       }} />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#0d0020]/80 border-b border-purple-500/20">
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#040c2e]/80 border-b border-blue-500/20">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg" />
@@ -782,27 +783,27 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
       <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10">
         {/* Title */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-          <div className="w-20 h-20 bg-purple-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-purple-500/20 shadow-[0_0_30px_rgba(147,51,234,0.2)]">
-            <Gamepad2 className="w-10 h-10 text-purple-400" />
+          <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+            <Gamepad2 className="w-10 h-10 text-blue-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-200">شرح هاك فورت نايت</h1>
-          <p className="text-purple-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتشغيل الهاك بنجاح</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">شرح هاك فورت نايت</h1>
+          <p className="text-blue-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتشغيل الهاك بنجاح</p>
         </motion.div>
 
         {/* STEP 1: تركيب التعريفات */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="mb-8">
-          <div className="rounded-2xl p-6 md:p-8 bg-[#1a0a3d]/60 backdrop-blur-lg border border-purple-500/20">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/40 backdrop-blur-md border border-blue-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             <div className="flex gap-5 items-start mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
                 <Download className="w-7 h-7" />
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-2 text-white">أول شي: شرح تركيب تعريفات الهاك</h3>
-                <p className="text-purple-200/60 leading-relaxed text-lg">شاهد الفيديو أدناه لتركيب تعريفات الهاك بشكل صحيح قبل أي شيء</p>
+                <p className="text-blue-200/60 leading-relaxed text-lg">شاهد الفيديو أدناه لتركيب تعريفات الهاك بشكل صحيح قبل أي شيء</p>
               </div>
             </div>
-            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-purple-400">👇</span> شرح تركيب التعريفات</h4>
-            <div className="rounded-xl overflow-hidden border border-purple-500/20">
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح تركيب التعريفات</h4>
+            <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
                 <source src="/video-fort-drivers.mp4" type="video/mp4" />
                 متصفحك لا يدعم تشغيل الفيديو
@@ -813,18 +814,18 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
 
         {/* STEP 2: شرح الهاك */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="mb-8">
-          <div className="rounded-2xl p-6 md:p-8 bg-[#1a0a3d]/60 backdrop-blur-lg border border-purple-500/20">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/40 backdrop-blur-md border border-blue-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             <div className="flex gap-5 items-start mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
                 <Gamepad2 className="w-7 h-7" />
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-2 text-white">ثم شرح تشغيل الهاك</h3>
-                <p className="text-purple-200/60 leading-relaxed text-lg">بعد تركيب التعريفات، شاهد هذا الشرح لتشغيل هاك فورت نايت 👇</p>
+                <p className="text-blue-200/60 leading-relaxed text-lg">بعد تركيب التعريفات، شاهد هذا الشرح لتشغيل هاك فورت نايت 👇</p>
               </div>
             </div>
-            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-purple-400">👇</span> شرح تشغيل الهاك</h4>
-            <div className="rounded-xl overflow-hidden border border-purple-500/20">
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح تشغيل الهاك</h4>
+            <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
                 <source src="/video-fort-hack.mp4" type="video/mp4" />
                 متصفحك لا يدعم تشغيل الفيديو
@@ -835,10 +836,10 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
 
         {/* استلام الرتبة */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8">
-          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-md border border-[#5865F2]/30 text-center shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
-            <p className="text-purple-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
+            <p className="text-blue-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
             {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
