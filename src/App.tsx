@@ -113,9 +113,6 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
         {/* Center: Nav Links */}
         <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-zinc-400">
           <a href="#delivery" className="hover:text-blue-400 transition-colors">استلام الطلبات</a>
-          <a href="#products" className="hover:text-blue-400 transition-colors">المنتجات</a>
-          <a href="#reviews" className="hover:text-blue-400 transition-colors">التقييمات</a>
-          <a href="#faq" className="hover:text-blue-400 transition-colors">الأسئلة الشائعة</a>
           <a href="#rules" className="hover:text-blue-400 transition-colors">القوانين</a>
         </div>
 
@@ -135,8 +132,6 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
           <motion.div initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }} className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-xl flex flex-col p-8 pt-24 text-right gap-6">
             <button onClick={() => setMobileMenuOpen(false)} className="absolute top-6 left-6 text-white"><X /></button>
             <a href="#delivery" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold text-white">استلام الطلبات</a>
-            <a href="#products" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold text-white">المنتجات</a>
-            <a href="#reviews" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold text-white">التقييمات</a>
             <a href="#rules" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold text-white">القوانين</a>
           </motion.div>
         )}
@@ -274,53 +269,6 @@ function CustomVideoPlayer() {
   );
 }
 
-function Products() {
-  return (
-    <section id="products" className="py-24 container mx-auto px-6">
-      <div className="text-center mb-16">
-        <span className="text-blue-500 font-bold text-xs tracking-widest uppercase">CATALOGUE</span>
-        <h2 className="text-4xl font-black text-white mt-2 mb-4">منتجاتنا الحصرية</h2>
-        <p className="text-zinc-500 max-w-xl mx-auto">تشكيلة مختارة من أفضل المنتجات الرقمية المصممة لتعطيك الأفضلية</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {/* Card 1 */}
-        <motion.div whileHover={{ y: -10 }} className="glass rounded-[32px] overflow-hidden border border-white/5 flex flex-col group">
-          <div className="h-64 bg-gradient-to-br from-blue-900/20 to-black relative flex items-center justify-center p-8 overflow-hidden">
-            <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full animate-pulse z-10">الأكثر طلباً 🔥</span>
-            <Gamepad2 className="w-32 h-32 text-blue-500/20 group-hover:scale-110 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay group-hover:opacity-100 opacity-0 transition-opacity" />
-          </div>
-          <div className="p-8">
-            <h3 className="text-2xl font-black text-white mb-3">هاك فورت نايت</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-6">أفضل وأأمن هاك لفورت نايت بمميزات حصرية وتحديثات مستمرة للحماية من الباند. العب أمن واحترافي.</p>
-            <div className="flex gap-3">
-              <a href={STORE_URL} target="_blank" className="btn-primary flex-1 py-3 rounded-xl font-bold text-center flex items-center justify-center gap-2">🔗 شراء الآن</a>
-              <button className="btn-ghost flex-1 py-3 rounded-xl font-bold">تفاصيل المنتج</button>
-            </div>
-          </div>
-        </motion.div>
-        
-        {/* Card 2 */}
-        <motion.div whileHover={{ y: -10 }} className="glass rounded-[32px] overflow-hidden border border-white/5 flex flex-col group">
-          <div className="h-64 bg-gradient-to-br from-blue-900/20 to-black relative flex items-center justify-center p-8 overflow-hidden">
-            <span className="absolute top-4 right-4 bg-yellow-500 text-black text-[10px] font-black px-3 py-1 rounded-full z-10">الإصدار الذهبي ⭐</span>
-            <Gamepad2 className="w-32 h-32 text-blue-500/20 group-hover:scale-110 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay group-hover:opacity-100 opacity-0 transition-opacity" />
-          </div>
-          <div className="p-8">
-            <h3 className="text-2xl font-black text-white mb-3">السبوفر المتميز</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-6">أقوى أداة سبوفر تدعم جميع المذريودات وحمايات الألعاب. استعمال مرة واحدة لفك الحظر نهائياً بضمان كامل.</p>
-            <div className="flex gap-3">
-              <a href={STORE_URL} target="_blank" className="btn-primary flex-1 py-3 rounded-xl font-bold text-center flex items-center justify-center gap-2">🔗 شراء الآن</a>
-              <button className="btn-ghost flex-1 py-3 rounded-xl font-bold">تفاصيل المنتج</button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
 
 function ActivationGateway({ user, onLogin, onActivate, loading, result }: any) {
   const [keyInput, setKeyInput] = useState('');
@@ -387,68 +335,6 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result }: any) 
   );
 }
 
-function Reviews() {
-  const reviewImages = [
-    '0092536c-2359-46e6-9687-68bd8a63ab2a.jpg','148a0680-d94f-4872-8edc-baae55fb99c3.png',
-    '15b5fba4-c8cd-410a-ba44-a40b387006be.jpg','1cf6fde4-f699-48c1-b138-62b31d85481e.png',
-    '1edfc461-eafa-4876-9be9-de6b668c0410.jpg','3db92eae-f863-4bf2-b642-b1a7065e6141.jpg',
-    '5766c4f7-aabf-4859-a93f-809699dde917.jpg','666acf6b-07d4-4764-84ec-7ed1886e0dd7.jpg',
-    '6d44bcab-1467-4c02-bb58-6ac082c30616.png','6d8059c1-8fb0-4374-8825-72ef42b4e67a.jpg',
-    '8801a17d-01f2-4f58-9810-2155bc2ebdd2.jpg','93081051-6699-465a-a156-0f1d15b01a5a.jpg',
-    'a06a962f-6c53-488c-a8c8-af98e10ce1a7.jpg','d4c3fce5-32ea-4b0d-af20-f64fe1b66b8d.jpg',
-    'ef94177f-cb9c-42b1-8f54-995b3c33385d.jpg','f6cfed1a-8c23-41d9-85f7-e1d33961e2b8.jpg',
-  ];
-  return (
-    <section id="reviews" className="py-24 container mx-auto px-6">
-      <div className="text-center mb-12">
-        <div className="flex justify-center gap-2 mb-4">{[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />)}</div>
-        <h2 className="text-4xl font-black text-white mb-2">آراء العملاء</h2>
-        <p className="text-zinc-500">تقييمات حقيقية من عملائنا الكرام</p>
-      </div>
-      <div className="columns-2 md:columns-3 lg:columns-4 gap-4 max-w-6xl mx-auto">
-        {reviewImages.map((img, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="mb-4 break-inside-avoid">
-            <img src={`/reviews/${img}`} className="w-full rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all hover:scale-[1.02] pointer-events-auto" alt={`تقييم ${i+1}`} style={{pointerEvents:'auto'}} />
-          </motion.div>
-        ))}
-      </div>
-      <div className="text-center mt-10">
-        <a href={STORE_URL} target="_blank" className="btn-primary px-8 py-4 rounded-2xl font-bold inline-flex items-center gap-2">عرض المزيد من التقييمات</a>
-      </div>
-    </section>
-  );
-}
-
-function Rules() {
-  const rules = [
-    { id: 1, title: 'سياسة الاسترجاع', text: 'يتم استرجاع المبلغ فقط في حال وجود خطأ من المسؤول أو المنفذ للطلب. غير ذلك لا يحق للعميل المطالبة بالاسترجاع.' },
-    { id: 2, title: 'بعد الشراء', text: 'لا يمكنك طلب استرجاع المبلغ بعد شراء المنتج أو استلامه بأي حال من الأحوال. يرجى التأكد قبل إتمام عملية الدفع.' },
-    { id: 3, title: 'فترة الضمان', text: 'لا يمكن طلب تعويض أو استرجاع بعد مرور 3 أيام من استخدام المنتج. يرجى فحص المنتج فور استلامه.' }
-  ];
-
-  return (
-    <section id="rules" className="py-24 container mx-auto px-6">
-      <div className="flex flex-col items-center mb-16">
-        <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 mb-4"><Shield className="w-8 h-8" /></div>
-        <h2 className="text-4xl font-black text-white mb-2">القوانين والشروط</h2>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {rules.map((r) => (
-          <div key={r.id} className="glass p-8 rounded-[32px] border border-white/5 hover:border-white/20 transition-all flex flex-col gap-4">
-            <span className="text-blue-500 font-black text-3xl opacity-30">0{r.id}</span>
-            <h3 className="text-xl font-bold text-white">{r.title}</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">{r.text}</p>
-          </div>
-        ))}
-      </div>
-      
-      <div className="max-w-4xl mx-auto mt-12 p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-red-400 font-bold text-center text-sm">
-        شرائك من المتجر يعني موافقتك التامة على جميع الشروط والقوانين المذكورة أعلاه
-      </div>
-    </section>
-  );
-}
 
 function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
   const [copiedCmd, setCopiedCmd] = useState(false);
@@ -1072,9 +958,6 @@ export default function App() {
           loading={activationLoading}
           result={activationResult}
         />
-        <Products />
-        <Reviews />
-        <Rules />
       </main>
       
       <Footer />
