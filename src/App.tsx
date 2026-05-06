@@ -72,6 +72,13 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
                 </div>
                 <button onClick={onLogout} className="p-1.5 hover:bg-red-500/20 rounded-full transition-all text-zinc-400 hover:text-red-400"><LogOut className="w-4 h-4" /></button>
               </div>
+              {userProfile?.isVIP && (
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                  className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.8)]" />
+                  <span className="text-yellow-400 font-bold text-xs tracking-wide">عميل مميز</span>
+                </motion.div>
+              )}
             ) : (
               <button onClick={onLogin} className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-5 py-2 rounded-full font-bold text-sm transition-all shadow-lg"><LogIn className="w-4 h-4" /> دخول</button>
             )
@@ -635,6 +642,256 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
   );
 }
 
+// =============================================
+// 🎮 Fortnite Guide
+// =============================================
+function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [roleMsg, setRoleMsg] = useState('');
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  const handleAssignRole = async () => {
+    if (!user) return;
+    setRoleLoading(true);
+    setRoleMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const discordId = user.uid.replace('discord_', '');
+      const res = await fetch('/api/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discordId, accessToken: '', idToken })
+      });
+      const data = await res.json();
+      setRoleMsg(data.success ? '✅ تم ربط الرتبة بنجاح! ادخل السيرفر الآن.' : ('❌ ' + (data.error || 'حدث خطأ')));
+    } catch { setRoleMsg('❌ فشل الاتصال بالسيرفر'); }
+    setRoleLoading(false);
+  };
+
+  return createPortal(
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] overflow-y-auto"
+      style={{ background: 'radial-gradient(ellipse at center, #1a0a3d 0%, #0d0020 50%, #060010 100%)' }}
+    >
+      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(147,51,234,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.4) 1px, transparent 1px)',
+        backgroundSize: '60px 60px'
+      }} />
+
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#0d0020]/80 border-b border-purple-500/20">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg" />
+            <span className="font-bold text-xl text-white">هاك فورت نايت 🎮</span>
+          </div>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/10">
+            <X className="w-5 h-5" />
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10">
+        {/* Title */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+          <div className="w-20 h-20 bg-purple-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-purple-500/20 shadow-[0_0_30px_rgba(147,51,234,0.2)]">
+            <Gamepad2 className="w-10 h-10 text-purple-400" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-200">شرح هاك فورت نايت</h1>
+          <p className="text-purple-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتشغيل الهاك بنجاح</p>
+        </motion.div>
+
+        {/* STEP 1: تركيب التعريفات */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#1a0a3d]/60 backdrop-blur-lg border border-purple-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+                <Download className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">أول شي: شرح تركيب تعريفات الهاك</h3>
+                <p className="text-purple-200/60 leading-relaxed text-lg">شاهد الفيديو أدناه لتركيب تعريفات الهاك بشكل صحيح قبل أي شيء</p>
+              </div>
+            </div>
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-purple-400">👇</span> شرح تركيب التعريفات</h4>
+            <div className="rounded-xl overflow-hidden border border-purple-500/20">
+              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                <source src="/video-fort-drivers.mp4" type="video/mp4" />
+                متصفحك لا يدعم تشغيل الفيديو
+              </video>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* STEP 2: شرح الهاك */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#1a0a3d]/60 backdrop-blur-lg border border-purple-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+                <Gamepad2 className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">ثم شرح تشغيل الهاك</h3>
+                <p className="text-purple-200/60 leading-relaxed text-lg">بعد تركيب التعريفات، شاهد هذا الشرح لتشغيل هاك فورت نايت 👇</p>
+              </div>
+            </div>
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-purple-400">👇</span> شرح تشغيل الهاك</h4>
+            <div className="rounded-xl overflow-hidden border border-purple-500/20">
+              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                <source src="/video-fort-hack.mp4" type="video/mp4" />
+                متصفحك لا يدعم تشغيل الفيديو
+              </video>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* استلام الرتبة */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center">
+            <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
+            <p className="text-purple-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
+            {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
+                className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] disabled:opacity-60 flex items-center gap-2 justify-center">
+                {roleLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> جاري الربط...</> : <><MessageCircle className="w-5 h-5" /> استلام الرتبة</>}
+              </motion.button>
+              <a href={DISCORD_URL} target="_blank"
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-lg transition-all border border-white/10 flex items-center gap-2 justify-center">
+                <ExternalLink className="w-5 h-5" /> دخول السيرفر
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Back */}
+        <div className="mt-8 text-center pb-12">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose}
+            className="px-8 py-3 bg-white/10 text-white rounded-xl border border-white/10 hover:bg-white/20 transition-all font-bold">
+            الرجوع للصفحة الرئيسية
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>,
+    document.body
+  );
+}
+
+// =============================================
+// 🔧 Troubleshoot Guide
+// =============================================
+function TroubleshootGuide({ onClose }: { onClose: () => void }) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  return createPortal(
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] overflow-y-auto">
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundColor: '#030000' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-80" style={{ background: 'radial-gradient(60% 60% at 50% 100%, rgba(200, 10, 10, 0.6) 0%, transparent 100%)' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.8) 20%, transparent 60%)' }} />
+      <div className="fixed inset-0 z-0 bg-black/40 pointer-events-none" />
+
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/60 border-b border-red-500/30">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
+            <span className="font-bold text-xl text-white">حل مشاكل السبوفر</span>
+          </div>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/30 hover:text-red-400 transition-all border border-white/20">
+            <X className="w-5 h-5" />
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 max-w-5xl relative z-10 flex flex-col items-center">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center w-full mb-16">
+          <div className="w-24 h-24 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+            <HelpCircle className="w-12 h-12 text-red-500" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-xl">شروحات حل المشاكل</h1>
+          <p className="text-red-200/80 text-xl font-bold max-w-2xl mx-auto leading-relaxed">هنا تجد جميع الحلول والفيديوهات لحل أي مشكلة قد تواجهك أثناء تطبيق السبوفر</p>
+        </motion.div>
+
+        <div className="w-full grid gap-8">
+          {[
+            { num: 1, title: 'حل مشكلة خطأ الوقت', q: 'هل تظهر لك رسالة خطأ الوقت الموضحة بالصورة؟', img: '/error-time.png', vid: '/video-solution-time.mp4', alt: 'خطأ الوقت' },
+            { num: 2, title: 'إيبك قيمز لا يعمل أو لا يحمل؟', q: 'هل تواجه مشكلة في تشغيل إيبك قيمز أو عدم قدرتة على التحميل بعد تطبيق الشرح؟', img: '/error-epic.png', vid: '/video-solution-epic.mp4', alt: 'مشكلة إيبك' },
+            { num: 3, title: 'خطأ في الشبكة أو كلام أزرق؟', q: 'هل عند تشغيل السبوفر يطفى فجأة أو يظهر لك خطأ بالشبكة؟', img: '/error-network.png', vid: '/video-solution-network.mp4', alt: 'خطأ الشبكة' },
+          ].map(({ num, title, q, img, vid, alt }) => (
+            <motion.div key={num} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: num * 0.1 }}
+              className="bg-[#0a0a0f]/80 backdrop-blur-md p-6 lg:p-10 rounded-[2rem] border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] flex flex-col items-center">
+              <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">{num}</span>
+                <h3 className="text-2xl md:text-3xl font-bold text-white">{title}</h3>
+              </div>
+              <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">{q}</p>
+              <div className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group" onClick={() => setSelectedImage(img)}>
+                <img src={img} alt={alt} className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="bg-black/80 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm"><Maximize2 className="w-4 h-4" /> انقر لتكبير</span>
+                </div>
+              </div>
+              <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
+                <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
+                <span className="text-red-400 font-bold flex items-center gap-2 text-xl"><CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇</span>
+                <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
+              </div>
+              <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
+                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
+                  <source src={vid} type="video/mp4" />متصفحك لا يدعم تشغيل الفيديو
+                </video>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Support */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-16 text-center w-full max-w-2xl bg-blue-500/10 backdrop-blur-md p-8 rounded-3xl border border-blue-500/30">
+          <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center justify-center gap-2"><MessageCircle className="w-6 h-6" /> ما زلت تواجه مشكلة؟</h3>
+          <p className="text-zinc-300 leading-relaxed text-lg mb-6">توجه إلى الديسكورد وافتح تذكرة دعم فني وسيقوم الفريق بتقديم المساعدة الكاملة.</p>
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+            الانتقال إلى سيرفر الديسكورد <ExternalLink className="w-5 h-5" />
+          </a>
+        </motion.div>
+
+        <div className="mt-10 text-center pb-12">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose}
+            className="px-8 py-3 bg-white/10 text-white rounded-xl border border-white/10 hover:bg-white/20 transition-all font-bold">
+            الرجوع للصفحة الرئيسية
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-md">
+            <button className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 border border-white/20" onClick={() => setSelectedImage(null)}>
+              <X className="w-6 h-6" />
+            </button>
+            <motion.img initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} src={selectedImage} alt="صورة مكبرة" className="max-w-full max-h-full object-contain rounded-2xl" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>,
+    document.body
+  );
+}
+
 function Footer() {
   return (
     <footer className="py-12 border-t border-white/5 container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -668,6 +925,8 @@ export default function App() {
   const [activationResult, setActivationResult] = useState<any>(null);
   const [activationLoading, setActivationLoading] = useState(false);
   const [showSpooferGuide, setShowSpooferGuide] = useState(false);
+  const [showFortniteGuide, setShowFortniteGuide] = useState(false);
+  const [showTroubleshoot, setShowTroubleshoot] = useState(false);
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -777,7 +1036,11 @@ export default function App() {
       const profile = await getUserData(user.uid);
       setUserProfile(profile);
       if (res.success) {
-        setTimeout(() => setShowSpooferGuide(true), 800);
+        const pt = res.productType || 'superstar';
+        setTimeout(() => {
+          if (pt === 'fortnite') setShowFortniteGuide(true);
+          else setShowSpooferGuide(true);
+        }, 800);
       }
     } catch (e: any) {
       setActivationResult({ success: false, error: e.message || 'حدث خطأ غير متوقع' });
@@ -831,14 +1094,32 @@ export default function App() {
         {showAdminDashboard && <AdminDashboard onClose={() => setShowAdminDashboard(false)} />}
         {showKeyManagement && <KeyManagement onClose={() => setShowKeyManagement(false)} />}
         {showSpooferGuide && <SpooferGuide onClose={() => setShowSpooferGuide(false)} user={user} />}
+        {showFortniteGuide && <FortniteGuide onClose={() => setShowFortniteGuide(false)} user={user} />}
+        {showTroubleshoot && <TroubleshootGuide onClose={() => setShowTroubleshoot(false)} />}
       </AnimatePresence>
-      {/* VIP shortcut button */}
-      {userProfile?.isVIP && !showSpooferGuide && (
-        <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          onClick={() => setShowSpooferGuide(true)}
-          className="fixed bottom-24 right-6 z-[89] flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-blue-400/30">
-          <Cpu className="w-4 h-4" /> شرح السبوفر
-        </motion.button>
+      {/* VIP shortcut buttons */}
+      {userProfile?.isVIP && (
+        <div className="fixed bottom-24 right-6 z-[89] flex flex-col gap-2">
+          {userProfile.activatedProducts?.includes('superstar') && (
+            <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              onClick={() => setShowSpooferGuide(true)}
+              className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-blue-400/30">
+              <Cpu className="w-4 h-4" /> شرح السبوفر
+            </motion.button>
+          )}
+          {userProfile.activatedProducts?.includes('fortnite') && (
+            <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              onClick={() => setShowFortniteGuide(true)}
+              className="flex items-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-purple-400/30">
+              <Gamepad2 className="w-4 h-4" /> شرح فورت نايت
+            </motion.button>
+          )}
+          <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            onClick={() => setShowTroubleshoot(true)}
+            className="flex items-center gap-2 px-4 py-3 bg-red-700 hover:bg-red-600 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-red-400/30">
+            <HelpCircle className="w-4 h-4" /> حل مشكلة
+          </motion.button>
+        </div>
       )}
     </div>
   );
