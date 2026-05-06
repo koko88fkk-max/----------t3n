@@ -6,7 +6,7 @@ import {
   ExternalLink, AlertTriangle, ChevronDown, Gamepad2, X, LogIn, LogOut, 
   MonitorPlay, Maximize2, Copy, Check, LayoutDashboard, Users, Clock, 
   RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, Key, Plus, Ban, 
-  Snowflake, Play, Search, Bell, List, Crosshair, Cpu, Shield, HelpCircle, Wrench
+  Snowflake, Play, Search, Bell, List, Crosshair, Cpu, Shield, HelpCircle, Wrench, Youtube
 } from 'lucide-react';
 import { 
   auth, loginWithDiscord, logout, checkUserVIP, activateKey, isAdmin, 
@@ -692,8 +692,51 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
           </div>
         </motion.div>
 
+        {/* Troubleshooting / Format Guide */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.65 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-red-500/5 backdrop-blur-lg border border-red-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0 border border-red-500/20">
+                <AlertTriangle className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">الاسبوفر ما زبط معك؟ (فورمات الجهاز)</h3>
+                <p className="text-red-200/80 leading-relaxed text-lg">
+                  إذا ما زبط معك الاسبوفر وقتها لازم تفرمت الجهاز بـ USB فلاشة، ويكون نظام ويندوز جديد ونظيف، ثم تعيد الخطوات وراح يضبط معك 100%.
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {/* Win 11 */}
+              <a href="https://www.youtube.com/watch?v=XZ-9RbqlA2k" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/5 hover:border-red-500/30 hover:bg-red-500/5 transition-all group">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Youtube className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold mb-1">شرح فورمات ويندوز 11</h4>
+                  <p className="text-sm text-zinc-500">مقطع يوتيوب يوضح الطريقة</p>
+                </div>
+                <ExternalLink className="w-5 h-5 text-zinc-600 mr-auto group-hover:text-red-400 transition-colors" />
+              </a>
+
+              {/* Win 10 */}
+              <a href="https://www.youtube.com/watch?v=aeokLW7juAw" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/5 hover:border-red-500/30 hover:bg-red-500/5 transition-all group">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Youtube className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold mb-1">شرح فورمات ويندوز 10</h4>
+                  <p className="text-sm text-zinc-500">مقطع يوتيوب يوضح الطريقة</p>
+                </div>
+                <ExternalLink className="w-5 h-5 text-zinc-600 mr-auto group-hover:text-red-400 transition-colors" />
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
         {/* استلام الرتبة */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="mb-8">
           <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center">
             <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
