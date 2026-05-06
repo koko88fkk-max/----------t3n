@@ -340,117 +340,117 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
           <p className="text-zinc-500">من هنا يمكنك تفعيل مفاتيحك للارتباط بحسابك واستلام منتجك</p>
         </div>
         
-        <div className="max-w-4xl mx-auto glass rounded-[40px] p-8 border border-white/5 relative overflow-hidden flex flex-col items-center">
+        {result?.success ? (
+          <div className="max-w-4xl mx-auto glass rounded-[40px] p-8 border border-white/5 relative overflow-hidden flex flex-col items-center">
             {/* Background effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
 
-            {result?.success ? (
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center w-full max-w-2xl mx-auto z-10 py-10">
-                <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                  <Check className="w-10 h-10 text-emerald-400" />
-                </div>
-                <h3 className="text-3xl font-black text-white mb-3">تم التفعيل بنجاح!</h3>
-                <div className="flex items-center gap-2 text-zinc-400 mb-2 text-sm">
-                  <span>المفتاح</span>
-                  <code className="bg-white/5 px-3 py-1 rounded text-white font-mono text-xs tracking-wider">{keyInput}</code>
-                  <span>مفعل ومربط بحسابك.</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold mb-10">
-                  <CheckCircle2 className="w-4 h-4" /> مربط بحسابك للأبد
-                </div>
-                
-                {/* Cards Container */}
-                <div className="w-full flex flex-col gap-4">
-                  {/* Product Card */}
-                  <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-yellow-500/30 transition-all">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col text-right">
-                        <h4 className="text-xl font-bold text-white mb-1">{result.productType === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
-                        <p className="text-sm text-zinc-500">منتج {result.productType === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
-                      </div>
-                      <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
-                        {result.productType === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
-                      </div>
-                    </div>
-                    <button onClick={() => onShowGuide?.(result.productType)} className="w-full py-4 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-bold transition-all flex items-center justify-center gap-2">
-                      <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
-                    </button>
-                  </div>
-
-                  {/* Discord Role Card */}
-                  <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-[#5865F2]/30 transition-all">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col text-right">
-                        <h4 className="text-xl font-bold text-white mb-1">رتبة ديسكورد</h4>
-                        <p className="text-sm text-zinc-500">اربط حسابك بالسيرفر للوصول للدعم.</p>
-                      </div>
-                      <div className="w-14 h-14 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2]">
-                        <MessageCircle className="w-7 h-7" />
-                      </div>
-                    </div>
-                    <button onClick={handleAssignRole} disabled={roleLoading} className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                      {roleLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <MessageCircle className="w-5 h-5" />}
-                      ربط الحساب وإستلام الرتبة
-                    </button>
-                    {roleMsg && <p className="text-center text-sm mt-1 text-[#5865F2] font-bold">{roleMsg}</p>}
-                  </div>
-                </div>
-
-                <button onClick={() => { setKeyInput(''); setRoleMsg(''); onReset?.(); }} className="mt-8 text-zinc-500 hover:text-white transition-colors text-sm underline decoration-white/20 underline-offset-4">تفعيل مفتاح آخر</button>
-              </motion.div>
-            ) : (
-              <div className="z-10 w-full max-w-lg flex flex-col items-center py-10">
-                <div className="flex flex-col items-center text-center mb-8">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(37,99,235,0.3)]">
-                    <Key className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-black text-white mb-2">تفعيل المفتاح</h2>
-                  <p className="text-zinc-400">أدخل مفتاح المنتج المكون من 12 رمزاً</p>
-                </div>
-                
-                <div className="w-full mb-8 text-center bg-blue-500/5 border border-blue-500/20 p-4 rounded-2xl">
-                  <p className="text-blue-200 text-sm leading-relaxed">
-                    أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك فوراً. يرجى تسجيل الدخول باستخدام ديسكورد.
-                  </p>
-                </div>
-                
-                {user ? (
-                  <div className="flex items-center gap-3 px-6 py-3 bg-green-500/10 border border-green-500/30 rounded-full mb-8">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    <span className="text-green-400 font-bold text-sm">مسجل دخول: {user.displayName}</span>
-                  </div>
-                ) : (
-                  <button onClick={onLogin} className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-3 rounded-full font-bold transition-all mb-8 shadow-lg">
-                    <LogIn className="w-5 h-5" /> تسجيل الدخول للربط
-                  </button>
-                )}
-
-                <div className="w-full flex flex-col gap-4">
-                  <input 
-                    type="text" 
-                    placeholder="T3N-XXXXXX-XXXXXX" 
-                    value={keyInput}
-                    onChange={(e) => setKeyInput(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-2xl py-4 px-6 text-white font-mono text-center tracking-[4px] focus:outline-none focus:border-blue-500/50 transition-all" 
-                  />
-                  <button 
-                    onClick={() => onActivate(keyInput)}
-                    disabled={loading || !user}
-                    className="w-full btn-primary py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50"
-                  >
-                    {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Key className="w-5 h-5" /> تفعيل المفتاح</>}
-                  </button>
-                </div>
-                
-                {result && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 p-4 rounded-xl border w-full ${result.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'} text-sm font-bold text-center`}>
-                    {result.message || result.error}
-                  </motion.div>
-                )}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center w-full max-w-2xl mx-auto z-10 py-10">
+              <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                <Check className="w-10 h-10 text-emerald-400" />
               </div>
-            )}
-        </div>
+              <h3 className="text-3xl font-black text-white mb-3">تم التفعيل بنجاح!</h3>
+              <div className="flex items-center gap-2 text-zinc-400 mb-2 text-sm">
+                <span>المفتاح</span>
+                <code className="bg-white/5 px-3 py-1 rounded text-white font-mono text-xs tracking-wider">{keyInput}</code>
+                <span>مفعل ومربط بحسابك.</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold mb-10">
+                <CheckCircle2 className="w-4 h-4" /> مربط بحسابك للأبد
+              </div>
+              
+              {/* Cards Container */}
+              <div className="w-full flex flex-col gap-4">
+                {/* Product Card */}
+                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-yellow-500/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col text-right">
+                      <h4 className="text-xl font-bold text-white mb-1">{result.productType === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
+                      <p className="text-sm text-zinc-500">منتج {result.productType === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
+                    </div>
+                    <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                      {result.productType === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
+                    </div>
+                  </div>
+                  <button onClick={() => onShowGuide?.(result.productType)} className="w-full py-4 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-bold transition-all flex items-center justify-center gap-2">
+                    <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
+                  </button>
+                </div>
+
+                {/* Discord Role Card */}
+                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-[#5865F2]/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col text-right">
+                      <h4 className="text-xl font-bold text-white mb-1">رتبة ديسكورد</h4>
+                      <p className="text-sm text-zinc-500">اربط حسابك بالسيرفر للوصول للدعم.</p>
+                    </div>
+                    <div className="w-14 h-14 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2]">
+                      <MessageCircle className="w-7 h-7" />
+                    </div>
+                  </div>
+                  <button onClick={handleAssignRole} disabled={roleLoading} className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    {roleLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                    ربط الحساب وإستلام الرتبة
+                  </button>
+                  {roleMsg && <p className="text-center text-sm mt-1 text-[#5865F2] font-bold">{roleMsg}</p>}
+                </div>
+              </div>
+
+              <button onClick={() => { setKeyInput(''); setRoleMsg(''); onReset?.(); }} className="mt-8 text-zinc-500 hover:text-white transition-colors text-sm underline decoration-white/20 underline-offset-4">تفعيل مفتاح آخر</button>
+            </motion.div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Left Card: Video */}
+            <div className="glass rounded-[32px] p-8 border border-white/5">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400"><MonitorPlay className="w-6 h-6" /></div>
+                <div><h3 className="text-xl font-black text-white">فيديو الشرح</h3><p className="text-zinc-500 text-sm">شاهد هذا المقطع لمعرفة كيفية استلام المنتج</p></div>
+              </div>
+              <CustomVideoPlayer />
+            </div>
+
+            {/* Right Card: Activation */}
+            <div className="glass rounded-[32px] p-8 border border-white/5 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]"><Key className="w-6 h-6" /></div>
+                <div><h3 className="text-xl font-black text-white">تفعيل المفتاح</h3><p className="text-zinc-500 text-sm">أدخل مفتاح المنتج المكون من 12 رمزاً</p></div>
+              </div>
+              
+              <p className="text-zinc-400 text-sm leading-relaxed mb-8">أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك فوراً. يرجى تسجيل الدخول باستخدام ديسكورد.</p>
+              
+              {user ? (
+                <div className="mb-6 py-2 px-4 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold w-fit">مسجّل دخول: {user.displayName} 🌙</div>
+              ) : (
+                <button onClick={onLogin} className="mb-6 py-3 px-6 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold hover:bg-blue-500/20 transition-all flex items-center gap-2"><LogIn className="w-4 h-4" /> يجب تسجيل الدخول أولاً</button>
+              )}
+
+              <div className="space-y-4 mt-auto">
+                <input 
+                  type="text" 
+                  placeholder="T3N-XXXXXX-XXXXXX" 
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl py-4 px-6 text-white font-mono text-center tracking-[4px] focus:outline-none focus:border-blue-500/50 transition-all" 
+                />
+                <button 
+                  onClick={() => onActivate(keyInput)}
+                  disabled={loading || !user}
+                  className="w-full btn-primary py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Key className="w-5 h-5" /> تفعيل المفتاح</>}
+                </button>
+              </div>
+              
+              {result && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 p-4 rounded-xl border ${result.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'} text-sm font-bold text-center`}>
+                  {result.message || result.error}
+                </motion.div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
