@@ -6,7 +6,7 @@ import {
   ExternalLink, AlertTriangle, ChevronDown, Gamepad2, X, LogIn, LogOut, 
   MonitorPlay, Maximize2, Copy, Check, LayoutDashboard, Users, Clock, 
   RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, Key, Plus, Ban, 
-  Snowflake, Play, Search, Bell, List, Crosshair, Cpu, Shield, HelpCircle
+  Snowflake, Play, Search, Bell, List, Crosshair, Cpu, Shield, HelpCircle, Wrench
 } from 'lucide-react';
 import { 
   auth, loginWithDiscord, logout, checkUserVIP, activateKey, isAdmin, 
@@ -1014,27 +1014,28 @@ export default function App() {
         {showFortniteGuide && <FortniteGuide onClose={() => setShowFortniteGuide(false)} user={user} />}
         {showTroubleshoot && <TroubleshootGuide onClose={() => setShowTroubleshoot(false)} />}
       </AnimatePresence>
-      {/* VIP shortcut buttons */}
+      {/* VIP Top Options Buttons */}
       {userProfile?.isVIP && (
-        <div className="fixed bottom-24 right-6 z-[89] flex flex-col gap-2">
-          {userProfile.activatedProducts?.includes('superstar') && (
-            <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              onClick={() => setShowSpooferGuide(true)}
-              className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-blue-400/30">
-              <Cpu className="w-4 h-4" /> شرح السبوفر
-            </motion.button>
-          )}
-          {userProfile.activatedProducts?.includes('fortnite') && (
-            <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              onClick={() => setShowFortniteGuide(true)}
-              className="flex items-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-purple-400/30">
-              <Gamepad2 className="w-4 h-4" /> شرح فورت نايت
-            </motion.button>
-          )}
-          <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[89] flex items-center justify-center gap-3 w-full px-4" dir="rtl">
+          <motion.button initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+            onClick={() => {
+              if (userProfile?.activatedProducts?.includes('fortnite')) {
+                setShowFortniteGuide(true);
+              } else if (userProfile?.activatedProducts?.includes('superstar')) {
+                setShowSpooferGuide(true);
+              }
+            }}
+            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-full shadow-lg transition-all border border-emerald-500/30">
+            <List className="w-5 h-5" />
+            <span className="text-sm">اختيار المنتج</span>
+            <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
+          </motion.button>
+          
+          <motion.button initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             onClick={() => setShowTroubleshoot(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-red-700 hover:bg-red-600 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-red-400/30">
-            <HelpCircle className="w-4 h-4" /> حل مشكلة
+            className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-full shadow-lg transition-all border border-red-500/30">
+            <Wrench className="w-5 h-5" />
+            <span className="text-sm">حل مشاكل عامة</span>
           </motion.button>
         </div>
       )}
