@@ -64,21 +64,23 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
         <div className="flex items-center gap-4">
           {!authLoading && (
             user ? (
-              <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-                <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-blue-500/30" alt="" />
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-white text-xs font-bold">{user.displayName || 'koz'}</span>
-                  <span className="text-blue-400 text-[10px] font-bold">ID: {getNumericId(user.uid, userProfile?.assignedId)}</span>
+              <>
+                <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                  <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-blue-500/30" alt="" />
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-white text-xs font-bold">{user.displayName || 'koz'}</span>
+                    <span className="text-blue-400 text-[10px] font-bold">ID: {getNumericId(user.uid, userProfile?.assignedId)}</span>
+                  </div>
+                  <button onClick={onLogout} className="p-1.5 hover:bg-red-500/20 rounded-full transition-all text-zinc-400 hover:text-red-400"><LogOut className="w-4 h-4" /></button>
                 </div>
-                <button onClick={onLogout} className="p-1.5 hover:bg-red-500/20 rounded-full transition-all text-zinc-400 hover:text-red-400"><LogOut className="w-4 h-4" /></button>
-              </div>
-              {userProfile?.isVIP && (
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                  className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.8)]" />
-                  <span className="text-yellow-400 font-bold text-xs tracking-wide">عميل مميز</span>
-                </motion.div>
-              )}
+                {userProfile?.isVIP && (
+                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                    className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.8)]" />
+                    <span className="text-yellow-400 font-bold text-xs tracking-wide">عميل مميز</span>
+                  </motion.div>
+                )}
+              </>
             ) : (
               <button onClick={onLogin} className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-5 py-2 rounded-full font-bold text-sm transition-all shadow-lg"><LogIn className="w-4 h-4" /> دخول</button>
             )
