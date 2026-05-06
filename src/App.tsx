@@ -402,49 +402,57 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Left Card: Video */}
-            <div className="glass rounded-[32px] p-8 border border-white/5">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400"><MonitorPlay className="w-6 h-6" /></div>
-                <div><h3 className="text-xl font-black text-white">فيديو الشرح</h3><p className="text-zinc-500 text-sm">شاهد هذا المقطع لمعرفة كيفية استلام المنتج</p></div>
+            {/* Video Card */}
+            <div className="glass rounded-[32px] p-8 border border-white/5 flex flex-col items-center text-center h-full">
+              <div className="w-20 h-20 rounded-[1.5rem] bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 mb-6 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+                <MonitorPlay className="w-10 h-10" />
               </div>
-              <CustomVideoPlayer />
+              <h3 className="text-2xl font-black text-white mb-3">فيديو الشرح</h3>
+              <p className="text-zinc-400 text-sm mb-8 max-w-sm">شاهد هذا المقطع لمعرفة كيفية استلام المنتج وتفعيله خطوة بخطوة.</p>
+              <div className="w-full mt-auto rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+                <CustomVideoPlayer />
+              </div>
             </div>
 
-            {/* Right Card: Activation */}
-            <div className="glass rounded-[32px] p-8 border border-white/5 flex flex-col">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]"><Key className="w-6 h-6" /></div>
-                <div><h3 className="text-xl font-black text-white">تفعيل المفتاح</h3><p className="text-zinc-500 text-sm">أدخل مفتاح المنتج المكون من 12 رمزاً</p></div>
+            {/* Activation Card */}
+            <div className="glass rounded-[32px] p-8 border border-white/5 flex flex-col items-center text-center h-full">
+              <div className="w-20 h-20 rounded-[1.5rem] bg-blue-600/20 flex items-center justify-center text-blue-400 border border-blue-500/30 mb-6 shadow-[0_0_30px_rgba(37,99,235,0.2)]">
+                <Key className="w-10 h-10" />
               </div>
-              
-              <p className="text-zinc-400 text-sm leading-relaxed mb-8">أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك فوراً. يرجى تسجيل الدخول باستخدام ديسكورد.</p>
+              <h3 className="text-2xl font-black text-white mb-3">تفعيل المفتاح</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm">أدخل مفتاح المنتج المكون من 12 رمزاً لاستلام مشترياتك فوراً.</p>
               
               {user ? (
-                <div className="mb-6 py-2 px-4 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold w-fit">مسجّل دخول: {user.displayName} 🌙</div>
+                <div className="mb-8 py-2 px-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  مسجّل دخول: {user.displayName}
+                </div>
               ) : (
-                <button onClick={onLogin} className="mb-6 py-3 px-6 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold hover:bg-blue-500/20 transition-all flex items-center gap-2"><LogIn className="w-4 h-4" /> يجب تسجيل الدخول أولاً</button>
+                <button onClick={onLogin} className="mb-8 py-3 px-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95">
+                  <LogIn className="w-5 h-5" /> تسجيل الدخول بديسكورد
+                </button>
               )}
 
-              <div className="space-y-4 mt-auto">
+              <div className="w-full space-y-4 mt-auto">
                 <input 
                   type="text" 
                   placeholder="T3N-XXXXXX-XXXXXX" 
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-2xl py-4 px-6 text-white font-mono text-center tracking-[4px] focus:outline-none focus:border-blue-500/50 transition-all" 
+                  className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 px-6 text-white font-mono text-center tracking-[4px] focus:outline-none focus:border-blue-500/50 transition-all text-lg shadow-inner" 
                 />
                 <button 
                   onClick={() => onActivate(keyInput)}
                   disabled={loading || !user}
-                  className="w-full btn-primary py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50"
+                  className="w-full btn-primary py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50 transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)]"
                 >
-                  {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Key className="w-5 h-5" /> تفعيل المفتاح</>}
+                  {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Key className="w-6 h-6" /> تفعيل المفتاح</>}
                 </button>
               </div>
               
               {result && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 p-4 rounded-xl border ${result.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'} text-sm font-bold text-center`}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`w-full mt-6 p-4 rounded-xl border ${result.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'} text-sm font-bold text-center flex items-center justify-center gap-2`}>
+                  {result.success ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
                   {result.message || result.error}
                 </motion.div>
               )}
