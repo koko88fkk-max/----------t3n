@@ -362,21 +362,23 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
               
               {/* Cards Container */}
               <div className="w-full flex flex-col gap-4">
-                {/* Product Card */}
-                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-yellow-500/30 transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col text-right">
-                      <h4 className="text-xl font-bold text-white mb-1">{result.productType === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
-                      <p className="text-sm text-zinc-500">منتج {result.productType === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
+                {/* Product Cards */}
+                {(result.activatedProducts || [result.productType]).map((prod: string) => (
+                  <div key={prod} className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-yellow-500/30 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col text-right">
+                        <h4 className="text-xl font-bold text-white mb-1">{prod === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
+                        <p className="text-sm text-zinc-500">منتج {prod === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                        {prod === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
+                      </div>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
-                      {result.productType === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
-                    </div>
+                    <button onClick={() => onShowGuide?.(prod)} className="w-full py-4 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-bold transition-all flex items-center justify-center gap-2">
+                      <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
+                    </button>
                   </div>
-                  <button onClick={() => onShowGuide?.(result.productType)} className="w-full py-4 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-500 font-bold transition-all flex items-center justify-center gap-2">
-                    <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
-                  </button>
-                </div>
+                ))}
 
                 {/* Discord Role Card */}
                 <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-[#5865F2]/30 transition-all">
@@ -1073,10 +1075,15 @@ export default function App() {
         provider: 'discord'
       });
       setActivationResult(res);
-      const profile = await getUserData(user.uid);
-      setUserProfile(profile);
-      if (res.success) {
-        // Success state is now handled by the ActivationGateway UI directly
+      if (res.success && res.activatedProducts) {
+        setUserProfile((prev: any) => ({
+          ...prev,
+          isVIP: true,
+          activatedProducts: res.activatedProducts
+        }));
+      } else {
+        const profile = await getUserData(user.uid);
+        setUserProfile(profile);
       }
     } catch (e: any) {
       setActivationResult({ success: false, error: e.message || 'حدث خطأ غير متوقع' });
