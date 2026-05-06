@@ -498,8 +498,6 @@ function Rules() {
 
 function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
   const [copiedCmd, setCopiedCmd] = useState(false);
-  const [roleLoading, setRoleLoading] = useState(false);
-  const [roleMsg, setRoleMsg] = useState('');
   const winCmd = 'windowsdefender://threatsettings/';
 
   useEffect(() => {
@@ -511,24 +509,6 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
     navigator.clipboard.writeText(winCmd);
     setCopiedCmd(true);
     setTimeout(() => setCopiedCmd(false), 2000);
-  };
-
-  const handleAssignRole = async () => {
-    if (!user) return;
-    setRoleLoading(true);
-    setRoleMsg('');
-    try {
-      const idToken = await user.getIdToken();
-      const discordId = user.uid.replace('discord_', '');
-      const res = await fetch('/api/assign-role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ discordId, accessToken: '', idToken })
-      });
-      const data = await res.json();
-      setRoleMsg(data.success ? '✅ تم ربط الرتبة بنجاح! ادخل السيرفر الآن.' : ('❌ ' + (data.error || 'حدث خطأ')));
-    } catch { setRoleMsg('❌ فشل الاتصال بالسيرفر'); }
-    setRoleLoading(false);
   };
 
   return createPortal(
@@ -735,23 +715,18 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
           </div>
         </motion.div>
 
-        {/* استلام الرتبة */}
+        {/* Discord Help */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="mb-8">
-          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center">
-            <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
-            <p className="text-blue-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
-            {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
-                className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] disabled:opacity-60 flex items-center gap-2 justify-center">
-                {roleLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> جاري الربط...</> : <><MessageCircle className="w-5 h-5" /> استلام الرتبة</>}
-              </motion.button>
-              <a href={DISCORD_URL} target="_blank"
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-lg transition-all border border-white/10 flex items-center gap-2 justify-center">
-                <ExternalLink className="w-5 h-5" /> دخول السيرفر
-              </a>
+          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-[#5865F2]/20 flex items-center justify-center text-[#5865F2] mb-4">
+              <MessageCircle className="w-8 h-8" />
             </div>
+            <h3 className="text-2xl font-bold text-white mb-3">مافهمت شي؟</h3>
+            <p className="text-blue-200/60 mb-6 max-w-md mx-auto">حياك سيرفر الديسكورد، فريق الدعم الفني متواجد لمساعدتك خطوة بخطوة.</p>
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer"
+              className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] flex items-center gap-3 justify-center w-full sm:w-auto hover:scale-105 active:scale-95">
+              <ExternalLink className="w-5 h-5" /> دخول سيرفر الديسكورد
+            </a>
           </div>
         </motion.div>
 
