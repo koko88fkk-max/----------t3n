@@ -41,14 +41,17 @@ const getNumericId = (uid: string, assignedId?: number) => {
 // 🏗️ Components
 // ==========================================
 
-function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser, unreadCount, notifications, onReadNotifications }: any) {
+function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser, unreadCount, notifications, onReadNotifications, setShowSpooferGuide, setShowFortniteGuide, setShowTroubleshoot }: any) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifPopup, setShowNotifPopup] = useState(false);
+  const [showProductMenu, setShowProductMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const productMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) setShowNotifPopup(false);
+      if (productMenuRef.current && !productMenuRef.current.contains(event.target as Node)) setShowProductMenu(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -108,6 +111,44 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
               )}
             </AnimatePresence>
           </div>
+          
+          {userProfile?.isVIP && (
+            <div className="hidden lg:flex items-center gap-3 border-l border-white/10 pl-4 ml-4" dir="rtl">
+              <button onClick={() => setShowTroubleshoot(true)} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-full shadow-lg transition-all border border-red-500/30">
+                <Wrench className="w-4 h-4" />
+                <span className="text-xs">حل مشاكل عامة</span>
+              </button>
+              
+              <div className="relative" ref={productMenuRef}>
+                <button onClick={() => setShowProductMenu(!showProductMenu)} className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-full shadow-lg transition-all border border-emerald-500/30">
+                  <List className="w-4 h-4" />
+                  <span className="text-xs">اختيار المنتج</span>
+                  <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                </button>
+                <AnimatePresence>
+                  {showProductMenu && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 mt-3 w-48 bg-[#0e0e1a] border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden z-[110]">
+                      <div className="flex flex-col p-2 gap-1">
+                        {!userProfile.activatedProducts?.length && (
+                          <div className="p-3 text-xs text-center text-zinc-500">لا يوجد منتجات مفعلة</div>
+                        )}
+                        {userProfile.activatedProducts?.includes('superstar') && (
+                          <button onClick={() => { setShowProductMenu(false); setShowSpooferGuide(true); }} className="flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-blue-400">
+                            <Cpu className="w-4 h-4" /> قسم السبوفر
+                          </button>
+                        )}
+                        {userProfile.activatedProducts?.includes('fortnite') && (
+                          <button onClick={() => { setShowProductMenu(false); setShowFortniteGuide(true); }} className="flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-purple-400">
+                            <Gamepad2 className="w-4 h-4" /> قسم فورت نايت
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Center: Nav Links */}
@@ -978,6 +1019,9 @@ export default function App() {
         notifications={notifications}
         unreadCount={unreadNotifs}
         onReadNotifications={() => setUnreadNotifs(0)}
+        setShowSpooferGuide={setShowSpooferGuide}
+        setShowFortniteGuide={setShowFortniteGuide}
+        setShowTroubleshoot={setShowTroubleshoot}
       />
       
       <main>
@@ -1014,31 +1058,6 @@ export default function App() {
         {showFortniteGuide && <FortniteGuide onClose={() => setShowFortniteGuide(false)} user={user} />}
         {showTroubleshoot && <TroubleshootGuide onClose={() => setShowTroubleshoot(false)} />}
       </AnimatePresence>
-      {/* VIP Top Options Buttons */}
-      {userProfile?.isVIP && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[89] flex items-center justify-center gap-3 w-full px-4" dir="rtl">
-          <motion.button initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-            onClick={() => {
-              if (userProfile?.activatedProducts?.includes('fortnite')) {
-                setShowFortniteGuide(true);
-              } else if (userProfile?.activatedProducts?.includes('superstar')) {
-                setShowSpooferGuide(true);
-              }
-            }}
-            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-full shadow-lg transition-all border border-emerald-500/30">
-            <List className="w-5 h-5" />
-            <span className="text-sm">اختيار المنتج</span>
-            <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
-          </motion.button>
-          
-          <motion.button initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            onClick={() => setShowTroubleshoot(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-full shadow-lg transition-all border border-red-500/30">
-            <Wrench className="w-5 h-5" />
-            <span className="text-sm">حل مشاكل عامة</span>
-          </motion.button>
-        </div>
-      )}
     </div>
   );
 }
