@@ -1,0 +1,429 @@
+﻿
+> C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1199:function SpooferGuide({ onClose }: { onClose: () => 
+void }) {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1200:  const [copiedCmd, setCopiedCmd] = useState(false);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1201:  const winCommand = 
+'windowsdefender://threatsettings/';
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1202:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1203:  const copyCommand = () => {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1204:    navigator.clipboard.writeText(winCommand);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1205:    setCopiedCmd(true);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1206:    setTimeout(() => setCopiedCmd(false), 2000);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1207:  };
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1208:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1209:  useEffect(() => {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1210:    // Lock body scroll when overlay is open
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1211:    document.body.style.overflow = 'hidden';
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1212:    return () => {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1213:      document.body.style.overflow = 'unset';
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1214:    };
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1215:  }, []);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1216:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1217:  return createPortal(
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1218:    <motion.div
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1219:      initial={{ opacity: 0 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1220:      animate={{ opacity: 1 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1221:      exit={{ opacity: 0 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1222:      className="fixed inset-0 z-[9999] 
+overflow-y-auto"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1223:      style={{
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1224:        background: 'radial-gradient(ellipse at 
+center, #0a1a5c 0%, #040c2e 50%, #020618 100%)',
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1225:      }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1226:    >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1227:      {/* Blue Grid Background */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1228:      <div className="fixed inset-0 z-0 opacity-30 
+pointer-events-none" style={{
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1229:        backgroundImage: 
+'linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, 
+transparent 1px)',
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1230:        backgroundSize: '60px 60px',
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1231:      }} />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1232:      <div className="fixed inset-0 z-0 
+pointer-events-none" style={{
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1233:        background: 'radial-gradient(ellipse at 
+center, rgba(37,99,235,0.15) 0%, transparent 70%)',
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1234:      }} />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1235:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1236:      {/* Header */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1237:      <div className="sticky top-0 z-50 
+backdrop-blur-xl bg-[#040c2e]/80 border-b border-blue-500/20">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1238:        <div className="container mx-auto px-4 h-20 
+flex items-center justify-between">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1239:          <div className="flex items-center gap-3">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1240:            <img src={LOGO_URL} alt="T3N" 
+className="w-10 h-10 object-contain rounded-lg" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1241:            <span className="font-bold text-xl 
+text-white">شرح السبوفر Spoofer</span>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1242:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1243:          <motion.button
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1244:            whileHover={{ scale: 1.1 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1245:            whileTap={{ scale: 0.9 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1246:            onClick={onClose}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1247:            className="w-10 h-10 rounded-full 
+bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all border 
+border-white/10"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1248:          >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1249:            <X className="w-5 h-5" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1250:          </motion.button>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1251:        </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1252:      </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1253:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1254:      {/* Content */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1255:      <div className="container mx-auto px-4 py-16 
+max-w-4xl relative z-10">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1256:        
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1257:        {/* Title */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1258:        <motion.div initial={{ opacity: 0, y: 30 }} 
+animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1259:          <div className="w-20 h-20 bg-blue-500/10 
+rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20 
+shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1260:            <Cpu className="w-10 h-10 text-blue-400" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1261:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1262:          <h1 className="text-4xl md:text-5xl 
+font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">شرح استخدام السبوفر</h1>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1263:          <p className="text-blue-200/60 text-lg 
+max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتفعيل السبوفر بنجاح</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1264:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1265:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1266:        {/* ===== STEP 1: Disable Defender ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1267:        <motion.div initial={{ opacity: 0, x: -30 }} 
+animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1268:          <div className="rounded-2xl p-6 md:p-8 
+bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1269:            <div className="flex gap-5 items-start 
+mb-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1270:              <div className="w-14 h-14 rounded-2xl 
+bg-red-500/10 text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1271:                <Shield className="w-7 h-7" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1272:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1273:              <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1274:                <h3 className="text-xl font-bold mb-2 
+text-white">أول شي: تطفي الحماية بشكل كامل</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1275:                <p className="text-blue-200/60 
+leading-relaxed text-lg">والي ما يعرف، تضغط <span className="text-white font-bold">Win+R</span> وتحط هذا الأمر:</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1276:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1277:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1278:            <div className="flex items-center gap-3 
+bg-black/40 rounded-xl p-4 border border-blue-500/20 mb-4">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1279:              <code className="text-blue-300 font-mono 
+text-lg flex-1 select-all" dir="ltr">{winCommand}</code>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1280:              <motion.button
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1281:                whileHover={{ scale: 1.05 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1282:                whileTap={{ scale: 0.95 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1283:                onClick={copyCommand}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1284:                className={`px-5 py-2.5 rounded-xl 
+font-bold text-sm flex items-center gap-2 transition-all ${copiedCmd ? 'bg-emerald-500 text-white' : 'bg-blue-500 
+text-white hover:bg-blue-400'}`}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1285:              >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1286:                {copiedCmd ? <><CheckCircle2 
+className="w-4 h-4" /> تم النسخ</> : <><ExternalLink className="w-4 h-4" /> نسخ</>}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1287:              </motion.button>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1288:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1289:            
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1290:            <motion.div initial={{ opacity: 0 }} 
+animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 
+text-center">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1291:              <p className="text-red-400 font-bold 
+text-lg">⚠️ وتطفي جميع الخيارات حقت الحماية اللي ظاهرة لك بالكامل!</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1292:            </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1293:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1294:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1295:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1296:        {/* ===== STEP 2: UpdatedApple ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1297:        <motion.div initial={{ opacity: 0, x: -30 }} 
+animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="mb-8">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1298:          <div className="rounded-2xl p-6 md:p-8 
+bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1299:            <div className="flex gap-5 items-start 
+mb-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1300:              <div className="w-14 h-14 rounded-2xl 
+bg-yellow-500/10 text-yellow-400 flex items-center justify-center shrink-0 border border-yellow-500/20">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1301:                <FileArchive className="w-7 h-7" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1302:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1303:              <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1304:                <h3 className="text-xl font-bold mb-2 
+text-white">ثم تروح لملف discord.gg t3n</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1305:                <p className="text-blue-200/60 
+leading-relaxed text-lg">تدخل على مجلد <span className="text-white font-bold">كلين</span> ثم تشغل ملف <span 
+className="text-yellow-400 font-bold">UpdatedApple.exe</span> — مهم تسويه قبل السبوفر!</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1306:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1307:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1308:            
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1309:            <h4 className="text-lg font-bold 
+text-white mb-4 flex items-center gap-2">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1310:              <span 
+className="text-blue-400">👇</span> شرح UpdatedApple طريقة استعمال
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1311:            </h4>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1312:            <div className="rounded-xl overflow-hidden 
+border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1313:              <video controls 
+controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1314:                <source src="/video-updatedapple.mp4" 
+type="video/mp4" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1315:                متصفحك لا يدعم تشغيل الفيديو
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1316:              </video>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1317:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1318:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1319:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1320:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1321:        {/* ===== STEP 3: Spoofer ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1322:        <motion.div initial={{ opacity: 0, x: -30 }} 
+animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="mb-8">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1323:          <div className="rounded-2xl p-6 md:p-8 
+bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1324:            <div className="flex gap-5 items-start 
+mb-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1325:              <div className="w-14 h-14 rounded-2xl 
+bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1326:                <Cpu className="w-7 h-7" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1327:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1328:              <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1329:                <h3 className="text-xl font-bold mb-2 
+text-white">بعد ما تسوي UpdatedApple.exe وإعادة تشغيل للجهاز</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1330:                <p className="text-blue-200/60 
+leading-relaxed text-lg">تكمل شرح السبوفر 👇</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1331:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1332:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1333:            
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1334:            <h4 className="text-lg font-bold 
+text-white mb-4 flex items-center gap-2">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1335:              <span 
+className="text-blue-400">👇</span> شرح السبوفر
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1336:            </h4>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1337:            <div className="rounded-xl overflow-hidden 
+border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1338:              <video controls 
+controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1339:                <source src="/video-spoofer.mp4" 
+type="video/mp4" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1340:                متصفحك لا يدعم تشغيل الفيديو
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1341:              </video>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1342:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1343:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1344:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1345:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1346:        {/* ===== STEP 4: Done ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1347:        <motion.div initial={{ opacity: 0, x: -30 }} 
+animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }} className="mb-8">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1348:          <div className="rounded-2xl p-6 md:p-8 
+bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1349:            <div className="flex flex-col md:flex-row 
+gap-5 items-start">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1350:              <div className="w-14 h-14 rounded-2xl 
+bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1351:                <Gamepad2 className="w-7 h-7" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1352:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1353:              <div className="flex-1">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1354:                <h3 className="text-xl font-bold mb-2 
+text-white">بعد ما تسوي السبوفر وإعادة تشغيل للجهاز</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1355:                <p className="text-blue-200/60 
+leading-relaxed text-lg mb-4">تخش بحساب جديد بأي لعبة تبيها ومبروك عليك باندك انفك! 🎉</p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1356:                
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1357:                <div className="bg-red-500/10 p-4 
+rounded-xl border border-red-500/30 mb-6 flex items-start gap-3">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1358:                  <ShieldAlert className="w-6 h-6 
+text-red-500 shrink-0 mt-0.5" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1359:                  <p className="text-red-200 text-sm 
+md:text-base font-bold leading-relaxed">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1360:                    مهم جداً: لازم تسوي وتخش بحساب 
+جديد تماماً عشان ما يرجع لك الباند! لو دخلت بحسابك القديم المتبند راح تنحظر من جديد وعشان تتأكد إنه راح الباند.
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1361:                  </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1362:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1363:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1364:                <div className="bg-black/30 p-5 md:p-6 
+rounded-2xl border border-blue-500/10">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1365:                  <p className="text-zinc-200 
+leading-relaxed mb-3 font-medium">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1366:                    وهذا <a 
+href="https://tmailor.com/ar/" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold 
+hover:text-blue-300 hover:underline transition-all">موقع ايميل مهمل</a> تقدر تسوي فيه حساب على السريع.
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1367:                  </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1368:                  <p className="text-zinc-400 
+leading-relaxed">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1369:                    ولو ما زبط دور لك ايميل معتمد 
+سوا{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1370:                    <a 
+href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold 
+hover:text-blue-300 hover:underline transition-all">gmail</a>{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1371:                    أو{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1372:                    <a 
+href="https://account.proton.me/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold 
+hover:text-blue-300 hover:underline transition-all">Proton Mail</a>{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1373:                    أو أي ايميل جاهز عندك.
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1374:                  </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1375:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1376:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1377:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1378:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1379:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1380:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1381:        {/* ===== Formatted Warning Section ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1382:        <motion.div initial={{ opacity: 0, x: -30 }} 
+animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.65 }} className="mb-8">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1383:          <div className="rounded-2xl p-6 md:p-8 
+bg-black/40 backdrop-blur-lg border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.15)] relative overflow-hidden">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1384:            <div className="absolute top-0 right-0 
+w-full h-1 bg-gradient-to-l from-red-500 to-transparent"></div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1385:            
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1386:            <div className="flex gap-5 items-start 
+mb-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1387:              <div className="w-14 h-14 rounded-2xl 
+bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 border border-red-500/30">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1388:                <AlertCircle className="w-7 h-7" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1389:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1390:              <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1391:                <h3 className="text-xl font-bold mb-2 
+text-red-500">تنبيه للي ما ضبط معه ⚠️</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1392:                <p className="text-red-200/80 
+leading-relaxed text-lg">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1393:                  والي ما يضبط معه أو رجع له الباند، 
+يفرمت الجهاز PC بفلاشة USB.
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1394:                </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1395:              </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1396:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1397:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1398:            <div className="grid md:grid-cols-2 gap-4 
+mt-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1399:              <a 
+href="https://youtu.be/XZ-9RbqlA2k?si=AfSzAF9BtqForaG6" target="_blank" rel="noopener noreferrer" className="flex 
+items-center gap-4 bg-[#0a1a5c]/40 p-5 rounded-xl border border-blue-500/20 hover:border-red-500/50 
+hover:bg-red-500/10 transition-all font-bold text-white group">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1400:                <div className="bg-red-500/20 p-2 
+rounded-lg text-red-400 group-hover:bg-red-500/40 transition-colors">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1401:                  <MonitorPlay className="w-6 h-6" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1402:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1403:                <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1404:                  <div className="text-sm 
+text-red-300/60 mb-1">شرح يوتيوب</div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1405:                  <div className="text-lg">فورمات 
+ويندوز <span className="text-blue-400">11</span></div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1406:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1407:              </a>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1408:              <a 
+href="https://youtu.be/WaFxvUmsNWs?si=EORZDATVTJYPor_X" target="_blank" rel="noopener noreferrer" className="flex 
+items-center gap-4 bg-[#0a1a5c]/40 p-5 rounded-xl border border-blue-500/20 hover:border-red-500/50 
+hover:bg-red-500/10 transition-all font-bold text-white group">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1409:                <div className="bg-red-500/20 p-2 
+rounded-lg text-red-400 group-hover:bg-red-500/40 transition-colors">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1410:                  <MonitorPlay className="w-6 h-6" />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1411:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1412:                <div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1413:                  <div className="text-sm 
+text-red-300/60 mb-1">شرح يوتيوب</div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1414:                  <div className="text-lg">فورمات 
+ويندوز <span className="text-blue-400">10</span></div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1415:                </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1416:              </a>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1417:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1418:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1419:            <p className="text-white font-bold mt-6 
+text-center text-lg bg-red-500/20 p-4 rounded-xl border border-red-500/30 shadow-inner">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1420:              وبعد الفورمات عيد خطوات الشرح كاملة، وخش 
+بحساب جديد، وبينفك الباند عنك! 💯
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1421:            </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1422:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1423:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1424:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1425:        {/* ===== Reviews Section ===== */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1426:        <motion.div initial={{ opacity: 0, y: 20 }} 
+animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mb-6">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1427:          <div className="rounded-2xl p-6 md:p-8 
+bg-[#0a1a5c]/60 backdrop-blur-lg border border-yellow-500/20 shadow-[0_0_25px_rgba(234,179,8,0.1)] text-center">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1428:            <div className="flex items-center 
+justify-center gap-2 mb-4">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1429:              {[...Array(5)].map((_, i) => (
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1430:                <motion.div
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1431:                  key={i}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1432:                  initial={{ opacity: 0, scale: 0, 
+rotate: -180 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1433:                  animate={{ opacity: 1, scale: 1, 
+rotate: 0 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1434:                  transition={{ delay: 0.8 + i * 0.1, 
+type: "spring", stiffness: 200 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1435:                  className="w-12 h-12 relative"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1436:                  style={{ filter: 'drop-shadow(0 0 
+6px rgba(234,179,8,0.5))' }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1437:                >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1438:                  <img
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1439:                    src={LOGO_URL}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1440:                    alt="★"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1441:                    className="w-full h-full 
+object-cover"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1442:                    style={{ clipPath: 'polygon(50% 
+0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1443:                  />
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1444:                </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1445:              ))}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1446:            </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1447:            <h3 className="text-2xl font-bold 
+text-white mb-4">شي أخير، لا تحرمنا من تقييمك!</h3>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1448:            <p className="text-blue-200/60 text-lg 
+mb-2">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1449:              في روم الدسكورد{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1450:              <a 
+href="https://discord.com/channels/1396959491786018826/1397221014215331891" target="_blank" rel="noopener noreferrer" 
+className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 transition-colors">التقييمات</a>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1451:              {' '}وفي{' '}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1452:              <a href="https://salla.sa/t3nn/" 
+target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline 
+underline-offset-4 transition-colors">متجر تعن</a>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1453:            </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1454:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1455:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1456:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1457:        {/* Note about role */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1458:        <motion.div initial={{ opacity: 0, y: 20 }} 
+animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85 }}>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1459:          <div className="rounded-2xl p-5 
+bg-blue-500/5 border border-blue-500/20 text-center">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1460:            <p className="text-blue-300/70 text-sm 
+leading-relaxed">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1461:              إذا ما عندك الرتبة عشان تقيّم في 
+الديسكورد، روح عند <span className="text-white font-bold">استلام الطلبات</span> وحط رقم طلبك وبيطلع لك خيار <span 
+className="text-white font-bold">ربط الحساب وإستلام الرتبة</span>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1462:            </p>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1463:          </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1464:        </motion.div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1465:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1466:        {/* Back Button */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1467:        <div className="mt-12 text-center pb-12">
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1468:          <motion.button
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1469:            whileHover={{ scale: 1.05 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1470:            whileTap={{ scale: 0.95 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1471:            onClick={onClose}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1472:            className="px-8 py-3 bg-white/10 
+text-white rounded-xl border border-white/10 hover:bg-white/20 transition-all font-bold"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1473:          >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1474:            الرجوع للصفحة الرئيسية
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1475:          </motion.button>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1476:        </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1477:      </div>
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1478:    </motion.div>,
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1479:    document.body
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1480:  );
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1481:}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1482:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1483:function SiteGuide({ onClose }: { onClose: () => void 
+}) {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1484:  useEffect(() => {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1485:    document.body.style.overflow = 'hidden';
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1486:    return () => {
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1487:      document.body.style.overflow = 'unset';
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1488:    };
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1489:  }, []);
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1490:
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1491:  return createPortal(
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1492:    <motion.div
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1493:      initial={{ opacity: 0 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1494:      animate={{ opacity: 1 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1495:      exit={{ opacity: 0 }}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1496:      className="fixed inset-0 z-[9999] 
+overflow-y-auto"
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1497:    >
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1498:      {/* Background Image */}
+  C:\Users\koz\Desktop\موقع تعن\بوابة\متجر-تعن-t3n\App.tsx:1499:      <div className="fixed inset-0 z-0 bg-cover 
+bg-center bg-no-repeat pointer-events-none" style={{ backgroundImage: 'url("/bg-site-guide.jpg")' }} />
+
+

@@ -441,62 +441,197 @@ function Rules() {
   );
 }
 
-function VIPArea({ userProfile }: any) {
-  if (!userProfile?.isVIP) return null;
+function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
+  const [copiedCmd, setCopiedCmd] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [roleMsg, setRoleMsg] = useState('');
+  const winCmd = 'windowsdefender://threatsettings/';
 
-  return (
-    <section id="vip-area" className="py-24 bg-gradient-to-b from-blue-900/20 to-transparent border-y border-blue-500/20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-      <div className="container mx-auto px-6 text-center relative z-10">
-        <motion.h2 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-5xl font-black text-white mb-6 flex justify-center items-center gap-4"
-        >
-          <ShieldCheck className="text-emerald-400 w-12 h-12" /> منطقة الأعضاء VIP
-        </motion.h2>
-        <p className="text-zinc-300 mb-12 max-w-2xl mx-auto text-lg font-medium">
-          مرحباً بك! لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الدخول لسيرفر الديسكورد برتبتك، تحميل الملفات، ومشاهدة الشروحات الحصرية.
-        </p>
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* Discord Card */}
-          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-[#5865F2]/50 transition-all flex flex-col items-center shadow-xl">
-            <div className="w-20 h-20 rounded-full bg-[#5865F2]/20 flex items-center justify-center text-[#5865F2] mb-6 shadow-inner">
-              <MessageCircle className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">رتبة الديسكورد</h3>
-            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">تم منحك الرتبة تلقائياً! ادخل السيرفر الآن وتفاعل مع المشتركين واستمتع بالدعم المباشر.</p>
-            <a href={DISCORD_URL} target="_blank" className="w-full py-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(88,101,242,0.4)] hover:shadow-[0_0_30px_rgba(88,101,242,0.6)]">
-              دخول السيرفر
-            </a>
-          </motion.div>
+  const copyCmd = () => {
+    navigator.clipboard.writeText(winCmd);
+    setCopiedCmd(true);
+    setTimeout(() => setCopiedCmd(false), 2000);
+  };
 
-          {/* Download Card */}
-          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-emerald-500/50 transition-all flex flex-col items-center shadow-xl">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 shadow-inner">
-              <Download className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">تحميل الملفات</h3>
-            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">حمل أحدث إصدارات اللودر والبرامج بضغطة زر واحدة عبر خوادمنا السريعة والمشفرة.</p>
-            <button className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)]">
-              التحميل الان
-            </button>
-          </motion.div>
+  const handleAssignRole = async () => {
+    if (!user) return;
+    setRoleLoading(true);
+    setRoleMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const discordId = user.uid.replace('discord_', '');
+      const res = await fetch('/api/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discordId, accessToken: '', idToken })
+      });
+      const data = await res.json();
+      setRoleMsg(data.success ? '✅ تم ربط الرتبة بنجاح! ادخل السيرفر الآن.' : ('❌ ' + (data.error || 'حدث خطأ')));
+    } catch { setRoleMsg('❌ فشل الاتصال بالسيرفر'); }
+    setRoleLoading(false);
+  };
 
-          {/* Tutorial Card */}
-          <motion.div whileHover={{ scale: 1.02, y: -5 }} className="glass rounded-[32px] p-8 border border-white/10 hover:border-purple-500/50 transition-all flex flex-col items-center shadow-xl">
-            <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 shadow-inner">
-              <Play className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">الشروحات</h3>
-            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">تعلم كيفية التركيب والاستخدام خطوة بخطوة من خلال فيديوهات شرح مفصلة وحصرية لك.</p>
-            <button className="w-full py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all text-lg shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)]">
-              مشاهدة الشرح
-            </button>
-          </motion.div>
+  return createPortal(
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] overflow-y-auto"
+      style={{ background: 'radial-gradient(ellipse at center, #0a1a5c 0%, #040c2e 50%, #020618 100%)' }}
+    >
+      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(59,130,246,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.4) 1px, transparent 1px)',
+        backgroundSize: '60px 60px'
+      }} />
+
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#040c2e]/80 border-b border-blue-500/20">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg" />
+            <span className="font-bold text-xl text-white">شرح السبوفر Spoofer</span>
+          </div>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/10">
+            <X className="w-5 h-5" />
+          </motion.button>
         </div>
       </div>
-    </section>
+
+      <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10">
+        {/* Title */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+          <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+            <Cpu className="w-10 h-10 text-blue-400" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">شرح استخدام السبوفر</h1>
+          <p className="text-blue-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتفعيل السبوفر بنجاح</p>
+        </motion.div>
+
+        {/* STEP 1 */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
+                <Shield className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">أول شي: تطفي الحماية بشكل كامل</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تضغط <span className="text-white font-bold">Win+R</span> وتحط هذا الأمر:</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-black/40 rounded-xl p-4 border border-blue-500/20 mb-4">
+              <code className="text-blue-300 font-mono text-lg flex-1 select-all" dir="ltr">{winCmd}</code>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={copyCmd}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${copiedCmd ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white hover:bg-blue-400'}`}>
+                {copiedCmd ? <><CheckCircle2 className="w-4 h-4" /> تم النسخ</> : <><ExternalLink className="w-4 h-4" /> نسخ</>}
+              </motion.button>
+            </div>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+              <p className="text-red-400 font-bold text-lg">⚠️ وتطفي جميع الخيارات حقت الحماية اللي ظاهرة لك بالكامل!</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* STEP 2 */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center shrink-0 border border-yellow-500/20">
+                <Download className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">ثم تروح لملف discord.gg t3n</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تدخل على مجلد <span className="text-white font-bold">كلين</span> ثم تشغل ملف <span className="text-yellow-400 font-bold">UpdatedApple.exe</span> — مهم تسويه قبل السبوفر!</p>
+              </div>
+            </div>
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح UpdatedApple طريقة استعمال</h4>
+            <div className="rounded-xl overflow-hidden border border-blue-500/20">
+              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                <source src="/video-updatedapple.mp4" type="video/mp4" />
+                متصفحك لا يدعم تشغيل الفيديو
+              </video>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* STEP 3 */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20">
+            <div className="flex gap-5 items-start mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                <Cpu className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">بعد ما تسوي UpdatedApple.exe وإعادة تشغيل للجهاز</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تكمل شرح السبوفر 👇</p>
+              </div>
+            </div>
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح السبوفر</h4>
+            <div className="rounded-xl overflow-hidden border border-blue-500/20">
+              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                <source src="/video-spoofer.mp4" type="video/mp4" />
+                متصفحك لا يدعم تشغيل الفيديو
+              </video>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* STEP 4 */}
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20">
+            <div className="flex gap-5 items-start">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                <Gamepad2 className="w-7 h-7" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2 text-white">بعد ما تسوي السبوفر وإعادة تشغيل للجهاز</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg mb-4">تخش بحساب جديد بأي لعبة تبيها ومبروك عليك باندك انفك! 🎉</p>
+                <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/30 mb-4 flex items-start gap-3">
+                  <ShieldAlert className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-red-200 text-sm md:text-base font-bold leading-relaxed">مهم جداً: لازم تسوي وتخش بحساب جديد تماماً عشان ما يرجع لك الباند! لو دخلت بحسابك القديم المتبند راح تنحظر من جديد.</p>
+                </div>
+                <div className="bg-black/30 p-5 rounded-2xl border border-blue-500/10">
+                  <p className="text-zinc-200 leading-relaxed mb-3 font-medium">وهذا <a href="https://tmailor.com/ar/" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:underline">موقع ايميل مهمل</a> تقدر تسوي فيه حساب على السريع.</p>
+                  <p className="text-zinc-400 leading-relaxed">ولو ما زبط دور لك ايميل معتمد سوا <a href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:underline">Gmail</a> أو <a href="https://account.proton.me/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:underline">Proton Mail</a> أو أي ايميل جاهز عندك.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* استلام الرتبة */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mb-8">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-lg border border-[#5865F2]/30 text-center">
+            <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
+            <p className="text-blue-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
+            {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
+                className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] disabled:opacity-60 flex items-center gap-2 justify-center">
+                {roleLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> جاري الربط...</> : <><MessageCircle className="w-5 h-5" /> استلام الرتبة</>}
+              </motion.button>
+              <a href={DISCORD_URL} target="_blank"
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-lg transition-all border border-white/10 flex items-center gap-2 justify-center">
+                <ExternalLink className="w-5 h-5" /> دخول السيرفر
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Back */}
+        <div className="mt-8 text-center pb-12">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose}
+            className="px-8 py-3 bg-white/10 text-white rounded-xl border border-white/10 hover:bg-white/20 transition-all font-bold">
+            الرجوع للصفحة الرئيسية
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>,
+    document.body
   );
 }
 
@@ -532,6 +667,7 @@ export default function App() {
   
   const [activationResult, setActivationResult] = useState<any>(null);
   const [activationLoading, setActivationLoading] = useState(false);
+  const [showSpooferGuide, setShowSpooferGuide] = useState(false);
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -638,9 +774,11 @@ export default function App() {
         provider: 'discord'
       });
       setActivationResult(res);
-      // Reload profile
       const profile = await getUserData(user.uid);
       setUserProfile(profile);
+      if (res.success) {
+        setTimeout(() => setShowSpooferGuide(true), 800);
+      }
     } catch (e: any) {
       setActivationResult({ success: false, error: e.message || 'حدث خطأ غير متوقع' });
     } finally { setActivationLoading(false); }
@@ -669,7 +807,6 @@ export default function App() {
           loading={activationLoading}
           result={activationResult}
         />
-        {userProfile?.isVIP && <VIPArea userProfile={userProfile} />}
         <Products />
         <Reviews />
         <Rules />
@@ -693,7 +830,16 @@ export default function App() {
         {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} loading={authLoading} />}
         {showAdminDashboard && <AdminDashboard onClose={() => setShowAdminDashboard(false)} />}
         {showKeyManagement && <KeyManagement onClose={() => setShowKeyManagement(false)} />}
+        {showSpooferGuide && <SpooferGuide onClose={() => setShowSpooferGuide(false)} user={user} />}
       </AnimatePresence>
+      {/* VIP shortcut button */}
+      {userProfile?.isVIP && !showSpooferGuide && (
+        <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          onClick={() => setShowSpooferGuide(true)}
+          className="fixed bottom-24 right-6 z-[89] flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-2xl text-sm transition-all border border-blue-400/30">
+          <Cpu className="w-4 h-4" /> شرح السبوفر
+        </motion.button>
+      )}
     </div>
   );
 }
