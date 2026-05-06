@@ -535,15 +535,15 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
 
       {/* Floating Download Card - Desktop */}
       <div className="hidden 2xl:flex fixed top-1/2 right-12 -translate-y-1/2 z-50 flex-col gap-4 w-80">
-        <div className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-yellow-500/30 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-[0_0_40px_rgba(234,179,8,0.15)]">
-          <div className="w-24 h-24 rounded-3xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+        <div className="bg-[#0a1a5c]/80 backdrop-blur-2xl border border-blue-500/30 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+          <div className="w-24 h-24 rounded-3xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
             <Cpu className="w-12 h-12" />
           </div>
           <div className="text-center w-full">
             <h3 className="text-white font-black text-3xl mb-2">ملف الاسبوفر</h3>
-            <p className="text-zinc-400 text-base mb-2">discord.gg_t3n</p>
+            <p className="text-blue-200/60 text-base mb-2">discord.gg_t3n</p>
           </div>
-          <a href="/downloads/discord.gg_t3n.rar" download className="w-full flex items-center justify-center gap-3 px-6 py-5 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg rounded-2xl transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] hover:scale-105 active:scale-95">
+          <a href="/downloads/discord.gg_t3n.rar" download className="w-full flex items-center justify-center gap-3 px-6 py-5 bg-blue-500 hover:bg-blue-400 text-white font-black text-lg rounded-2xl transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95">
             <Download className="w-6 h-6" />
             تحميل الملف
           </a>
@@ -552,16 +552,16 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
 
       {/* Mobile/Tablet Sticky Download */}
       <div className="2xl:hidden fixed bottom-6 left-4 right-4 z-50">
-        <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-yellow-500/30 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+        <div className="bg-[#0a1a5c]/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_30px_rgba(59,130,246,0.2)]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/30">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/30">
               <Cpu className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-white font-bold">ملف الاسبوفر</h3>
             </div>
           </div>
-          <a href="/downloads/discord.gg_t3n.rar" download className="flex items-center justify-center gap-2 px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-lg transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+          <a href="/downloads/discord.gg_t3n.rar" download className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-400 text-white font-black rounded-lg transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
             <Download className="w-4 h-4" />
             تحميل
           </a>
