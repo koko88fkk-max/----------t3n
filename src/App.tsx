@@ -533,6 +533,41 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
         backgroundSize: '60px 60px'
       }} />
 
+      {/* Floating Download Card - Desktop */}
+      <div className="hidden 2xl:flex fixed top-1/2 right-12 -translate-y-1/2 z-50 flex-col gap-4 w-80">
+        <div className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-yellow-500/30 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-[0_0_40px_rgba(234,179,8,0.15)]">
+          <div className="w-24 h-24 rounded-3xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+            <Cpu className="w-12 h-12" />
+          </div>
+          <div className="text-center w-full">
+            <h3 className="text-white font-black text-3xl mb-2">ملف الاسبوفر</h3>
+            <p className="text-zinc-400 text-base mb-2">discord.gg_t3n</p>
+          </div>
+          <a href="/downloads/discord.gg_t3n.rar" download className="w-full flex items-center justify-center gap-3 px-6 py-5 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg rounded-2xl transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] hover:scale-105 active:scale-95">
+            <Download className="w-6 h-6" />
+            تحميل الملف
+          </a>
+        </div>
+      </div>
+
+      {/* Mobile/Tablet Sticky Download */}
+      <div className="2xl:hidden fixed bottom-6 left-4 right-4 z-50">
+        <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-yellow-500/30 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center border border-yellow-500/30">
+              <Cpu className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-white font-bold">ملف الاسبوفر</h3>
+            </div>
+          </div>
+          <a href="/downloads/discord.gg_t3n.rar" download className="flex items-center justify-center gap-2 px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-lg transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+            <Download className="w-4 h-4" />
+            تحميل
+          </a>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#040c2e]/80 border-b border-blue-500/20">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
@@ -589,17 +624,9 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
               <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center shrink-0 border border-yellow-500/20">
                 <Download className="w-7 h-7" />
               </div>
-              <div className="flex-1 w-full">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 text-white">ثم تروح لملف discord.gg t3n</h3>
-                    <p className="text-blue-200/60 leading-relaxed text-lg">تدخل على مجلد <span className="text-white font-bold">كلين</span> ثم تشغل ملف <span className="text-yellow-400 font-bold">UpdatedApple.exe</span> — مهم تسويه قبل السبوفر!</p>
-                  </div>
-                  <a href="/downloads/discord.gg_t3n.rar" download className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.3)]">
-                    <Download className="w-5 h-5" />
-                    تحميل الملف
-                  </a>
-                </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">ثم تروح لملف discord.gg t3n</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تدخل على مجلد <span className="text-white font-bold">كلين</span> ثم تشغل ملف <span className="text-yellow-400 font-bold">UpdatedApple.exe</span> — مهم تسويه قبل السبوفر!</p>
               </div>
             </div>
             <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح UpdatedApple طريقة استعمال</h4>
