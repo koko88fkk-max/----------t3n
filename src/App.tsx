@@ -234,7 +234,7 @@ function Hero() {
             <motion.button 
               whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(255,255,255,0.1)" }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => document.getElementById('delivery')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('activation')?.scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-4 glass-panel text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all w-full relative overflow-hidden group border-white/20"
             >
               <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
