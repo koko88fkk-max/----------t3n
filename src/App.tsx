@@ -59,9 +59,9 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
       initial={{ y: -100 }} animate={{ y: 0 }}
       className="fixed top-0 left-0 right-0 z-[100] glass border-b border-white/5"
     >
-      <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+      <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between relative">
         {/* Right side: User Info */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-1">
           {!authLoading && (
             user ? (
               <>
@@ -111,13 +111,13 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
         </div>
 
         {/* Center: Nav Links */}
-        <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-zinc-400">
+        <div className="hidden lg:flex items-center justify-center gap-8 text-sm font-bold text-zinc-400 absolute left-1/2 -translate-x-1/2">
           <a href="#delivery" className="hover:text-blue-400 transition-colors">استلام الطلبات</a>
           <a href="#rules" className="hover:text-blue-400 transition-colors">القوانين</a>
         </div>
 
         {/* Left Side: Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-end gap-3 flex-1">
           <span className="text-lg font-black text-white glow-text hidden sm:block">تعن T3N</span>
           <img src={LOGO_URL} className="w-10 h-10 object-contain rounded-xl border border-white/10" alt="Logo" />
         </div>
@@ -330,6 +330,37 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result }: any) 
             )}
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function Rules() {
+  const rules = [
+    { id: 1, title: 'سياسة الاسترجاع', text: 'يتم استرجاع المبلغ فقط في حال وجود خطأ من المسؤول أو المنفذ للطلب. غير ذلك لا يحق للعميل المطالبة بالاسترجاع.' },
+    { id: 2, title: 'بعد الشراء', text: 'لا يمكنك طلب استرجاع المبلغ بعد شراء المنتج أو استلامه بأي حال من الأحوال. يرجى التأكد قبل إتمام عملية الدفع.' },
+    { id: 3, title: 'فترة الضمان', text: 'لا يمكن طلب تعويض أو استرجاع بعد مرور 3 أيام من استخدام المنتج. يرجى فحص المنتج فور استلامه.' }
+  ];
+
+  return (
+    <section id="rules" className="py-24 container mx-auto px-6">
+      <div className="flex flex-col items-center mb-16">
+        <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 mb-4"><Shield className="w-8 h-8" /></div>
+        <h2 className="text-4xl font-black text-white mb-2">القوانين والشروط</h2>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {rules.map((r) => (
+          <div key={r.id} className="glass p-8 rounded-[32px] border border-white/5 hover:border-white/20 transition-all flex flex-col gap-4">
+            <span className="text-blue-500 font-black text-3xl opacity-30">0{r.id}</span>
+            <h3 className="text-xl font-bold text-white">{r.title}</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">{r.text}</p>
+          </div>
+        ))}
+      </div>
+      
+      <div className="max-w-4xl mx-auto mt-12 p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-red-400 font-bold text-center text-sm">
+        شرائك من المتجر يعني موافقتك التامة على جميع الشروط والقوانين المذكورة أعلاه
       </div>
     </section>
   );
@@ -958,6 +989,7 @@ export default function App() {
           loading={activationLoading}
           result={activationResult}
         />
+        <Rules />
       </main>
       
       <Footer />
