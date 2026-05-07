@@ -950,14 +950,39 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                 <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
                 <span className="text-red-400 font-bold flex items-center gap-2 text-xl"><CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇</span>
                 <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
-              </div>
-              <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
+                     <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
                 <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
                   <source src={vid} type="video/mp4" />متصفحك لا يدعم تشغيل الفيديو
                 </video>
               </div>
-            </motion.div>
-          ))}
+
+              {num === 3 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  transition={{ delay: 0.5 }}
+                  className="mt-8 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex items-center justify-between gap-4 group hover:bg-white/10 transition-all shadow-2xl"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
+                      <img src="/warp-icon.png" alt="Warp" className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-black text-lg">برنامج Warp</h4>
+                      <p className="text-zinc-500 text-xs font-bold">لحل مشاكل الاتصال والشبكة</p>
+                    </div>
+                  </div>
+                  <a 
+                    href="https://downloads.cloudflareclient.com/v1/download/windows/ga" 
+                    download 
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95"
+                  >
+                    <Download className="w-5 h-5" />
+                    تحميل
+                  </a>
+                </motion.div>
+              )}
+            </motion.div>     ))}
         </div>
 
         {/* Support */}
