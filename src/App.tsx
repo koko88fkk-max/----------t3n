@@ -950,7 +950,8 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                 <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
                 <span className="text-red-400 font-bold flex items-center gap-2 text-xl"><CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇</span>
                 <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
-                     <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
+              </div>
+              <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
                 <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
                   <source src={vid} type="video/mp4" />متصفحك لا يدعم تشغيل الفيديو
                 </video>
