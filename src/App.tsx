@@ -957,32 +957,27 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
               </div>
 
               {num === 3 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  transition={{ delay: 0.5 }}
-                  className="mt-8 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex items-center justify-between gap-4 group hover:bg-white/10 transition-all shadow-2xl"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
-                      <img src="/warp-icon.png" alt="Warp" className="w-full h-full object-contain" />
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 w-full max-w-xl">
+                  <a href="https://downloads.cloudflareclient.com/v1/download/windows/ga" target="_blank" rel="noopener noreferrer" 
+                    className="flex items-center gap-5 p-6 rounded-[2.5rem] bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-600/30 transition-all group shadow-[0_15px_40px_rgba(37,99,235,0.15)]">
+                    <div className="w-20 h-20 rounded-[1.5rem] bg-white p-2 flex items-center justify-center shrink-0 shadow-lg group-hover:rotate-6 transition-transform">
+                      <img src="/warp-icon.png" alt="WARP" className="w-full h-full object-contain" />
                     </div>
-                    <div>
-                      <h4 className="text-white font-black text-lg">برنامج Warp</h4>
-                      <p className="text-zinc-500 text-xs font-bold">لحل مشاكل الاتصال والشبكة</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-blue-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Recommended</span>
+                        <h4 className="text-white font-black text-2xl tracking-tight">برنامج WARP</h4>
+                      </div>
+                      <p className="text-blue-200/80 text-base font-bold leading-tight">اضغط هنا لتحميل البرنامج لحل مشكلة الشبكة</p>
                     </div>
-                  </div>
-                  <a 
-                    href="https://downloads.cloudflareclient.com/v1/download/windows/ga" 
-                    download 
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95"
-                  >
-                    <Download className="w-5 h-5" />
-                    تحميل
+                    <div className="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-all">
+                      <Download className="w-7 h-7" />
+                    </div>
                   </a>
                 </motion.div>
               )}
-            </motion.div>     ))}
+            </motion.div>
+          ))}
         </div>
 
         {/* Support */}
