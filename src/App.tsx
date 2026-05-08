@@ -920,8 +920,8 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8">
           <div className="rounded-2xl p-6 md:p-8 bg-[#5865F2]/10 backdrop-blur-md border border-[#5865F2]/30 text-center shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-3">استلام رتبة الديسكورد</h3>
-            <p className="text-blue-200/60 mb-6">اضغط الزر أدناه لربط حسابك وإعطائك الرتبة في سيرفر تعن T3N</p>
+            <h3 className="text-2xl font-bold text-white mb-3">مافهمت شي؟</h3>
+            <p className="text-blue-200/60 mb-6 max-w-md mx-auto">حياك سيرفر الديسكورد، فريق الدعم الفني متواجد لمساعدتك خطوة بخطوة.</p>
             {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
