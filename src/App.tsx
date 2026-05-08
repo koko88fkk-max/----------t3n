@@ -922,15 +922,10 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
             <MessageCircle className="w-12 h-12 text-[#5865F2] mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-3">مافهمت شي؟</h3>
             <p className="text-blue-200/60 mb-6 max-w-md mx-auto">حياك سيرفر الديسكورد، فريق الدعم الفني متواجد لمساعدتك خطوة بخطوة.</p>
-            {roleMsg && <p className="mb-4 font-bold text-lg" style={{ color: roleMsg.startsWith('✅') ? '#34d399' : '#f87171' }}>{roleMsg}</p>}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAssignRole} disabled={roleLoading}
-                className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] disabled:opacity-60 flex items-center gap-2 justify-center">
-                {roleLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> جاري الربط...</> : <><MessageCircle className="w-5 h-5" /> استلام الرتبة</>}
-              </motion.button>
-              <a href={DISCORD_URL} target="_blank"
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-lg transition-all border border-white/10 flex items-center gap-2 justify-center">
-                <ExternalLink className="w-5 h-5" /> دخول السيرفر
+            <div className="flex justify-center">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer"
+                className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl text-lg transition-all shadow-[0_0_20px_rgba(88,101,242,0.4)] flex items-center gap-3 justify-center w-full sm:w-auto hover:scale-105 active:scale-95">
+                <ExternalLink className="w-5 h-5" /> دخول سيرفر الديسكورد
               </a>
             </div>
           </div>
