@@ -749,11 +749,29 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
 function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
   const [roleLoading, setRoleLoading] = useState(false);
   const [roleMsg, setRoleMsg] = useState('');
+  const [dlLoading, setDlLoading] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
+
+  const handleProtectedDownload = async (filename: string, saveName: string) => {
+    setDlLoading(filename);
+    try {
+      const res = await fetch(`/${filename}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = saveName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { /* silent fail */ }
+    setDlLoading(null);
+  };
 
   const handleAssignRole = async () => {
     if (!user) return;
@@ -821,11 +839,30 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
               </div>
             </div>
             <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح تركيب التعريفات</h4>
-            <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
-              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
-                <source src="/video-fort-drivers.mp4" type="video/mp4" />
-                متصفحك لا يدعم تشغيل الفيديو
-              </video>
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+              <div className="flex-1 rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
+                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-cover" preload="metadata">
+                  <source src="/video-fort-drivers.mp4" type="video/mp4" />
+                  متصفحك لا يدعم تشغيل الفيديو
+                </video>
+              </div>
+              <motion.button
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleProtectedDownload('External_T3N.rar', 'External_T3N.rar')}
+                disabled={dlLoading === 'External_T3N.rar'}
+                whileHover={{ scale: 1.03, boxShadow: '0 0 35px rgba(59,130,246,0.45)' }}
+                whileTap={{ scale: 0.97 }}
+                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-blue-600/30 to-blue-900/50 border border-blue-500/40 hover:border-blue-400 transition-all shadow-[0_0_25px_rgba(59,130,246,0.2)] select-none cursor-pointer disabled:opacity-60"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-[0_0_25px_rgba(59,130,246,0.6)]">
+                  {dlLoading === 'External_T3N.rar' ? <RefreshCw className="w-7 h-7 text-white animate-spin" /> : <Download className="w-7 h-7 text-white" />}
+                </div>
+                <div className="text-center">
+                  <p className="text-white font-black text-base leading-tight">External_T3N</p>
+                  <p className="text-blue-300/70 text-xs font-bold mt-1">{dlLoading === 'External_T3N.rar' ? 'جاري التحميل...' : 'اضغط للتحميل'}</p>
+                </div>
+                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/30">ملف الهاك</span>
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -843,11 +880,30 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
               </div>
             </div>
             <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span className="text-blue-400">👇</span> شرح تشغيل الهاك</h4>
-            <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
-              <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
-                <source src="/video-fort-hack.mp4" type="video/mp4" />
-                متصفحك لا يدعم تشغيل الفيديو
-              </video>
+            <div className="flex flex-col lg:flex-row-reverse gap-4 items-stretch">
+              <div className="flex-1 rounded-xl overflow-hidden border border-blue-500/20 shadow-2xl">
+                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-cover" preload="metadata">
+                  <source src="/video-fort-hack.mp4" type="video/mp4" />
+                  متصفحك لا يدعم تشغيل الفيديو
+                </video>
+              </div>
+              <motion.button
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleProtectedDownload('Mouse Driver.rar', 'Mouse_Driver.rar')}
+                disabled={dlLoading === 'Mouse Driver.rar'}
+                whileHover={{ scale: 1.03, boxShadow: '0 0 35px rgba(99,102,241,0.45)' }}
+                whileTap={{ scale: 0.97 }}
+                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-indigo-600/30 to-indigo-900/50 border border-indigo-500/40 hover:border-indigo-400 transition-all shadow-[0_0_25px_rgba(99,102,241,0.2)] select-none cursor-pointer disabled:opacity-60"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-[0_0_25px_rgba(99,102,241,0.6)]">
+                  {dlLoading === 'Mouse Driver.rar' ? <RefreshCw className="w-7 h-7 text-white animate-spin" /> : <Download className="w-7 h-7 text-white" />}
+                </div>
+                <div className="text-center">
+                  <p className="text-white font-black text-base leading-tight">Mouse Driver</p>
+                  <p className="text-indigo-300/70 text-xs font-bold mt-1">{dlLoading === 'Mouse Driver.rar' ? 'جاري التحميل...' : 'اضغط للتحميل'}</p>
+                </div>
+                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30">تعريف الماوس</span>
+              </motion.button>
             </div>
           </div>
         </motion.div>
