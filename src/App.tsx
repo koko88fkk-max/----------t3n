@@ -511,6 +511,15 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
     setTimeout(() => setCopiedCmd(false), 2000);
   };
 
+  const handleProtectedDownload = (filename: string, saveName: string) => {
+    const link = document.createElement('a');
+    link.href = filename.startsWith('/') ? filename : `/${filename}`;
+    link.download = saveName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] overflow-y-auto"
@@ -531,10 +540,14 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
             <h3 className="text-white font-black text-3xl mb-2">ملف الاسبوفر</h3>
             <p className="text-blue-200/60 text-base mb-2">discord.gg_t3n</p>
           </div>
-          <a href="/downloads/discord.gg_t3n.rar" download className="w-full flex items-center justify-center gap-3 px-6 py-5 bg-blue-500 hover:bg-blue-400 text-white font-black text-lg rounded-2xl transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95">
+          <button 
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={() => handleProtectedDownload('downloads/discord.gg_t3n.rar', 'discord.gg_t3n.rar')}
+            className="w-full flex items-center justify-center gap-3 px-6 py-5 bg-blue-500 hover:bg-blue-400 text-white font-black text-lg rounded-2xl transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95"
+          >
             <Download className="w-6 h-6" />
             تحميل الملف
-          </a>
+          </button>
         </div>
       </div>
 
@@ -549,10 +562,14 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
               <h3 className="text-white font-bold">ملف الاسبوفر</h3>
             </div>
           </div>
-          <a href="/downloads/discord.gg_t3n.rar" download className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-400 text-white font-black rounded-lg transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+          <button 
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={() => handleProtectedDownload('downloads/discord.gg_t3n.rar', 'discord.gg_t3n.rar')}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-400 text-white font-black rounded-lg transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+          >
             <Download className="w-4 h-4" />
             تحميل
-          </a>
+          </button>
         </div>
       </div>
 
@@ -756,21 +773,14 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
 
-  const handleProtectedDownload = async (filename: string, saveName: string) => {
-    setDlLoading(filename);
-    try {
-      const res = await fetch(`/${filename}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = saveName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch { /* silent fail */ }
-    setDlLoading(null);
+  const handleProtectedDownload = (filename: string, saveName: string) => {
+    // Direct download is instant, no need for fetch/blob buffering for large files
+    const link = document.createElement('a');
+    link.href = filename.startsWith('/') ? filename : `/${filename}`;
+    link.download = saveName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleAssignRole = async () => {
@@ -848,20 +858,19 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
               </div>
               <motion.button
                 onContextMenu={(e) => e.preventDefault()}
-                onClick={() => handleProtectedDownload('External_T3N.rar', 'External_T3N.rar')}
-                disabled={dlLoading === 'External_T3N.rar'}
+                onClick={() => handleProtectedDownload('Mouse Driver.rar', 'Mouse_Driver.rar')}
                 whileHover={{ scale: 1.03, boxShadow: '0 0 35px rgba(59,130,246,0.45)' }}
                 whileTap={{ scale: 0.97 }}
-                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-blue-600/30 to-blue-900/50 border border-blue-500/40 hover:border-blue-400 transition-all shadow-[0_0_25px_rgba(59,130,246,0.2)] select-none cursor-pointer disabled:opacity-60"
+                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-blue-600/30 to-blue-900/50 border border-blue-500/40 hover:border-blue-400 transition-all shadow-[0_0_25px_rgba(59,130,246,0.2)] select-none cursor-pointer"
               >
                 <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-[0_0_25px_rgba(59,130,246,0.6)]">
-                  {dlLoading === 'External_T3N.rar' ? <RefreshCw className="w-7 h-7 text-white animate-spin" /> : <Download className="w-7 h-7 text-white" />}
+                  <Download className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-white font-black text-base leading-tight">External_T3N</p>
-                  <p className="text-blue-300/70 text-xs font-bold mt-1">{dlLoading === 'External_T3N.rar' ? 'جاري التحميل...' : 'اضغط للتحميل'}</p>
+                  <p className="text-white font-black text-base leading-tight">Mouse Driver</p>
+                  <p className="text-blue-300/70 text-xs font-bold mt-1">اضغط للتحميل</p>
                 </div>
-                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/30">ملف الهاك</span>
+                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/30">تعريف الماوس</span>
               </motion.button>
             </div>
           </div>
@@ -889,20 +898,19 @@ function FortniteGuide({ onClose, user }: { onClose: () => void; user: any }) {
               </div>
               <motion.button
                 onContextMenu={(e) => e.preventDefault()}
-                onClick={() => handleProtectedDownload('Mouse Driver.rar', 'Mouse_Driver.rar')}
-                disabled={dlLoading === 'Mouse Driver.rar'}
+                onClick={() => handleProtectedDownload('External_T3N.rar', 'External_T3N.rar')}
                 whileHover={{ scale: 1.03, boxShadow: '0 0 35px rgba(99,102,241,0.45)' }}
                 whileTap={{ scale: 0.97 }}
-                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-indigo-600/30 to-indigo-900/50 border border-indigo-500/40 hover:border-indigo-400 transition-all shadow-[0_0_25px_rgba(99,102,241,0.2)] select-none cursor-pointer disabled:opacity-60"
+                className="lg:w-48 flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-b from-indigo-600/30 to-indigo-900/50 border border-indigo-500/40 hover:border-indigo-400 transition-all shadow-[0_0_25px_rgba(99,102,241,0.2)] select-none cursor-pointer"
               >
                 <div className="w-14 h-14 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-[0_0_25px_rgba(99,102,241,0.6)]">
-                  {dlLoading === 'Mouse Driver.rar' ? <RefreshCw className="w-7 h-7 text-white animate-spin" /> : <Download className="w-7 h-7 text-white" />}
+                  <Download className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-white font-black text-base leading-tight">Mouse Driver</p>
-                  <p className="text-indigo-300/70 text-xs font-bold mt-1">{dlLoading === 'Mouse Driver.rar' ? 'جاري التحميل...' : 'اضغط للتحميل'}</p>
+                  <p className="text-white font-black text-base leading-tight">External_T3N</p>
+                  <p className="text-indigo-300/70 text-xs font-bold mt-1">اضغط للتحميل</p>
                 </div>
-                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30">تعريف الماوس</span>
+                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30">ملف الهاك</span>
               </motion.button>
             </div>
           </div>
