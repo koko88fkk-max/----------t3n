@@ -958,23 +958,29 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
               </div>
 
               {num === 3 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 w-full max-w-xl">
-                  <a href="https://downloads.cloudflareclient.com/v1/download/windows/ga" target="_blank" rel="noopener noreferrer" 
-                    className="flex items-center gap-5 p-6 rounded-[2.5rem] bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-600/30 transition-all group shadow-[0_15px_40px_rgba(37,99,235,0.15)]">
-                    <div className="w-20 h-20 rounded-[1.5rem] bg-white p-2 flex items-center justify-center shrink-0 shadow-lg group-hover:rotate-6 transition-transform">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 w-full">
+                  <a href="https://downloads.cloudflareclient.com/v1/download/windows/ga" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-4 py-3 px-5 rounded-2xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-600/30 transition-all group shadow-[0_8px_30px_rgba(37,99,235,0.15)] w-full">
+                    <div className="w-12 h-12 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0 shadow-lg group-hover:rotate-6 transition-transform">
                       <img src="/warp-icon.png" alt="WARP" className="w-full h-full object-contain" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2">
                         <span className="bg-blue-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Recommended</span>
-                        <h4 className="text-white font-black text-2xl tracking-tight">برنامج WARP</h4>
+                        <h4 className="text-white font-black text-lg tracking-tight">برنامج WARP</h4>
                       </div>
-                      <p className="text-blue-200/80 text-base font-bold leading-tight">اضغط هنا لتحميل البرنامج لحل مشكلة الشبكة</p>
+                      <p className="text-blue-200/70 text-sm font-bold leading-tight">اضغط هنا لتحميل البرنامج لحل مشكلة الشبكة</p>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-all">
-                      <Download className="w-7 h-7" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-all shrink-0">
+                      <Download className="w-5 h-5" />
                     </div>
                   </a>
+                  <div className="mt-4 flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl px-5 py-4">
+                    <span className="text-yellow-400 text-xl shrink-0 mt-0.5">⚠️</span>
+                    <p className="text-yellow-200/90 text-sm font-bold leading-relaxed text-right">
+                      <span className="text-yellow-400 font-black">تنبيه: </span>اذا ما ضبط معك، لازم وقتها تفرمت فلاشة USB أو فورمات عادي من نفس ويندوز، وبعد الفورمات تأكد من المشكلة إذا راحت.
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </motion.div>
