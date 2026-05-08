@@ -932,6 +932,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             { num: 1, title: 'حل مشكلة خطأ الوقت', q: 'هل تظهر لك رسالة خطأ الوقت الموضحة بالصورة؟', img: '/error-time.png', vid: '/video-solution-time.mp4', alt: 'خطأ الوقت' },
             { num: 2, title: 'إيبك قيمز لا يعمل أو لا يحمل؟', q: 'هل تواجه مشكلة في تشغيل إيبك قيمز أو عدم قدرتة على التحميل بعد تطبيق الشرح؟', img: '/error-epic.png', vid: '/video-solution-epic.mp4', alt: 'مشكلة إيبك' },
             { num: 3, title: 'خطأ في الشبكة أو كلام أزرق؟', q: 'هل عند تشغيل السبوفر يطفى فجأة أو يظهر لك خطأ بالشبكة؟', img: '/error-network.png', vid: '/video-solution-network.mp4', alt: 'خطأ الشبكة' },
+            { num: 4, title: 'خطأ في تعريفات DLL', q: 'هل تظهر لك رسالة خطأ تقول أن ملف DLL غير موجود مثل SDL3.dll أو ما شابهها؟', img: '/error-dll.png', vid: '', alt: 'خطأ DLL' },
           ].map(({ num, title, q, img, vid, alt }) => (
             <motion.div key={num} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: num * 0.1 }}
               className="bg-[#0a0a0f]/80 backdrop-blur-md p-6 lg:p-10 rounded-[2rem] border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)] flex flex-col items-center">
@@ -948,14 +949,16 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
               </div>
               <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
                 <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
-                <span className="text-red-400 font-bold flex items-center gap-2 text-xl"><CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇</span>
+                <span className="text-red-400 font-bold flex items-center gap-2 text-xl"><CheckCircle2 className="w-7 h-7" /> {vid ? 'إليك الحل بالفيديو 👇' : 'الحل 👇'}</span>
                 <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
               </div>
-              <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
-                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
-                  <source src={vid} type="video/mp4" />متصفحك لا يدعم تشغيل الفيديو
-                </video>
-              </div>
+              {vid && (
+                <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black">
+                  <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
+                    <source src={vid} type="video/mp4" />متصفحك لا يدعم تشغيل الفيديو
+                  </video>
+                </div>
+              )}
 
               {num === 3 && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 w-full">
@@ -979,6 +982,40 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                     <span className="text-yellow-400 text-xl shrink-0 mt-0.5">⚠️</span>
                     <p className="text-yellow-200/90 text-sm font-bold leading-relaxed text-right">
                       <span className="text-yellow-400 font-black">تنبيه: </span>اذا ما ضبط معك، لازم وقتها تفرمت فلاشة USB أو فورمات عادي من نفس ويندوز، وبعد الفورمات تأكد من المشكلة إذا راحت.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {num === 4 && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 w-full flex flex-col gap-4">
+                  <p className="text-zinc-300 text-base font-bold text-center mb-2">حمّل وثبّت هذين البرنامجين بالترتيب لحل المشكلة:</p>
+                  <a href="https://aka.ms/vc14/vc_redist.x64.exe" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-4 py-3 px-5 rounded-2xl bg-gradient-to-r from-purple-600/20 to-purple-800/20 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-600/20 transition-all group shadow-[0_8px_30px_rgba(147,51,234,0.1)] w-full">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-all">
+                      <Download className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 text-right">
+                      <h4 className="text-white font-black text-base tracking-tight">Visual C++ Redistributable</h4>
+                      <p className="text-purple-200/70 text-xs font-bold">تعريفات VC++ الأساسية — ابدأ بهذا</p>
+                    </div>
+                    <span className="bg-purple-500/30 text-purple-300 text-[10px] font-black px-2 py-1 rounded-full shrink-0">1</span>
+                  </a>
+                  <a href="https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-web-installer" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-4 py-3 px-5 rounded-2xl bg-gradient-to-r from-indigo-600/20 to-indigo-800/20 border border-indigo-500/30 hover:border-indigo-400 hover:bg-indigo-600/20 transition-all group shadow-[0_8px_30px_rgba(99,102,241,0.1)] w-full">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-all">
+                      <Download className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 text-right">
+                      <h4 className="text-white font-black text-base tracking-tight">.NET Framework 4.8</h4>
+                      <p className="text-indigo-200/70 text-xs font-bold">إطار عمل دوت نت — ثانياً</p>
+                    </div>
+                    <span className="bg-indigo-500/30 text-indigo-300 text-[10px] font-black px-2 py-1 rounded-full shrink-0">2</span>
+                  </a>
+                  <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl px-5 py-4">
+                    <span className="text-yellow-400 text-xl shrink-0 mt-0.5">⚠️</span>
+                    <p className="text-yellow-200/90 text-sm font-bold leading-relaxed text-right">
+                      <span className="text-yellow-400 font-black">تنبيه: </span>بعد التثبيت أعد تشغيل الجهاز، ثم شغّل البرنامج مجدداً.
                     </p>
                   </div>
                 </motion.div>
