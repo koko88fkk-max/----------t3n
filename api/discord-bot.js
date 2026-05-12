@@ -312,20 +312,30 @@ export default async function handler(req, res) {
           });
         }
         const data = snap.data();
-        let statusText = data.status === 'unused' ? "🟢 لم يتم استخدامه" : data.status === 'active' ? "🔴 مستخدم" : "⚫ محظور";
+        let statusEmoji = data.status === 'unused' ? "🟢" : data.status === 'active' ? "🔴" : "⚫";
+        let statusText = data.status === 'unused' ? "لم يتم استخدامه (متاح)" : data.status === 'active' ? "مستخدم" : "محظور";
         
-        let desc = `**المفتاح:** \`${cleanKey}\`\n**الحالة:** ${statusText}\n**تاريخ الإنشاء:** ${new Date(data.createdAt).toLocaleString('ar-SA')}`;
+        const createdTs = Math.floor(new Date(data.createdAt).getTime() / 1000);
         
-        if (data.status === 'active') {
-          desc += `\n\n**معلومات المستخدم:**\n`;
-          desc += `الاسم: ${data.usedByName || 'غير متوفر'}\n`;
-          desc += `الإيميل: ${data.usedByEmail || 'غير متوفر'}\n`;
+        let desc = `🔑 **المفتاح:** \`${cleanKey}\`\n`;
+        desc += `📌 **الحالة:** ${statusEmoji} **${statusText}**\n`;
+        desc += `📅 **تاريخ الإنشاء:** <t:${createdTs}:f> (<t:${createdTs}:R>)\n`;
+        
+        if (data.status === 'active' || data.usedByUid) {
+          desc += `\n━━━━━━━━━━━━━━━━━━\n**معلومات التفعيل:**\n`;
+          if (data.activatedAt) {
+             const actTs = Math.floor(new Date(data.activatedAt).getTime() / 1000);
+             desc += `🕒 **وقت التفعيل:** <t:${actTs}:f> (<t:${actTs}:R>)\n`;
+          }
+          desc += `📝 **الاسم:** ${data.usedByName || 'غير متوفر'}\n`;
+          desc += `📧 **الإيميل:** ${data.usedByEmail || 'غير متوفر'}\n`;
+          
           if (data.usedByUid) {
-            // Attempt to mention if it looks like a discord ID (numbers only)
-            if (/^\d+$/.test(data.usedByUid)) {
-              desc += `حساب الديسكورد: <@${data.usedByUid}>\n`;
+            let discordIdMatch = data.usedByUid.match(/\d+/);
+            if (discordIdMatch) {
+              desc += `👤 **حساب الديسكورد:** <@${discordIdMatch[0]}>\n`;
             } else {
-              desc += `معرف الحساب: ${data.usedByUid}\n`;
+              desc += `👤 **معرف الحساب:** ${data.usedByUid}\n`;
             }
           }
         }
