@@ -35,8 +35,10 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const ALLOWED_CHANNEL_ID = '1494851523010625562';
+const T3N_COLOR = 0x1A1A2E;
+const BANNER_URL = 'https://i.imgur.com/G5YvJbM.png'; // Placeholder banner, can be updated later
 
-// Function to generate a random key
 function generateRandomKey() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let p1 = '';
@@ -46,7 +48,6 @@ function generateRandomKey() {
   return `T3N-${p1}-${p2}`;
 }
 
-// Function to verify Discord signature using built-in Node crypto
 function verifyInteractionSignature(req, bodyText) {
   const signature = req.headers['x-signature-ed25519'];
   const timestamp = req.headers['x-signature-timestamp'];
@@ -55,7 +56,7 @@ function verifyInteractionSignature(req, bodyText) {
   if (!signature || !timestamp || !PUBLIC_KEY) return false;
 
   try {
-    const isVerified = crypto.verify(
+    return crypto.verify(
       null,
       Buffer.from(timestamp + bodyText),
       {
@@ -70,83 +71,271 @@ function verifyInteractionSignature(req, bodyText) {
       },
       Buffer.from(signature, 'hex')
     );
-    return isVerified;
   } catch (err) {
-    console.error("Verification error:", err);
     return false;
   }
 }
 
+function getPanelUI() {
+  return {
+    type: 4,
+    data: {
+      flags: 64, // Ephemeral
+      embeds: [{
+        title: "لوحة تحكم مفاتيح T3N Spoofer",
+        description: "اختر الإجراء الذي تريد القيام به من الأزرار أدناه:",
+        color: T3N_COLOR,
+        image: { url: BANNER_URL },
+        footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+      }],
+      components: [
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 1, label: "إنشاء مفتاح", custom_id: "gen_single" },
+            { type: 2, style: 1, label: "إنشاء متعدد", custom_id: "gen_multi" },
+            { type: 2, style: 4, label: "حذف مفتاح", custom_id: "delete_key" },
+            { type: 2, style: 4, label: "حظر مفتاح", custom_id: "ban_key" }
+          ]
+        },
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 2, label: "كشف صاحب المفتاح", custom_id: "info_key" },
+            { type: 2, style: 2, label: "الإحصائيات", custom_id: "stats" }
+          ]
+        }
+      ]
+    }
+  };
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
     const rawBody = await getRawBody(req);
-
-    // Verify Discord Request
     if (!verifyInteractionSignature(req, rawBody)) {
       return res.status(401).json({ error: 'invalid request signature' });
     }
 
     const interaction = JSON.parse(rawBody);
 
-    // Type 1 is a Ping interaction (Discord checks if the endpoint is alive)
-    if (interaction.type === 1) {
-      return res.status(200).json({ type: 1 });
+    // Ping
+    if (interaction.type === 1) return res.status(200).json({ type: 1 });
+
+    // Check Channel
+    if (interaction.channel_id !== ALLOWED_CHANNEL_ID) {
+      return res.status(200).json({
+        type: 4,
+        data: { content: "❌ عذراً، لا يمكنك استخدام البوت إلا في روم الإدارة المخصص.", flags: 64 }
+      });
     }
 
-    // Type 2 is a Slash Command interaction
+    // ==== Type 2: Slash Command ====
     if (interaction.type === 2) {
-      const { name, options } = interaction.data;
+      if (interaction.data.name === 'genkey') {
+        return res.status(200).json(getPanelUI());
+      }
+    }
 
-      if (name === 'genkey') {
-        // حماية: التأكد أن الأمر يتم في الروم المخصص فقط
-        const ALLOWED_CHANNEL_ID = '1494851523010625562';
-        if (interaction.channel_id !== ALLOWED_CHANNEL_ID) {
+    // ==== Type 3: Button Clicks ====
+    if (interaction.type === 3) {
+      const cid = interaction.data.custom_id;
+
+      if (cid === 'gen_single') {
+        const newKey = generateRandomKey();
+        await db.collection('keys').doc(newKey).set({
+          productType: 'spoofer',
+          status: 'unused',
+          createdAt: new Date().toISOString(),
+          createdBy: interaction.member?.user?.username || 'DiscordBot',
+          usedByUid: null
+        });
+
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            embeds: [{
+              title: "✅ تم إنشاء المفتاح بنجاح!",
+              description: `🔹 **مفتاح Spoofer T3N:**\n\`\`\`\n${newKey}\n\`\`\`\n⏳ **المدة:** مدى الحياة`,
+              color: 0x4CAF50,
+              footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+            }]
+          }
+        });
+      }
+
+      if (['gen_multi', 'delete_key', 'ban_key', 'info_key'].includes(cid)) {
+        // Return Modal
+        let title, label;
+        if (cid === 'gen_multi') { title = "إنشاء مفاتيح متعددة"; label = "عدد المفاتيح (الحد الأقصى 100):"; }
+        if (cid === 'delete_key') { title = "حذف مفتاح"; label = "أدخل المفتاح:"; }
+        if (cid === 'ban_key') { title = "حظر مفتاح"; label = "أدخل المفتاح:"; }
+        if (cid === 'info_key') { title = "كشف صاحب المفتاح"; label = "أدخل المفتاح:"; }
+
+        return res.status(200).json({
+          type: 9, // Modal
+          data: {
+            title: title,
+            custom_id: `modal_${cid}`,
+            components: [{
+              type: 1,
+              components: [{
+                type: 4, // Text Input
+                custom_id: "input_val",
+                style: 1,
+                label: label,
+                required: true
+              }]
+            }]
+          }
+        });
+      }
+
+      if (cid === 'stats') {
+        const snapUnused = await db.collection('keys').where('status', '==', 'unused').count().get();
+        const snapUsed = await db.collection('keys').where('status', '==', 'active').count().get();
+        const snapBanned = await db.collection('keys').where('status', '==', 'banned').count().get();
+        
+        const unused = snapUnused.data().count;
+        const used = snapUsed.data().count;
+        const banned = snapBanned.data().count;
+        const total = unused + used + banned;
+
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            embeds: [{
+              title: "📊 إحصائيات المفاتيح",
+              color: T3N_COLOR,
+              fields: [
+                { name: "متاحة", value: `${unused}`, inline: true },
+                { name: "مستخدمة", value: `${used}`, inline: true },
+                { name: "محظورة", value: `${banned}`, inline: true },
+                { name: "الكل", value: `${total}`, inline: true }
+              ],
+              footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+            }],
+            components: [{
+              type: 1,
+              components: [
+                { type: 2, style: 2, label: "رجوع للوحة التحكم", custom_id: "back_to_panel" }
+              ]
+            }]
+          }
+        });
+      }
+
+      if (cid === 'back_to_panel') {
+        // Update existing message (type 7)
+        return res.status(200).json({
+          type: 7,
+          data: getPanelUI().data
+        });
+      }
+    }
+
+    // ==== Type 5: Modal Submits ====
+    if (interaction.type === 5) {
+      const cid = interaction.data.custom_id;
+      const inputVal = interaction.data.components[0].components[0].value.trim();
+
+      if (cid === 'modal_gen_multi') {
+        let count = parseInt(inputVal);
+        if (isNaN(count) || count < 1 || count > 100) {
           return res.status(200).json({
             type: 4,
-            data: {
-              content: `❌ عذراً، لا يمكنك استخدام هذا الأمر إلا في روم الإدارة المخصص.`,
-              flags: 64
-            }
+            data: { content: "❌ الرجاء إدخال رقم صحيح بين 1 و 100.", flags: 64 }
           });
         }
 
-        const typeOpt = options?.find(o => o.name === 'type')?.value || 'fortnite';
-        const daysOpt = options?.find(o => o.name === 'days')?.value || 30;
-
-        const newKey = generateRandomKey();
-
-        try {
-          await db.collection('keys').doc(newKey).set({
-            productType: typeOpt,
-            durationDays: daysOpt,
+        let keys = [];
+        const batch = db.batch();
+        for (let i = 0; i < count; i++) {
+          const k = generateRandomKey();
+          keys.push(k);
+          batch.set(db.collection('keys').doc(k), {
+            productType: 'spoofer',
             status: 'unused',
             createdAt: new Date().toISOString(),
             createdBy: interaction.member?.user?.username || 'DiscordBot',
             usedByUid: null
           });
+        }
+        await batch.commit();
 
-          // Respond back to Discord
-          return res.status(200).json({
-            type: 4, // ChannelMessageWithSource
-            data: {
-              content: `✅ **تم إنشاء المفتاح بنجاح!**\n\n**المفتاح:** \`${newKey}\`\n**النوع:** ${typeOpt}\n**المدة:** ${daysOpt} يوم`,
-              flags: 64 // Ephemeral (Only the user who ran the command can see it privately)
-            }
-          });
-        } catch (error) {
-          console.error("Error creating key:", error);
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            content: `✅ تم إنشاء ${count} مفاتيح بنجاح:\n\`\`\`\n${keys.join('\n')}\n\`\`\``
+          }
+        });
+      }
+
+      const cleanKey = inputVal.toUpperCase();
+
+      if (cid === 'modal_delete_key') {
+        await db.collection('keys').doc(cleanKey).delete();
+        return res.status(200).json({
+          type: 4,
+          data: { content: `✅ تم حذف المفتاح \`${cleanKey}\` بنجاح!`, flags: 64 }
+        });
+      }
+
+      if (cid === 'modal_ban_key') {
+        await db.collection('keys').doc(cleanKey).update({ status: 'banned' });
+        return res.status(200).json({
+          type: 4,
+          data: { content: `🚫 تم حظر المفتاح \`${cleanKey}\` بنجاح!`, flags: 64 }
+        });
+      }
+
+      if (cid === 'modal_info_key') {
+        const snap = await db.collection('keys').doc(cleanKey).get();
+        if (!snap.exists) {
           return res.status(200).json({
             type: 4,
-            data: {
-              content: `❌ حدث خطأ أثناء إنشاء المفتاح في قاعدة البيانات.`,
-              flags: 64
-            }
+            data: { content: "❌ المفتاح غير موجود في النظام.", flags: 64 }
           });
         }
+        const data = snap.data();
+        let statusText = data.status === 'unused' ? "🟢 لم يتم استخدامه" : data.status === 'active' ? "🔴 مستخدم" : "⚫ محظور";
+        
+        let desc = `**المفتاح:** \`${cleanKey}\`\n**الحالة:** ${statusText}\n**تاريخ الإنشاء:** ${new Date(data.createdAt).toLocaleString('ar-SA')}`;
+        
+        if (data.status === 'active') {
+          desc += `\n\n**معلومات المستخدم:**\n`;
+          desc += `الاسم: ${data.usedByName || 'غير متوفر'}\n`;
+          desc += `الإيميل: ${data.usedByEmail || 'غير متوفر'}\n`;
+          if (data.usedByUid) {
+            // Attempt to mention if it looks like a discord ID (numbers only)
+            if (/^\d+$/.test(data.usedByUid)) {
+              desc += `حساب الديسكورد: <@${data.usedByUid}>\n`;
+            } else {
+              desc += `معرف الحساب: ${data.usedByUid}\n`;
+            }
+          }
+        }
+
+        const embedInfo = {
+          title: "🔍 تفاصيل المفتاح",
+          description: desc,
+          color: T3N_COLOR,
+          footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+        };
+
+        if (data.usedByPhoto) {
+          embedInfo.thumbnail = { url: data.usedByPhoto };
+        }
+
+        return res.status(200).json({
+          type: 4,
+          data: { flags: 64, embeds: [embedInfo] }
+        });
       }
     }
 
