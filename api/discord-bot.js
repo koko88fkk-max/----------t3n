@@ -161,7 +161,7 @@ export default async function handler(req, res) {
               title: "🔑 T3N | Key Generated",
               description: "✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n```\n" + newKey + "\n```\n\n⏳ **Duration:** مدى الحياة (Lifetime)",
               color: T3N_COLOR,
-              thumbnail: { url: "https://t3n-2a2i.vercel.app/logo.png" },
+              thumbnail: { url: "https://t3n-2a2i.vercel.app/discord-thumb.png" },
               image: { url: BANNER_URL },
               footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
             }]
@@ -277,7 +277,7 @@ export default async function handler(req, res) {
               title: "🔑 T3N | Keys Generated",
               description: `✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n\`\`\`\n${keys.join('\n')}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
               color: T3N_COLOR,
-              thumbnail: { url: "https://t3n-2a2i.vercel.app/logo.png" },
+              thumbnail: { url: "https://t3n-2a2i.vercel.app/discord-thumb.png" },
               image: { url: BANNER_URL },
               footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
             }]
