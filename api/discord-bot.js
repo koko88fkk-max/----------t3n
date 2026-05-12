@@ -102,6 +102,18 @@ export default async function handler(req, res) {
       const { name, options } = interaction.data;
 
       if (name === 'genkey') {
+        // حماية: التأكد أن الأمر يتم في الروم المخصص فقط
+        const ALLOWED_CHANNEL_ID = '1494851523010625562';
+        if (interaction.channel_id !== ALLOWED_CHANNEL_ID) {
+          return res.status(200).json({
+            type: 4,
+            data: {
+              content: `❌ عذراً، لا يمكنك استخدام هذا الأمر إلا في روم الإدارة المخصص.`,
+              flags: 64
+            }
+          });
+        }
+
         const typeOpt = options?.find(o => o.name === 'type')?.value || 'fortnite';
         const daysOpt = options?.find(o => o.name === 'days')?.value || 30;
 
