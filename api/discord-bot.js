@@ -158,9 +158,11 @@ export default async function handler(req, res) {
           data: {
             flags: 64,
             embeds: [{
-              title: "✅ تم إنشاء المفتاح بنجاح!",
-              description: `🔹 **مفتاح Spoofer T3N:**\n\`\`\`\n${newKey}\n\`\`\`\n⏳ **المدة:** مدى الحياة`,
-              color: 0x4CAF50,
+              title: "🔑 T3N | Key Generated",
+              description: "✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n```\n" + newKey + "\n```\n\n⏳ **Duration:** مدى الحياة (Lifetime)",
+              color: T3N_COLOR,
+              thumbnail: { url: "https://t3n-2a2i.vercel.app/logo.png" },
+              image: { url: BANNER_URL },
               footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
             }]
           }
@@ -271,7 +273,14 @@ export default async function handler(req, res) {
           type: 4,
           data: {
             flags: 64,
-            content: `✅ تم إنشاء ${count} مفاتيح بنجاح:\n\`\`\`\n${keys.join('\n')}\n\`\`\``
+            embeds: [{
+              title: "🔑 T3N | Keys Generated",
+              description: `✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n\`\`\`\n${keys.join('\n')}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
+              color: T3N_COLOR,
+              thumbnail: { url: "https://t3n-2a2i.vercel.app/logo.png" },
+              image: { url: BANNER_URL },
+              footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+            }]
           }
         });
       }
