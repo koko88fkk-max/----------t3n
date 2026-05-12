@@ -92,17 +92,17 @@ function getPanelUI() {
         {
           type: 1,
           components: [
-            { type: 2, style: 1, label: "إنشاء مفتاح", custom_id: "gen_single" },
-            { type: 2, style: 1, label: "إنشاء متعدد", custom_id: "gen_multi" },
-            { type: 2, style: 4, label: "حذف مفتاح", custom_id: "delete_key" },
-            { type: 2, style: 4, label: "حظر مفتاح", custom_id: "ban_key" }
+            { type: 2, style: 1, label: "إنشاء مفتاح", emoji: { name: "🔑" }, custom_id: "gen_single" },
+            { type: 2, style: 1, label: "إنشاء متعدد", emoji: { name: "🗂️" }, custom_id: "gen_multi" },
+            { type: 2, style: 4, label: "حذف مفتاح", emoji: { name: "🗑️" }, custom_id: "delete_key" },
+            { type: 2, style: 4, label: "حظر مفتاح", emoji: { name: "🚫" }, custom_id: "ban_key" }
           ]
         },
         {
           type: 1,
           components: [
-            { type: 2, style: 2, label: "كشف صاحب المفتاح", custom_id: "info_key" },
-            { type: 2, style: 2, label: "الإحصائيات", custom_id: "stats" }
+            { type: 2, style: 2, label: "كشف صاحب المفتاح", emoji: { name: "🔍" }, custom_id: "info_key" },
+            { type: 2, style: 2, label: "الإحصائيات", emoji: { name: "📊" }, custom_id: "stats" }
           ]
         }
       ]
@@ -224,7 +224,7 @@ export default async function handler(req, res) {
             components: [{
               type: 1,
               components: [
-                { type: 2, style: 2, label: "رجوع للوحة التحكم", custom_id: "back_to_panel" }
+                { type: 2, style: 2, label: "رجوع للوحة التحكم", emoji: { name: "🔙" }, custom_id: "back_to_panel" }
               ]
             }]
           }
