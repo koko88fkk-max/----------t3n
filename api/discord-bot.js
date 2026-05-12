@@ -37,7 +37,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const ALLOWED_CHANNEL_ID = '1494851523010625562';
 const T3N_COLOR = 0x1A1A2E;
-const BANNER_URL = 'https://i.imgur.com/G5YvJbM.png'; // Placeholder banner, can be updated later
+const BANNER_URL = 'https://t3n-2a2i.vercel.app/banner.png';
 
 function generateRandomKey() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
