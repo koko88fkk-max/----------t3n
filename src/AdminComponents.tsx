@@ -139,10 +139,23 @@ export function AdminDashboard({ onClose }: { onClose: () => void }) {
 
             {/* Danger Zone */}
             <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
-              <h3 className="text-red-400 font-bold text-sm mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> منطقة الخطر</h3>
-              <button onClick={handleWipe} disabled={wiping} className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-sm disabled:opacity-50">
-                {wiping ? 'جاري الحذف...' : '🗑️ حذف جميع الحسابات وإعادة تعيين IDs'}
-              </button>
+              <h3 className="text-red-400 font-bold text-sm mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> منطقة الخطر والإعدادات المتقدمة</h3>
+              <div className="flex flex-col gap-3">
+                <button onClick={async () => {
+                  try {
+                    await toggleMaintenanceMode();
+                    alert('تم تغيير حالة وضع الصيانة بنجاح!');
+                  } catch (e: any) {
+                    alert('خطأ: ' + e.message);
+                  }
+                }} className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-bold text-sm w-full md:w-auto text-center flex items-center justify-center gap-2">
+                  <Wrench className="w-4 h-4" /> تفعيل / تعطيل وضع الصيانة
+                </button>
+                
+                <button onClick={handleWipe} disabled={wiping} className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-sm disabled:opacity-50 w-full md:w-auto text-center flex items-center justify-center gap-2">
+                  {wiping ? 'جاري الحذف...' : <><Trash2 className="w-4 h-4" /> حذف جميع الحسابات وإعادة تعيين IDs</>}
+                </button>
+              </div>
             </div>
           </>
         )}

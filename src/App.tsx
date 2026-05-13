@@ -1176,19 +1176,24 @@ export default function App() {
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+
+  // Maintenance mode listener
+  useEffect(() => {
+    const unsub = listenToMaintenanceMode((status) => {
+      setIsMaintenanceMode(status);
+    });
+    return () => unsub();
+  }, []);
 
   // Discord Auth: capture ?token= from URL after redirect from /api/discord-auth
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     if (token) {
-      // Clean the URL immediately
       window.history.replaceState(null, '', window.location.pathname);
-      // Sign in with the custom token from our backend
       signInWithCustomToken(auth, token)
         .then(async (result) => {
-          console.log('[T3N] Discord login successful via custom token');
-          // Save/update user profile in Firestore
           const user = result.user;
           const { doc, setDoc, getDoc, runTransaction } = await import('firebase/firestore');
           const { db } = await import('./lib/firebase');
@@ -1294,6 +1299,55 @@ export default function App() {
     } finally { setActivationLoading(false); }
   };
 
+  if (isMaintenanceMode && !isAdminUser) {
+    return (
+      <div className="min-h-screen bg-[#020618] flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Admin Login Button During Maintenance */}
+        <div className="absolute top-6 right-6 z-[100]">
+          {!authLoading && (
+            user ? (
+              <div className="flex gap-2 items-center">
+                <span className="text-white text-xs bg-white/5 px-3 py-2 rounded-xl">{user.displayName}</span>
+                <button onClick={handleLogout} className="bg-red-500/20 hover:bg-red-500/40 text-red-400 p-2 rounded-xl transition-all"><LogOut className="w-4 h-4" /></button>
+              </div>
+            ) : (
+              <button onClick={() => setShowLoginModal(true)} className="bg-white/5 hover:bg-white/10 text-white p-2 rounded-xl transition-all border border-white/10"><LogIn className="w-4 h-4" /></button>
+            )
+          )}
+        </div>
+
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{
+          backgroundImage: 'linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-600/20 blur-[120px] rounded-full pointer-events-none" />
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 text-center max-w-lg w-full bg-[#0a1a5c]/40 backdrop-blur-xl border border-orange-500/20 p-10 rounded-[32px] shadow-[0_0_50px_rgba(249,115,22,0.15)]"
+        >
+          <motion.div 
+            animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className="w-24 h-24 mx-auto bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-center text-orange-500 mb-8"
+          >
+            <Wrench className="w-10 h-10" />
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">الموقع تحت الصيانة</h1>
+          <p className="text-blue-200/60 mb-8 leading-relaxed text-lg">
+            نقوم حالياً ببعض التحديثات والتحسينات على المتجر لتقديم تجربة أفضل لكم. سنعود للعمل قريباً جداً!
+          </p>
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 w-full py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-2xl transition-all shadow-[0_0_30px_rgba(88,101,242,0.3)] hover:scale-[1.02] active:scale-95">
+            <MessageCircle className="w-5 h-5" />
+            تواصل معنا في الديسكورد
+          </a>
+        </motion.div>
+        <AnimatePresence>
+          {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} loading={authLoading} />}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar 
@@ -1311,6 +1365,12 @@ export default function App() {
         setShowTroubleshoot={setShowTroubleshoot}
       />
       
+      {isMaintenanceMode && isAdminUser && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[90] bg-orange-500 text-white px-6 py-2 rounded-full font-bold text-sm shadow-xl flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" /> وضع الصيانة مُفعّل حالياً (مرئي لك فقط كأدمن)
+        </div>
+      )}
+
       <main>
         <Hero />
         <ActivationGateway 
