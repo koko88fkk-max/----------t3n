@@ -148,7 +148,7 @@ export function AdminDashboard({ onClose }: { onClose: () => void }) {
               <div className="flex flex-col gap-3">
                 <button onClick={async () => {
                   try {
-                    await toggleMaintenanceMode();
+                    await toggleMaintenanceMode(isMaintenanceMode);
                   } catch (e: any) {
                     alert('خطأ: ' + e.message);
                   }
