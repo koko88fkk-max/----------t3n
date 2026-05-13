@@ -76,13 +76,19 @@ function verifyInteractionSignature(req, bodyText) {
   }
 }
 
+const PRODUCT_NAMES = {
+  'fortnite_unban': 'فك باند فورت هاردوير',
+  'spoofer_t3n': 'سبوفر تعن',
+  'spoofer_temp': 'سبوفر تيمب'
+};
+
 function getPanelUI() {
   return {
     type: 4,
     data: {
-      flags: 64, // Ephemeral
+      flags: 64,
       embeds: [{
-        title: "لوحة تحكم مفاتيح T3N Spoofer",
+        title: "لوحة تحكم مفاتيح T3N",
         description: "اختر الإجراء الذي تريد القيام به من الأزرار أدناه:",
         color: T3N_COLOR,
         image: { url: BANNER_URL },
@@ -103,6 +109,39 @@ function getPanelUI() {
           components: [
             { type: 2, style: 2, label: "كشف صاحب المفتاح", emoji: { name: "🔍" }, custom_id: "info_key" },
             { type: 2, style: 2, label: "الإحصائيات", emoji: { name: "📊" }, custom_id: "stats" }
+          ]
+        }
+      ]
+    }
+  };
+}
+
+function getProductSelectUI(mode) {
+  // mode = 'single' or 'multi'
+  const prefix = mode === 'single' ? 'pick_single_' : 'pick_multi_';
+  return {
+    type: 4,
+    data: {
+      flags: 64,
+      embeds: [{
+        title: mode === 'single' ? "🔑 اختر نوع المنتج" : "🗂️ اختر نوع المنتج (إنشاء متعدد)",
+        description: "اضغط على المنتج المطلوب:",
+        color: T3N_COLOR,
+        footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+      }],
+      components: [
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 1, label: "فك باند فورت هاردوير", emoji: { name: "🎮" }, custom_id: prefix + "fortnite_unban" },
+            { type: 2, style: 1, label: "سبوفر تعن", emoji: { name: "🛡️" }, custom_id: prefix + "spoofer_t3n" },
+            { type: 2, style: 1, label: "سبوفر تيمب", emoji: { name: "⏱️" }, custom_id: prefix + "spoofer_temp" }
+          ]
+        },
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 2, label: "رجوع للوحة التحكم", emoji: { name: "🔙" }, custom_id: "back_to_panel" }
           ]
         }
       ]
@@ -143,10 +182,23 @@ export default async function handler(req, res) {
     if (interaction.type === 3) {
       const cid = interaction.data.custom_id;
 
+      // Show product selection for single key
       if (cid === 'gen_single') {
+        return res.status(200).json(getProductSelectUI('single'));
+      }
+
+      // Show product selection for multi key
+      if (cid === 'gen_multi') {
+        return res.status(200).json(getProductSelectUI('multi'));
+      }
+
+      // Handle single key generation after product selection
+      if (cid.startsWith('pick_single_')) {
+        const productType = cid.replace('pick_single_', '');
+        const productName = PRODUCT_NAMES[productType] || productType;
         const newKey = generateRandomKey();
         await db.collection('keys').doc(newKey).set({
-          productType: 'spoofer',
+          productType: productType,
           status: 'unused',
           createdAt: new Date().toISOString(),
           createdBy: interaction.member?.user?.username || 'DiscordBot',
@@ -158,7 +210,7 @@ export default async function handler(req, res) {
           data: {
             embeds: [{
               title: "🔑 T3N | Key Generated",
-              description: "✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n```\n" + newKey + "\n```\n\n⏳ **Duration:** مدى الحياة (Lifetime)",
+              description: `✅ **Key Generation Successful!**\n\n📦 **المنتج:** ${productName}\n🔹 **Your License Key:**\n\`\`\`\n${newKey}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
               color: T3N_COLOR,
               thumbnail: { url: "https://t3n-2a2i.vercel.app/discord-thumb.png" },
               image: { url: BANNER_URL },
@@ -168,23 +220,43 @@ export default async function handler(req, res) {
         });
       }
 
-      if (['gen_multi', 'delete_key', 'ban_key', 'info_key'].includes(cid)) {
-        // Return Modal
+      // Handle multi key - show modal to enter count, with product type stored in custom_id
+      if (cid.startsWith('pick_multi_')) {
+        const productType = cid.replace('pick_multi_', '');
+        return res.status(200).json({
+          type: 9,
+          data: {
+            title: "إنشاء مفاتيح متعددة",
+            custom_id: `modal_gen_multi_${productType}`,
+            components: [{
+              type: 1,
+              components: [{
+                type: 4,
+                custom_id: "input_val",
+                style: 1,
+                label: "عدد المفاتيح (الحد الأقصى 100):",
+                required: true
+              }]
+            }]
+          }
+        });
+      }
+
+      if (['delete_key', 'ban_key', 'info_key'].includes(cid)) {
         let title, label;
-        if (cid === 'gen_multi') { title = "إنشاء مفاتيح متعددة"; label = "عدد المفاتيح (الحد الأقصى 100):"; }
         if (cid === 'delete_key') { title = "حذف مفتاح"; label = "أدخل المفتاح:"; }
         if (cid === 'ban_key') { title = "حظر مفتاح"; label = "أدخل المفتاح:"; }
         if (cid === 'info_key') { title = "كشف صاحب المفتاح"; label = "أدخل المفتاح:"; }
 
         return res.status(200).json({
-          type: 9, // Modal
+          type: 9,
           data: {
             title: title,
             custom_id: `modal_${cid}`,
             components: [{
               type: 1,
               components: [{
-                type: 4, // Text Input
+                type: 4,
                 custom_id: "input_val",
                 style: 1,
                 label: label,
@@ -241,7 +313,10 @@ export default async function handler(req, res) {
       const cid = interaction.data.custom_id;
       const inputVal = interaction.data.components[0].components[0].value.trim();
 
-      if (cid === 'modal_gen_multi') {
+      // Handle multi-key generation with product type in custom_id
+      if (cid.startsWith('modal_gen_multi_')) {
+        const productType = cid.replace('modal_gen_multi_', '');
+        const productName = PRODUCT_NAMES[productType] || productType;
         let count = parseInt(inputVal);
         if (isNaN(count) || count < 1 || count > 100) {
           return res.status(200).json({
@@ -256,7 +331,7 @@ export default async function handler(req, res) {
           const k = generateRandomKey();
           keys.push(k);
           batch.set(db.collection('keys').doc(k), {
-            productType: 'spoofer',
+            productType: productType,
             status: 'unused',
             createdAt: new Date().toISOString(),
             createdBy: interaction.member?.user?.username || 'DiscordBot',
@@ -270,7 +345,7 @@ export default async function handler(req, res) {
           data: {
             embeds: [{
               title: "🔑 T3N | Keys Generated",
-              description: `✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n\`\`\`\n${keys.join('\n')}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
+              description: `✅ **Key Generation Successful!**\n\n📦 **المنتج:** ${productName}\n🔹 **Your License Key(s):**\n\`\`\`\n${keys.join('\n')}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
               color: T3N_COLOR,
               thumbnail: { url: "https://t3n-2a2i.vercel.app/discord-thumb.png" },
               image: { url: BANNER_URL },
