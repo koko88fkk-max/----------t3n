@@ -269,7 +269,7 @@ export async function checkUserVIP(uid: string) {
           continue;
         }
         hasValidKey = true;
-        const pt = kd.productType === 'spoofer' ? 'superstar' : (kd.productType || 'superstar'); // Fallback for old keys
+        const pt = kd.productType || 'superstar'; // Keep original product type
         if (pt && pt !== '') {
           newProducts.add(pt);
         }
@@ -315,12 +315,13 @@ export function isValidKeyFormat(value: string): boolean {
   return /^T3N-[A-Z0-9]{6}-[A-Z0-9]{6}$/.test(trimmed);
 }
 
-export async function createKeys(count: number, productType: 'fortnite' | 'superstar'): Promise<string[]> {
+export async function createKeys(count: number, productType: 'fortnite_unban' | 'spoofer_t3n' | 'spoofer_temp' | 'superstar' | 'fortnite' | 'spoofer'): Promise<string[]> {
   if (!count || count < 1 || count > 100) {
     throw new Error('عدد المفاتيح يجب أن يكون بين 1 و 100');
   }
 
-  if (!productType || !['fortnite', 'superstar'].includes(productType)) {
+  const validTypes = ['fortnite_unban', 'spoofer_t3n', 'spoofer_temp', 'superstar', 'fortnite', 'spoofer'];
+  if (!productType || !validTypes.includes(productType)) {
     throw new Error('نوع المنتج غير صحيح');
   }
 

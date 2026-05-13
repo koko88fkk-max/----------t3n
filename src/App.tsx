@@ -363,17 +363,19 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
               {/* Cards Container */}
               <div className="w-full flex flex-col gap-4">
                 {/* Product Card */}
-                <div className={`bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group transition-all ${result.productType === 'fortnite' ? 'hover:border-blue-500/30' : 'hover:border-yellow-500/30'}`}>
+                <div className={`bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group transition-all hover:border-yellow-500/30`}>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col text-right">
-                      <h4 className="text-xl font-bold text-white mb-1">{result.productType === 'fortnite' ? 'هاك فورت نايت' : 'السبوفر'}</h4>
-                      <p className="text-sm text-zinc-500">منتج {result.productType === 'fortnite' ? 'فورت نايت' : 'السبوفر'} والشروحات الخاصة به.</p>
+                      <h4 className="text-xl font-bold text-white mb-1">
+                        {result.productType === 'fortnite_unban' ? 'فك باند فورت هاردوير' : result.productType === 'spoofer_temp' ? 'سبوفر تيمب' : 'سبوفر تعن'}
+                      </h4>
+                      <p className="text-sm text-zinc-500">منتج السبوفر والشروحات الخاصة به.</p>
                     </div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${result.productType === 'fortnite' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'}`}>
-                      {result.productType === 'fortnite' ? <Gamepad2 className="w-7 h-7" /> : <Cpu className="w-7 h-7" />}
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border bg-yellow-500/10 border-yellow-500/20 text-yellow-500`}>
+                      <Cpu className="w-7 h-7" />
                     </div>
                   </div>
-                  <button onClick={() => onShowGuide?.(result.productType)} className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${result.productType === 'fortnite' ? 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 text-blue-500' : 'bg-yellow-500/10 hover:bg-yellow-500/20 border-yellow-500/30 text-yellow-500'}`}>
+                  <button onClick={() => onShowGuide?.(result.productType)} className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border bg-yellow-500/10 hover:bg-yellow-500/20 border-yellow-500/30 text-yellow-500`}>
                     <MonitorPlay className="w-5 h-5" /> الانتقال إلى الشرح والملفات
                   </button>
                 </div>
@@ -1300,8 +1302,7 @@ export default function App() {
           result={activationResult}
           onReset={() => setActivationResult(null)}
           onShowGuide={(type: string) => {
-            if (type === 'fortnite') setShowFortniteGuide(true);
-            else setShowSpooferGuide(true);
+            setShowSpooferGuide(true);
           }}
         />
         <Rules />

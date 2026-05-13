@@ -65,9 +65,19 @@ export default async function handler(req, res) {
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const GUILD_ID = process.env.GUILD_ID || '1396959491786018826';
-  const ROLE_ID = process.env.ROLE_ID || '1397221350095192074';
+  const CUSTOMER_ROLE = '1397221350095192074'; // العميل الكستمر
   const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY;
   const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "t3n-stor-cd7d7";
+
+  // Role mapping by product type
+  const PRODUCT_ROLES = {
+    'fortnite_unban': ['1483330317040484364', CUSTOMER_ROLE], // فورت نايت + العميل
+    'spoofer_t3n': ['1500092886467870720', CUSTOMER_ROLE],    // سبوفر تعن + العميل
+    'spoofer_temp': ['1503919636696273068', CUSTOMER_ROLE],   // سبوفر تيمب + العميل
+    'superstar': [CUSTOMER_ROLE],                              // fallback
+    'fortnite': ['1483330317040484364', CUSTOMER_ROLE],        // fallback
+    'spoofer': ['1500092886467870720', CUSTOMER_ROLE],         // fallback
+  };
 
   if (!FIREBASE_API_KEY) {
     console.error("FATAL: FIREBASE_API_KEY is missing in Vercel environment variables");
@@ -99,11 +109,27 @@ export default async function handler(req, res) {
   // ==== الحماية: 2. التحقق من حالة مفتاح الـ VIP للعميل ====
   let orderNumber = 'غير متوفر';
   let lastRoleAssignTime = null;
+  let userProductType = 'superstar'; // default fallback
   try {
     const docRes = await axios.get(`https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${verifiedUid}`);
     const isVIP = docRes.data.fields?.isVIP?.booleanValue;
     orderNumber = docRes.data.fields?.verifiedOrder?.stringValue || 'غير متوفر';
     lastRoleAssignTime = docRes.data.fields?.lastRoleAssign?.timestampValue || null;
+
+    // Get the user's activated keys to determine product type
+    const activatedKeysField = docRes.data.fields?.activatedKeys?.arrayValue?.values;
+    if (activatedKeysField && activatedKeysField.length > 0) {
+      const lastKeyId = activatedKeysField[activatedKeysField.length - 1].stringValue;
+      if (lastKeyId) {
+        try {
+          const keyRes = await axios.get(`https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/keys/${lastKeyId}`);
+          const keyProductType = keyRes.data.fields?.productType?.stringValue;
+          if (keyProductType) userProductType = keyProductType;
+        } catch (keyErr) {
+          console.error("Failed to fetch key product type:", keyErr.message);
+        }
+      }
+    }
 
     if (isVIP !== true) {
       console.error(`User ${verifiedUid} attempted assignment but isVIP is false.`);
@@ -124,16 +150,20 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'فشل الاتصال بقاعدة البيانات للتحقق من صلاحيتك.' });
   }
 
+  // Determine which roles to assign
+  const rolesToAssign = PRODUCT_ROLES[userProductType] || [CUSTOMER_ROLE];
+  console.log(`Product type: ${userProductType}, Roles to assign: ${rolesToAssign.join(', ')}`);
+
   try {
     console.log(`Adding member ${discordId} to guild ${GUILD_ID}`);
-    // 1. محاولة إدخال العميل للسيرفر وإعطائه الرتبة
+    // 1. Try to add user to guild
     let response;
     try {
       response = await axios.put(
         `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}`,
         {
           access_token: accessToken,
-          roles: [ROLE_ID]
+          roles: rolesToAssign
         },
         {
           headers: {
@@ -147,22 +177,23 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'فشل في إدخال العميل للسيرفر (ديسكورد رفض الطلب)', details: err.response?.data });
     }
 
-    // 2. لو كان العميل موجود مسبقاً في السيرفر، الديسكورد بيرد بـ 204 No Content
+    // 2. If user already exists (204), assign roles individually
     if (response.status === 204) {
-      console.log(`User already in guild. Assigning role ${ROLE_ID} directly.`);
-      try {
-        await axios.put(
-          `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${ROLE_ID}`,
-          {},
-          {
-            headers: {
-              'Authorization': `Bot ${BOT_TOKEN}`
+      console.log(`User already in guild. Assigning ${rolesToAssign.length} roles.`);
+      for (const roleId of rolesToAssign) {
+        try {
+          await axios.put(
+            `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`,
+            {},
+            {
+              headers: {
+                'Authorization': `Bot ${BOT_TOKEN}`
+              }
             }
-          }
-        );
-      } catch (err) {
-        console.error("Axios PUT to assign role failed:", err.response?.data || err.message);
-        return res.status(500).json({ error: 'العميل موجود بالسيرفر لكن فشل إعطائه الرتبة', details: err.response?.data });
+          );
+        } catch (err) {
+          console.error(`Failed to assign role ${roleId}:`, err.response?.data || err.message);
+        }
       }
     }
 
@@ -217,7 +248,7 @@ export default async function handler(req, res) {
             thumbnail: { url: avatarURL },
             fields: [
               { name: 'العميل', value: `<@${user.id}>`, inline: true },
-              { name: 'الرتبة', value: `<@&${ROLE_ID}>`, inline: true },
+              { name: 'الرتب', value: rolesToAssign.map(r => `<@&${r}>`).join(' + '), inline: true },
               { name: 'رقم الطلب', value: `\`${orderNumber}\``, inline: true },
               { name: 'الإيميل', value: `\`${userEmail}\``, inline: true },
               { name: 'عمر الحساب', value: `\`${ageText}\``, inline: true },

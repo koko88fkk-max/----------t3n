@@ -156,6 +156,7 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createCount, setCreateCount] = useState(1);
+  const [createType, setCreateType] = useState<'fortnite_unban' | 'spoofer_t3n' | 'spoofer_temp'>('spoofer_t3n');
   const [lastCreated, setLastCreated] = useState<string[]>([]);
   const [createError, setCreateError] = useState('');
   const [activeTab, setActiveTab] = useState<'superstar' | 'used'>('superstar');
@@ -169,14 +170,14 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
     if (isCreating) return;
     setIsCreating(true); setCreateError('');
     try {
-      const c = await createKeys(Math.min(100, Math.max(1, createCount)), 'superstar');
+      const c = await createKeys(Math.min(100, Math.max(1, createCount)), createType);
       if (c.length === 0) setCreateError('فشل في الإنشاء');
       else { setLastCreated(c); await load(); }
     } catch (e: any) { setCreateError(e.message || 'خطأ غير معروف'); }
     setIsCreating(false);
   };
 
-  const spooferKeys = keys.filter(k => (k.productType === 'superstar' || k.productType === 'spoofer') && k.status !== 'active');
+  const spooferKeys = keys.filter(k => ['superstar', 'spoofer', 'fortnite_unban', 'spoofer_t3n', 'spoofer_temp'].includes(k.productType) && k.status !== 'active');
   const usedKeys = keys.filter(k => k.status === 'active');
   const currentKeys = activeTab === 'superstar' ? spooferKeys : usedKeys;
 
@@ -231,17 +232,27 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        {/* Create Section - Spoofer Only */}
+        {/* Create Section - 3 Products */}
         <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 mb-6">
-          <h3 className="text-sm font-bold text-white mb-4">إنشاء مفاتيح سبوفر جديدة</h3>
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-blue-600 text-white">
-              <Gamepad2 className="w-4 h-4" /> سبوفر T3N
+          <h3 className="text-sm font-bold text-white mb-4">إنشاء مفاتيح جديدة</h3>
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <button onClick={() => setCreateType('fortnite_unban')} className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${createType === 'fortnite_unban' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+                <Gamepad2 className="w-4 h-4" /> فك باند فورت هاردوير
+              </button>
+              <button onClick={() => setCreateType('spoofer_t3n')} className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${createType === 'spoofer_t3n' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+                <Gamepad2 className="w-4 h-4" /> سبوفر تعن
+              </button>
+              <button onClick={() => setCreateType('spoofer_temp')} className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${createType === 'spoofer_temp' ? 'bg-cyan-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+                <Gamepad2 className="w-4 h-4" /> سبوفر تيمب
+              </button>
             </div>
-            <input type="number" min={1} max={100} value={createCount} onChange={e => setCreateCount(Math.min(100,Math.max(1,Number(e.target.value)||1)))} className="w-24 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white text-center font-black text-sm" />
-            <button onClick={handleCreate} disabled={isCreating} className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50 flex items-center gap-2">
-              {isCreating ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري...</> : `إنشاء ${createCount} مفتاح`}
-            </button>
+            <div className="flex flex-col md:flex-row gap-3">
+              <input type="number" min={1} max={100} value={createCount} onChange={e => setCreateCount(Math.min(100,Math.max(1,Number(e.target.value)||1)))} className="w-24 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white text-center font-black text-sm" />
+              <button onClick={handleCreate} disabled={isCreating} className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50 flex items-center gap-2">
+                {isCreating ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري...</> : `إنشاء ${createCount} مفتاح`}
+              </button>
+            </div>
           </div>
           {createError && <p className="text-red-400 text-xs font-bold mt-3">{createError}</p>}
           {lastCreated.length > 0 && (
