@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { LayoutDashboard, Key, X, RefreshCw, Trash2, ShieldOff, Gamepad2, Copy, Ban, Snowflake, Search, Users, CheckCircle2, AlertTriangle, Clock, Wrench } from 'lucide-react';
-import { getAdminStats, getAllKeys, createKeys, deleteKey, banKey, unbanKey, freezeKey, unfreezeKey, banUser, deleteUserData, resetAllUsersAndCounter, toggleMaintenanceMode } from './lib/firebase';
+import { getAdminStats, getAllKeys, createKeys, deleteKey, banKey, unbanKey, freezeKey, unfreezeKey, banUser, deleteUserData, resetAllUsersAndCounter, toggleMaintenanceMode, listenToMaintenanceMode } from './lib/firebase';
 
 const getNumericId = (uid: string, assignedId?: number) => {
   if (assignedId) return assignedId.toString();
@@ -47,9 +47,14 @@ export function AdminDashboard({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [wiping, setWiping] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
 
   const load = async () => { setLoading(true); setStats(await getAdminStats()); setLoading(false); };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    const unsub = listenToMaintenanceMode((status) => setIsMaintenanceMode(status));
+    return () => unsub();
+  }, []);
 
   const filteredUsers = stats?.users?.filter((u: any) => {
     if (!search) return true;
@@ -144,12 +149,12 @@ export function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <button onClick={async () => {
                   try {
                     await toggleMaintenanceMode();
-                    alert('تم تغيير حالة وضع الصيانة بنجاح!');
                   } catch (e: any) {
                     alert('خطأ: ' + e.message);
                   }
-                }} className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-bold text-sm w-full md:w-auto text-center flex items-center justify-center gap-2">
-                  <Wrench className="w-4 h-4" /> تفعيل / تعطيل وضع الصيانة
+                }} className={`${isMaintenanceMode ? 'bg-zinc-600 hover:bg-zinc-500 text-white' : 'bg-orange-600 hover:bg-orange-500 text-white'} px-6 py-3 rounded-xl font-bold text-sm w-full md:w-auto text-center flex items-center justify-center gap-2 transition-all`}>
+                  <Wrench className="w-4 h-4" /> 
+                  {isMaintenanceMode ? 'إلغاء وضع الصيانة (إرجاع الموقع للزوار)' : 'تفعيل وضع الصيانة (إيقاف الموقع مؤقتاً)'}
                 </button>
                 
                 <button onClick={handleWipe} disabled={wiping} className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-sm disabled:opacity-50 w-full md:w-auto text-center flex items-center justify-center gap-2">
