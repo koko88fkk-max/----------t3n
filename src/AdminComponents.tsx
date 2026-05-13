@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
-import { LayoutDashboard, Key, X, RefreshCw, Trash2, ShieldOff, Gamepad2, Copy, Ban, Snowflake, Search, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Key, X, RefreshCw, Trash2, ShieldOff, Gamepad2, Copy, Ban, Snowflake, Search, Users, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { getAdminStats, getAllKeys, createKeys, deleteKey, banKey, unbanKey, freezeKey, unfreezeKey, banUser, deleteUserData, resetAllUsersAndCounter } from './lib/firebase';
 
 const getNumericId = (uid: string, assignedId?: number) => {
@@ -10,6 +10,30 @@ const getNumericId = (uid: string, assignedId?: number) => {
   let h = 0;
   for (let i = 0; i < uid.length; i++) { h = ((h << 5) - h) + uid.charCodeAt(i); h |= 0; }
   return Math.abs(h).toString().slice(0, 6);
+};
+
+const formatDetailedDate = (dateStr: string | null) => {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '-';
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const secs = Math.floor(diff / 1000);
+  const mins = Math.floor(secs / 60);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+
+  let ago = '';
+  if (months > 0) ago = `منذ ${months} شهر`;
+  else if (days > 0) ago = `منذ ${days} يوم`;
+  else if (hours > 0) ago = `منذ ${hours} ساعة`;
+  else if (mins > 0) ago = `منذ ${mins} دقيقة`;
+  else ago = `منذ ${secs} ثانية`;
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const dateFormatted = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${dateFormatted} (${ago})`;
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -132,10 +156,11 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createCount, setCreateCount] = useState(1);
-  const [createType, setCreateType] = useState<'superstar' | 'fortnite'>('superstar');
   const [lastCreated, setLastCreated] = useState<string[]>([]);
   const [createError, setCreateError] = useState('');
-  const [activeTab, setActiveTab] = useState<'superstar' | 'fortnite' | 'used'>('superstar');
+  const [activeTab, setActiveTab] = useState<'superstar' | 'used'>('superstar');
+  const [keySearch, setKeySearch] = useState('');
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const load = async () => { setLoading(true); try { setKeys(await getAllKeys()); } catch(e){} setLoading(false); };
   useEffect(() => { load(); }, []);
@@ -144,22 +169,39 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
     if (isCreating) return;
     setIsCreating(true); setCreateError('');
     try {
-      const c = await createKeys(Math.min(100, Math.max(1, createCount)), createType);
-      if (c.length === 0) setCreateError('فشل في الإنشاء: ربما بسبب الصلاحيات أو عدم الاتصال بقاعدة البيانات');
+      const c = await createKeys(Math.min(100, Math.max(1, createCount)), 'superstar');
+      if (c.length === 0) setCreateError('فشل في الإنشاء');
       else { setLastCreated(c); await load(); }
-    } catch (e: any) { console.error(e); setCreateError(e.message || 'خطأ غير معروف أثناء الإنشاء'); }
+    } catch (e: any) { setCreateError(e.message || 'خطأ غير معروف'); }
     setIsCreating(false);
   };
 
   const spooferKeys = keys.filter(k => (k.productType === 'superstar' || k.productType === 'spoofer') && k.status !== 'active');
-  const fortniteKeys = keys.filter(k => k.productType === 'fortnite' && k.status !== 'active');
   const usedKeys = keys.filter(k => k.status === 'active');
-  const currentKeys = activeTab === 'superstar' ? spooferKeys : activeTab === 'fortnite' ? fortniteKeys : usedKeys;
+  const currentKeys = activeTab === 'superstar' ? spooferKeys : usedKeys;
+
+  // Apply search filter
+  const filteredKeys = currentKeys.filter(k => {
+    if (!keySearch) return true;
+    const s = keySearch.toLowerCase();
+    return k.id?.toLowerCase().includes(s) || k.usedByName?.toLowerCase().includes(s) || k.usedByEmail?.toLowerCase().includes(s) || k.usedByUid?.toLowerCase().includes(s);
+  });
 
   const totalUnused = keys.filter(k => k.status === 'unused').length;
   const totalUsed = keys.filter(k => k.status === 'active').length;
   const totalBanned = keys.filter(k => k.status === 'banned').length;
   const totalFrozen = keys.filter(k => k.status === 'frozen').length;
+
+  const handleDeleteAllVisible = async () => {
+    if (!confirm(`⚠️ هل أنت متأكد من حذف ${filteredKeys.length} مفتاح من هذه الصفحة؟`)) return;
+    if (!confirm('⚠️ تأكيد أخير: لا يمكن التراجع عن هذا!')) return;
+    setDeletingAll(true);
+    try {
+      for (const k of filteredKeys) { await deleteKey(k.id); }
+      await load();
+    } catch (e: any) { alert('خطأ: ' + e.message); }
+    setDeletingAll(false);
+  };
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl overflow-y-auto">
@@ -189,13 +231,12 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        {/* Create Section */}
+        {/* Create Section - Spoofer Only */}
         <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 mb-6">
-          <h3 className="text-sm font-bold text-white mb-4">إنشاء مفاتيح جديدة</h3>
+          <h3 className="text-sm font-bold text-white mb-4">إنشاء مفاتيح سبوفر جديدة</h3>
           <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex gap-2 flex-1">
-              <button onClick={() => setCreateType('superstar')} className={`flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${createType === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> سبوفر</button>
-              <button onClick={() => setCreateType('fortnite')} className={`flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${createType === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}><Gamepad2 className="w-4 h-4" /> فورت نايت</button>
+            <div className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-blue-600 text-white">
+              <Gamepad2 className="w-4 h-4" /> سبوفر T3N
             </div>
             <input type="number" min={1} max={100} value={createCount} onChange={e => setCreateCount(Math.min(100,Math.max(1,Number(e.target.value)||1)))} className="w-24 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white text-center font-black text-sm" />
             <button onClick={handleCreate} disabled={isCreating} className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50 flex items-center gap-2">
@@ -214,17 +255,27 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        {/* Product Tabs */}
+        {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-4">
           <button onClick={() => setActiveTab('superstar')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'superstar' ? 'bg-blue-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
             <Gamepad2 className="w-4 h-4" /> مفاتيح السبوفر ({spooferKeys.length})
           </button>
-          <button onClick={() => setActiveTab('fortnite')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'fortnite' ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
-            <Gamepad2 className="w-4 h-4" /> مفاتيح فورت نايت ({fortniteKeys.length})
-          </button>
           <button onClick={() => setActiveTab('used')} className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'used' ? 'bg-emerald-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
             <CheckCircle2 className="w-4 h-4" /> المستخدمة ({usedKeys.length})
           </button>
+        </div>
+
+        {/* Search + Delete All */}
+        <div className="flex flex-col md:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input type="text" placeholder="ابحث بالمفتاح أو اسم المستخدم أو الإيميل..." value={keySearch} onChange={e => setKeySearch(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-12 pl-4 text-white text-sm font-bold" />
+          </div>
+          {activeTab === 'superstar' && filteredKeys.length > 0 && (
+            <button onClick={handleDeleteAllVisible} disabled={deletingAll} className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs disabled:opacity-50 flex items-center gap-2 whitespace-nowrap">
+              {deletingAll ? <><RefreshCw className="w-3 h-3 animate-spin" /> جاري الحذف...</> : <><Trash2 className="w-3 h-3" /> حذف الكل ({filteredKeys.length})</>}
+            </button>
+          )}
         </div>
 
         {/* Keys Table */}
@@ -232,35 +283,53 @@ export function KeyManagement({ onClose }: { onClose: () => void }) {
           <div className="overflow-x-auto">
             <table className="w-full text-right text-xs">
               <thead><tr className="bg-white/5 text-zinc-500 border-b border-white/5">
-                <th className="p-3">المفتاح</th><th className="p-3">الحالة</th><th className="p-3">المستخدم</th><th className="p-3">التاريخ</th><th className="p-3">إجراءات</th>
+                <th className="p-3">المفتاح</th><th className="p-3">الحالة</th><th className="p-3">المستخدم</th><th className="p-3">تاريخ الإنشاء</th><th className="p-3">تاريخ التفعيل</th><th className="p-3">إجراءات</th>
               </tr></thead>
               <tbody>
-                {currentKeys.map(k => (
+                {filteredKeys.map(k => (
                   <tr key={k.id} className="border-b border-white/5 hover:bg-white/[0.02]">
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        {k.productType === 'fortnite' ? (
-                          <span title="مخصص لفورت نايت" className="bg-purple-500/20 text-purple-400 p-1 rounded-md"><Gamepad2 className="w-3 h-3" /></span>
-                        ) : (
-                          <span title="مخصص للسبوفر" className="bg-blue-500/20 text-blue-400 p-1 rounded-md"><Gamepad2 className="w-3 h-3" /></span>
-                        )}
+                        <span title="مخصص للسبوفر" className="bg-blue-500/20 text-blue-400 p-1 rounded-md"><Gamepad2 className="w-3 h-3" /></span>
                         <span className="font-mono text-[11px] text-zinc-300">{k.id}</span>
                       </div>
                     </td>
                     <td className="p-3"><StatusBadge status={k.status} /></td>
-                    <td className="p-3 text-zinc-500 text-[10px]">{k.usedByName || '-'}</td>
-                    <td className="p-3 text-zinc-600 text-[10px]">{k.activatedAt ? new Date(k.activatedAt).toLocaleDateString('ar') : '-'}</td>
+                    <td className="p-3">
+                      {k.usedByName ? (
+                        <div className="flex items-center gap-2">
+                          {k.usedByPhoto && <img src={k.usedByPhoto} className="w-5 h-5 rounded-full" />}
+                          <div>
+                            <p className="text-zinc-300 text-[10px] font-bold">{k.usedByName}</p>
+                            <p className="text-zinc-600 text-[9px]">{k.usedByEmail || ''}</p>
+                          </div>
+                        </div>
+                      ) : <span className="text-zinc-600 text-[10px]">-</span>}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1 text-zinc-500 text-[10px]">
+                        <Clock className="w-3 h-3 shrink-0" />
+                        <span>{formatDetailedDate(k.createdAt)}</span>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1 text-zinc-500 text-[10px]">
+                        {k.activatedAt ? (
+                          <><Clock className="w-3 h-3 shrink-0 text-emerald-500" /><span className="text-emerald-400">{formatDetailedDate(k.activatedAt)}</span></>
+                        ) : <span className="text-zinc-600">لم يُفعّل</span>}
+                      </div>
+                    </td>
                     <td className="p-3 flex gap-1">
-                      <button onClick={() => navigator.clipboard.writeText(k.id)} className="p-1 rounded hover:bg-white/10 text-zinc-500"><Copy className="w-3 h-3" /></button>
-                      {k.status !== 'banned' && <button onClick={async () => { try { await banKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Ban className="w-3 h-3" /></button>}
-                      {k.status === 'banned' && <button onClick={async () => { try { await unbanKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
-                      {k.status !== 'frozen' && k.status !== 'banned' && <button onClick={async () => { try { await freezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400"><Snowflake className="w-3 h-3" /></button>}
-                      {k.status === 'frozen' && <button onClick={async () => { try { await unfreezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"><CheckCircle2 className="w-3 h-3" /></button>}
-                      <button onClick={async () => { if(confirm('حذف المفتاح؟')) { try { await deleteKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                      <button onClick={() => navigator.clipboard.writeText(k.id)} className="p-1 rounded hover:bg-white/10 text-zinc-500" title="نسخ"><Copy className="w-3 h-3" /></button>
+                      {k.status !== 'banned' && <button onClick={async () => { try { await banKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400" title="حظر"><Ban className="w-3 h-3" /></button>}
+                      {k.status === 'banned' && <button onClick={async () => { try { await unbanKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400" title="فك الحظر"><CheckCircle2 className="w-3 h-3" /></button>}
+                      {k.status !== 'frozen' && k.status !== 'banned' && <button onClick={async () => { try { await freezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-cyan-500/10 text-zinc-500 hover:text-cyan-400" title="تجميد"><Snowflake className="w-3 h-3" /></button>}
+                      {k.status === 'frozen' && <button onClick={async () => { try { await unfreezeKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } }} className="p-1 rounded hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400" title="فك التجميد"><CheckCircle2 className="w-3 h-3" /></button>}
+                      <button onClick={async () => { if(confirm('حذف المفتاح؟')) { try { await deleteKey(k.id); await load(); } catch(e:any) { alert('خطأ: ' + e.message); } } }} className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400" title="حذف"><Trash2 className="w-3 h-3" /></button>
                     </td>
                   </tr>
                 ))}
-                {currentKeys.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-zinc-600 text-sm">لا توجد مفاتيح</td></tr>}
+                {filteredKeys.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-zinc-600 text-sm">لا توجد مفاتيح</td></tr>}
               </tbody>
             </table>
           </div>
