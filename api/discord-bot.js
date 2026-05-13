@@ -156,7 +156,6 @@ export default async function handler(req, res) {
         return res.status(200).json({
           type: 4,
           data: {
-            flags: 64,
             embeds: [{
               title: "🔑 T3N | Key Generated",
               description: "✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n```\n" + newKey + "\n```\n\n⏳ **Duration:** مدى الحياة (Lifetime)",
@@ -269,7 +268,6 @@ export default async function handler(req, res) {
         return res.status(200).json({
           type: 4,
           data: {
-            flags: 64,
             embeds: [{
               title: "🔑 T3N | Keys Generated",
               description: `✅ **Key Generation Successful!**\n\n🔹 **Your License Key(s) for Permanent Spoofer:**\n\`\`\`\n${keys.join('\n')}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
