@@ -211,14 +211,11 @@ export default async function handler(req, res) {
           data: {
             flags: 64,
             embeds: [{
-              title: "📊 إحصائيات المفاتيح",
+              title: "📊 إحصائيات مفاتيح T3N",
+              description: `🟢 **المفاتيح المتاحة:** \`${unused}\`\n🔴 **المفاتيح المستخدمة:** \`${used}\`\n⚫ **المفاتيح المحظورة:** \`${banned}\`\n\n━━━━━━━━━━━━━━━━━━\n🔢 **إجمالي المفاتيح:** \`${total}\``,
               color: T3N_COLOR,
-              fields: [
-                { name: "متاحة", value: `${unused}`, inline: true },
-                { name: "مستخدمة", value: `${used}`, inline: true },
-                { name: "محظورة", value: `${banned}`, inline: true },
-                { name: "الكل", value: `${total}`, inline: true }
-              ],
+              thumbnail: { url: "https://t3n-2a2i.vercel.app/discord-thumb.png" },
+              image: { url: BANNER_URL },
               footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
             }],
             components: [{
