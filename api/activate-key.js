@@ -74,8 +74,8 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, error: 'هذا المفتاح مربوط بحساب آخر ولا يمكن استخدامه من قبل حساب مختلف' });
     }
 
-    // Map product type: 'spoofer' -> 'superstar' for frontend compatibility
-    let pt = kd.productType === 'spoofer' ? 'superstar' : (kd.productType || 'superstar');
+    // Keep original product type for role assignment
+    let pt = kd.productType || 'superstar';
 
     // If already activated by the same user, just verify and return products
     if (kd.usedByUid === uid) {
@@ -133,24 +133,37 @@ export default async function handler(req, res) {
       verifiedAt: now.toISOString()
     }, { merge: true });
 
-    // ==== Auto-Assign Discord Role ====
+    // ==== Auto-Assign Discord Roles based on product type ====
     if (uid.startsWith('discord_')) {
       const discordId = uid.replace('discord_', '');
       const BOT_TOKEN = process.env.BOT_TOKEN;
       const GUILD_ID = process.env.GUILD_ID || '1396959491786018826';
-      const ROLE_ID = process.env.ROLE_ID || '1397221350095192074';
+      const CUSTOMER_ROLE = '1397221350095192074';
+      
+      const PRODUCT_ROLES = {
+        'fortnite_unban': ['1483330317040484364', CUSTOMER_ROLE],
+        'spoofer_t3n': ['1500092886467870720', CUSTOMER_ROLE],
+        'spoofer_temp': ['1503919636696273068', CUSTOMER_ROLE],
+        'superstar': [CUSTOMER_ROLE],
+        'fortnite': ['1483330317040484364', CUSTOMER_ROLE],
+        'spoofer': ['1500092886467870720', CUSTOMER_ROLE],
+      };
+      
+      const rolesToAssign = PRODUCT_ROLES[pt] || [CUSTOMER_ROLE];
       
       if (BOT_TOKEN) {
-        try {
-          await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${ROLE_ID}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bot ${BOT_TOKEN}`
-            }
-          });
-          console.log(`Assigned role ${ROLE_ID} to ${discordId} automatically.`);
-        } catch (err) {
-          console.error('Failed to assign Discord role automatically:', err);
+        for (const roleId of rolesToAssign) {
+          try {
+            await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bot ${BOT_TOKEN}`
+              }
+            });
+            console.log(`Assigned role ${roleId} to ${discordId} automatically.`);
+          } catch (err) {
+            console.error(`Failed to assign role ${roleId}:`, err);
+          }
         }
       }
     }

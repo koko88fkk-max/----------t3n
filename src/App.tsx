@@ -132,14 +132,9 @@ function Navbar({ user, userProfile, onLogin, onLogout, authLoading, isAdminUser
                         {!userProfile.activatedProducts?.length && (
                           <div className="p-3 text-xs text-center text-zinc-500">لا يوجد منتجات مفعلة</div>
                         )}
-                        {userProfile.activatedProducts?.includes('superstar') && (
+                        {userProfile.activatedProducts?.some((p: string) => ['superstar', 'spoofer', 'fortnite_unban', 'spoofer_t3n', 'spoofer_temp', 'fortnite'].includes(p)) && (
                           <button onClick={() => { setShowProductMenu(false); setShowSpooferGuide(true); }} className="flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-blue-400">
-                            <Cpu className="w-4 h-4" /> قسم السبوفر
-                          </button>
-                        )}
-                        {userProfile.activatedProducts?.includes('fortnite') && (
-                          <button onClick={() => { setShowProductMenu(false); setShowFortniteGuide(true); }} className="flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 rounded-xl transition-all text-sm font-bold text-purple-400">
-                            <Gamepad2 className="w-4 h-4" /> قسم فورت نايت
+                            <Cpu className="w-4 h-4" /> قسم الشروحات والملفات
                           </button>
                         )}
                       </div>
