@@ -508,13 +508,37 @@ function SpooferGuide({ onClose, user }: { onClose: () => void; user: any }) {
     setTimeout(() => setCopiedCmd(false), 2000);
   };
 
-  const handleProtectedDownload = (filename: string, saveName: string) => {
-    const link = document.createElement('a');
-    link.href = filename.startsWith('/') ? filename : `/${filename}`;
-    link.download = saveName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleProtectedDownload = async (filename: string, saveName: string) => {
+    if (!auth.currentUser) {
+      alert("الرجاء تسجيل الدخول أولاً");
+      return;
+    }
+    
+    try {
+      const idToken = await auth.currentUser.getIdToken(true);
+      const res = await fetch('/api/secure-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken, filename })
+      });
+      
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || "مرفوض: ليس لديك صلاحية لتحميل هذا الملف. يجب تفعيل مفتاح.");
+        return;
+      }
+      
+      // If approved, trigger download
+      const link = document.createElement('a');
+      link.href = data.downloadUrl;
+      link.download = saveName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("حدث خطأ أثناء محاولة التحميل.");
+    }
   };
 
   return createPortal(
