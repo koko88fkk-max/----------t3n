@@ -9,26 +9,9 @@ const APP_ID = 'ضع_الـ_Application_ID_هنا';
 const url = `https://discord.com/api/v10/applications/${APP_ID}/commands`;
 
 const commandData = {
-  name: 'genkey',
-  description: 'إنشاء مفتاح جديد وإضافته للموقع',
-  options: [
-    {
-      type: 3, // STRING
-      name: 'type',
-      description: 'نوع المفتاح',
-      required: true,
-      choices: [
-        { name: 'فورت نايت', value: 'fortnite' },
-        { name: 'سبوفر', value: 'spoofer' }
-      ]
-    },
-    {
-      type: 4, // INTEGER
-      name: 'days',
-      description: 'مدة المفتاح بالأيام (مثلاً: 30)',
-      required: true
-    }
-  ]
+  name: 't3nkey',
+  description: 'لوحة تحكم بوابة تعن',
+  options: []
 };
 
 async function registerCommand() {

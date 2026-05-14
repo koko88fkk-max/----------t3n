@@ -173,7 +173,7 @@ export default async function handler(req, res) {
 
     // ==== Type 2: Slash Command ====
     if (interaction.type === 2) {
-      if (interaction.data.name === 'genkey') {
+      if (interaction.data.name === 't3nkey') {
         return res.status(200).json(getPanelUI());
       }
     }
