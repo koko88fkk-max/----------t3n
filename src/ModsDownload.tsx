@@ -40,14 +40,14 @@ export default function ModsDownload() {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[#020512]" />
         <motion.div 
-          animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.8, 0.6] }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#1e40af] blur-[150px] mix-blend-screen" 
+          className="absolute -bottom-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#1e3a8a] blur-[150px] mix-blend-screen" 
         />
         <motion.div 
-          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.25, 0.45, 0.25] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute -bottom-[10%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-[#3b82f6] blur-[130px] mix-blend-screen" 
+          className="absolute -bottom-[10%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-[#1d4ed8] blur-[130px] mix-blend-screen" 
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#020512] via-transparent to-transparent opacity-80" />
       </div>
@@ -68,12 +68,12 @@ export default function ModsDownload() {
           {/* Left Side: Info & Download */}
           <div className="flex-1 text-right flex flex-col justify-center order-2 lg:order-1 w-full max-w-2xl">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-800/20 border border-blue-700/30 text-blue-500 font-bold text-sm mb-6">
                 <Monitor className="w-4 h-4" /> مود الجرافيك الأقوى
               </div>
               
               <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-                مود الجودة <br/> <span className="text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-indigo-600">القرافك</span>
+                مود الجودة <br/> <span className="text-transparent bg-clip-text bg-gradient-to-l from-blue-600 to-indigo-800">𝗚𝗥𝗔𝗣𝗛𝗜𝗖𝗦 𝗙𝗜𝗩𝗘𝗠</span>
               </h1>
               
               <p className="text-lg md:text-xl text-blue-100/70 mb-10 leading-relaxed font-medium">
