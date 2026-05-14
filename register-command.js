@@ -9,7 +9,7 @@ const APP_ID = 'ضع_الـ_Application_ID_هنا';
 const url = `https://discord.com/api/v10/applications/${APP_ID}/commands`;
 
 const commandData = {
-  name: 't3nkey',
+  name: 'genkey',
   description: 'لوحة تحكم بوابة تعن',
   options: []
 };
