@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Download, Monitor, Zap, ChevronLeft, ChevronRight, X, ShieldCheck, Cpu } from 'lucide-react';
-import { auth, checkUserVIP, getUserData } from './lib/firebase';
 
 const LOGO_URL = "/logo.png";
+const GDRIVE_URL = "https://drive.google.com/file/d/1GSJoul75rHGHwi__NU2ZK7jLqAK_zVZC/view?usp=sharing";
+
 const images = [
   "/mods/dsada.webp.webp",
   "/mods/sde.png.png",
@@ -17,8 +18,6 @@ const images = [
 export default function ModsDownload() {
   const [currentImage, setCurrentImage] = useState(0);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
-  const [isVIP, setIsVIP] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // Auto slider
   useEffect(() => {
@@ -28,51 +27,8 @@ export default function ModsDownload() {
     return () => clearInterval(timer);
   }, []);
 
-  // Check VIP status
-  useEffect(() => {
-    const checkVIP = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const profile = await getUserData(user.uid);
-        if (profile?.isVIP) setIsVIP(true);
-      }
-      setLoading(false);
-    };
-    checkVIP();
-    
-    const unsubscribe = auth.onAuthStateChanged(() => {
-      checkVIP();
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleDownload = async () => {
-    if (!auth.currentUser) {
-      alert("الرجاء تسجيل الدخول من الصفحة الرئيسية أولاً");
-      return;
-    }
-    
-    try {
-      const idToken = await auth.currentUser.getIdToken(true);
-      const res = await fetch('/api/secure-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken, filename: 't3n-mods' })
-      });
-      
-      const data = await res.json();
-      if (!data.success) {
-        alert(data.error || "مرفوض: يجب أن تمتلك مفتاح فعال للتحميل.");
-        return;
-      }
-      
-      // If approved, trigger download by opening the secure link
-      // This will open the Google Drive URL safely
-      window.open(data.downloadUrl, '_blank');
-    } catch (err) {
-      console.error("Download failed:", err);
-      alert("حدث خطأ أثناء محاولة التحميل.");
-    }
+  const handleDownload = () => {
+    window.open(GDRIVE_URL, '_blank');
   };
 
   const nextImage = () => setCurrentImage((prev) => (prev + 1) % images.length);
@@ -80,26 +36,23 @@ export default function ModsDownload() {
 
   return (
     <div className="min-h-screen bg-[#020618] relative overflow-hidden font-sans text-white selection:bg-blue-500/30">
-      {/* Dynamic Background matching user's image */}
+      {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[#020512]" />
-        {/* Soft Blue glow bottom left */}
         <motion.div 
           animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.8, 0.6] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           className="absolute -bottom-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#1e40af] blur-[150px] mix-blend-screen" 
         />
-        {/* Bright Blue glow bottom right */}
         <motion.div 
           animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className="absolute -bottom-[10%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-[#3b82f6] blur-[130px] mix-blend-screen" 
         />
-        {/* Deep navy top overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020512] via-transparent to-transparent opacity-80" />
       </div>
 
-      {/* Navbar Minimal */}
+      {/* Navbar */}
       <nav className="relative z-50 flex items-center justify-between p-6 md:px-12 border-b border-white/5 bg-black/20 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <img src={LOGO_URL} alt="T3N Logo" className="w-10 h-10 object-contain rounded-xl" />
@@ -112,7 +65,7 @@ export default function ModsDownload() {
       <main className="relative z-10 container mx-auto px-6 py-12 md:py-20">
         <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-stretch">
           
-          {/* Left Side: Info & Download (Text RTL) */}
+          {/* Left Side: Info & Download */}
           <div className="flex-1 text-right flex flex-col justify-center order-2 lg:order-1 w-full max-w-2xl">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-sm mb-6">
@@ -152,17 +105,19 @@ export default function ModsDownload() {
                   <div className="flex-1 text-center md:text-right">
                     <h2 className="text-2xl font-black text-white mb-2">T3N mods.rar</h2>
                     <p className="text-blue-200/60 text-sm font-bold flex items-center justify-center md:justify-end gap-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" /> آمن ومفحوص بنسبة 100%
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" /> آمن ومفحوص بنسبة 100% — مجاني للجميع
                     </p>
                   </div>
 
-                  <button 
+                  <motion.button 
                     onClick={handleDownload}
-                    disabled={loading}
-                    className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shrink-0"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] flex items-center justify-center gap-3 shrink-0"
                   >
-                    {loading ? 'جاري التحقق...' : 'تحميل المود الحين'}
-                  </button>
+                    <Download className="w-5 h-5" />
+                    تحميل مجاني الحين
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
@@ -171,7 +126,10 @@ export default function ModsDownload() {
           {/* Right Side: Image Gallery */}
           <div className="flex-1 w-full order-1 lg:order-2">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }}>
-              <div className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] group cursor-zoom-in" onClick={() => setFullscreenImage(images[currentImage])}>
+              <div 
+                className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] group cursor-zoom-in" 
+                onClick={() => setFullscreenImage(images[currentImage])}
+              >
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentImage}
@@ -185,7 +143,6 @@ export default function ModsDownload() {
                   />
                 </AnimatePresence>
                 
-                {/* Image Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Navigation Arrows */}
@@ -197,7 +154,11 @@ export default function ModsDownload() {
                 {/* Dots indicator */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
                   {images.map((_, i) => (
-                    <button key={i} onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }} className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentImage ? 'bg-blue-500 w-8 shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'bg-white/30 hover:bg-white/50'}`} />
+                    <button 
+                      key={i} 
+                      onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }} 
+                      className={`h-2.5 rounded-full transition-all ${i === currentImage ? 'bg-blue-500 w-8 shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'w-2.5 bg-white/30 hover:bg-white/50'}`} 
+                    />
                   ))}
                 </div>
               </div>
@@ -210,9 +171,13 @@ export default function ModsDownload() {
       {/* Fullscreen Image Modal */}
       <AnimatePresence>
         {fullscreenImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
-            <button onClick={() => setFullscreenImage(null)} className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-red-500/50 transition-all"><X className="w-6 h-6" /></button>
-            <img src={fullscreenImage} alt="Fullscreen" className="max-w-full max-h-[90vh] rounded-2xl object-contain shadow-2xl" />
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <button className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-red-500/50 transition-all"><X className="w-6 h-6" /></button>
+            <img src={fullscreenImage} alt="Fullscreen" className="max-w-full max-h-[90vh] rounded-2xl object-contain shadow-2xl" onClick={(e) => e.stopPropagation()} />
           </motion.div>
         )}
       </AnimatePresence>
