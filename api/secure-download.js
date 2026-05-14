@@ -51,13 +51,16 @@ export default async function handler(req, res) {
     // For now, any VIP can download.
 
     // 4. Return the secure signed URL or the actual file URL
-    // Since the files are in public/, we can just return the path for now, 
-    // but a better approach long-term is moving them to Firebase Storage or similar.
-    // For Vercel, we can just let the frontend know it's approved.
+    let downloadUrl = `/${filename}`;
+    
+    // Hardcoded external links for large files
+    if (filename === 't3n-mods') {
+      downloadUrl = 'https://drive.google.com/file/d/1GSJoul75rHGHwi__NU2ZK7jLqAK_zVZC/view?usp=sharing';
+    }
     
     return res.status(200).json({ 
       success: true, 
-      downloadUrl: `/${filename}` 
+      downloadUrl 
     });
 
   } catch (error) {

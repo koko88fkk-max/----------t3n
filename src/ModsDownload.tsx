@@ -57,7 +57,7 @@ export default function ModsDownload() {
       const res = await fetch('/api/secure-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken, filename: 'mods/T3N_mods.rar' })
+        body: JSON.stringify({ idToken, filename: 't3n-mods' })
       });
       
       const data = await res.json();
@@ -66,13 +66,9 @@ export default function ModsDownload() {
         return;
       }
       
-      // If approved, trigger download
-      const link = document.createElement('a');
-      link.href = data.downloadUrl;
-      link.download = 'T3N mods.rar';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // If approved, trigger download by opening the secure link
+      // This will open the Google Drive URL safely
+      window.open(data.downloadUrl, '_blank');
     } catch (err) {
       console.error("Download failed:", err);
       alert("حدث خطأ أثناء محاولة التحميل.");
