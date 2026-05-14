@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, Monitor, Zap, ChevronLeft, ChevronRight, X, ShieldCheck, Cpu } from 'lucide-react';
+import { Download, Monitor, ChevronLeft, ChevronRight, X, ShieldCheck } from 'lucide-react';
 
 const LOGO_URL = "/logo.png";
 const GDRIVE_URL = "https://drive.google.com/file/d/1GSJoul75rHGHwi__NU2ZK7jLqAK_zVZC/view?usp=sharing";
@@ -77,21 +77,8 @@ export default function ModsDownload() {
               </h1>
               
               <p className="text-lg md:text-xl text-blue-100/70 mb-10 leading-relaxed font-medium">
-                ارفع مستوى تجربتك البصرية إلى أقصى حد! هذا المود مصمم خصيصاً لتحسين جودة الرسومات، الألوان، والتفاصيل الدقيقة في اللعبة بدون التأثير بشكل كبير على الأداء.
+                ارفع مستوى تجربتك البصرية إلى أقصى حد! هذا المود مصمم خصيصاً لتحسين جودة الرسومات، الألوان، والتفاصيل الدقيقة في اللعبة.
               </p>
-
-              <div className="grid grid-cols-2 gap-4 mb-10">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2">
-                  <Zap className="w-6 h-6 text-yellow-400" />
-                  <h3 className="font-bold text-white">أداء مستقر</h3>
-                  <p className="text-xs text-zinc-400">محسن ليعمل بسلاسة</p>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2">
-                  <Cpu className="w-6 h-6 text-emerald-400" />
-                  <h3 className="font-bold text-white">جودة خرافية</h3>
-                  <p className="text-xs text-zinc-400">تفاصيل دقيقة وألوان غنية</p>
-                </div>
-              </div>
 
               {/* Download Box */}
               <div className="bg-[#0a1a5c]/40 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(59,130,246,0.15)] relative overflow-hidden group">
@@ -126,6 +113,10 @@ export default function ModsDownload() {
           {/* Right Side: Image Gallery */}
           <div className="flex-1 w-full order-1 lg:order-2">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }}>
+              <div className="flex items-center gap-3 mb-4 justify-end">
+                <span className="text-white font-black text-lg tracking-wide">صور من داخل <span className="text-blue-400">𝗙𝗜𝗩𝗘𝗠</span></span>
+                <div className="h-0.5 flex-1 bg-gradient-to-r from-blue-600/60 to-transparent rounded-full" />
+              </div>
               <div 
                 className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] group cursor-zoom-in" 
                 onClick={() => setFullscreenImage(images[currentImage])}
