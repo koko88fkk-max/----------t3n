@@ -214,22 +214,10 @@ export default async function handler(req, res) {
     // Ping
     if (interaction.type === 1) return res.status(200).json({ type: 1 });
 
-    // Check Channel
-    if (interaction.channel_id !== ALLOWED_CHANNEL_ID) {
-      return res.status(200).json({
-        type: 4,
-        data: { content: "❌ عذراً، لا يمكنك استخدام البوت إلا في روم الإدارة المخصص.", flags: 64 }
-      });
-    }
-
     // ==== Type 2: Commands (Slash & Context Menu) ====
     if (interaction.type === 2) {
-      // 1. Slash Command
-      if (interaction.data.name === 'genkey' && interaction.data.type === 1) {
-        return res.status(200).json(getPanelUI());
-      }
-      
       // 2. User Context Menu Command (right-click on user -> Apps -> send-key)
+      // This works from ANY channel
       if ((interaction.data.name === 'send-key' || interaction.data.name === 'إرسال مفتاح') && interaction.data.type === 2) {
         const targetUserId = interaction.data.target_id;
         if (!targetUserId) {
@@ -241,6 +229,29 @@ export default async function handler(req, res) {
         // Return the product selection UI directly for this user
         return res.status(200).json(getProductSelectUI(`send_${targetUserId}`));
       }
+
+      // 1. Slash Command - restricted to admin channel
+      if (interaction.data.name === 'genkey') {
+        if (interaction.channel_id !== ALLOWED_CHANNEL_ID) {
+          return res.status(200).json({
+            type: 4,
+            data: { content: "❌ عذراً، لا يمكنك استخدام هذا الأمر إلا في روم الإدارة المخصص.", flags: 64 }
+          });
+        }
+        return res.status(200).json(getPanelUI());
+      }
+    }
+
+    // Check Channel for other interactions (buttons, modals) - but allow send-related ones
+    const isAdminChannel = interaction.channel_id === ALLOWED_CHANNEL_ID;
+    const isSendRelated = interaction.type === 3 && interaction.data?.custom_id?.startsWith('pick_send_');
+    const isSendModal = interaction.type === 5 && interaction.data?.custom_id === 'modal_send_user_id';
+    
+    if (!isAdminChannel && !isSendRelated && !isSendModal) {
+      return res.status(200).json({
+        type: 4,
+        data: { content: "❌ عذراً، لا يمكنك استخدام البوت إلا في روم الإدارة المخصص.", flags: 64 }
+      });
     }
 
     // ==== Type 3: Component Clicks / Selects ====
