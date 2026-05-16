@@ -9,9 +9,9 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.BOT_TOKEN || process.env.DISCORD_TOKEN;
   if (!BOT_TOKEN) {
-    return res.status(500).json({ error: 'DISCORD_BOT_TOKEN not set in Vercel Environment Variables' });
+    return res.status(500).json({ error: 'Bot token not set in Vercel Environment Variables' });
   }
 
   const APP_ID = '1462977086653464729';
