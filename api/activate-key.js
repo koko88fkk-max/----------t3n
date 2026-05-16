@@ -136,7 +136,7 @@ export default async function handler(req, res) {
     // ==== Auto-Assign Discord Roles based on product type ====
     if (uid.startsWith('discord_')) {
       const discordId = uid.replace('discord_', '');
-      const BOT_TOKEN = process.env.BOT_TOKEN;
+      const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.BOT_TOKEN || process.env.DISCORD_TOKEN;
       const GUILD_ID = process.env.GUILD_ID || '1396959491786018826';
       const CUSTOMER_ROLE = '1397221350095192074';
       
@@ -152,19 +152,47 @@ export default async function handler(req, res) {
       const rolesToAssign = PRODUCT_ROLES[pt] || [CUSTOMER_ROLE];
       
       if (BOT_TOKEN) {
+        // Assign all roles
         for (const roleId of rolesToAssign) {
           try {
-            await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`, {
+            const roleRes = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`, {
               method: 'PUT',
-              headers: {
-                'Authorization': `Bot ${BOT_TOKEN}`
-              }
+              headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
             });
-            console.log(`Assigned role ${roleId} to ${discordId} automatically.`);
+            console.log(`Role ${roleId} assigned to ${discordId}: status ${roleRes.status}`);
           } catch (err) {
             console.error(`Failed to assign role ${roleId}:`, err);
           }
         }
+
+        // Send DM to user
+        try {
+          const dmChannelRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
+            method: 'POST',
+            headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recipient_id: discordId })
+          });
+          const dmChannel = await dmChannelRes.json();
+          if (dmChannel.id) {
+            await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                embeds: [{
+                  title: '✅ تم تفعيل مفتاحك بنجاح!',
+                  description: `تم تفعيل منتجك وإضافة رتبتك في سيرفر تعن T3N تلقائياً.\n\n🌐 **الموقع:** https://t3n-2a2i.vercel.app/\n\nيمكنك الآن الوصول إلى جميع الملفات والشروحات.`,
+                  color: 0x2563EB,
+                  footer: { text: '© 2026 T3N. All Rights Reserved.' }
+                }]
+              })
+            });
+            console.log(`DM sent to ${discordId} after key activation.`);
+          }
+        } catch (dmErr) {
+          console.error('Failed to send DM after activation:', dmErr);
+        }
+      } else {
+        console.error('BOT_TOKEN is missing! Cannot assign roles automatically.');
       }
     }
 
