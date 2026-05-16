@@ -229,8 +229,8 @@ export default async function handler(req, res) {
         return res.status(200).json(getPanelUI());
       }
       
-      // 2. User Context Menu Command
-      if (interaction.data.name === 'إرسال مفتاح' && interaction.data.type === 2) {
+      // 2. User Context Menu Command (right-click on user -> Apps -> send-key)
+      if ((interaction.data.name === 'send-key' || interaction.data.name === 'إرسال مفتاح') && interaction.data.type === 2) {
         const targetUserId = interaction.data.target_id;
         if (!targetUserId) {
           return res.status(200).json({
