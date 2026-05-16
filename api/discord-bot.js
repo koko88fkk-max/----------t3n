@@ -100,13 +100,14 @@ function getPanelUI() {
           components: [
             { type: 2, style: 1, label: "إنشاء مفتاح", emoji: { name: "🔑" }, custom_id: "gen_single" },
             { type: 2, style: 1, label: "إنشاء متعدد", emoji: { name: "🗂️" }, custom_id: "gen_multi" },
-            { type: 2, style: 4, label: "حذف مفتاح", emoji: { name: "🗑️" }, custom_id: "delete_key" },
-            { type: 2, style: 4, label: "حظر مفتاح", emoji: { name: "🚫" }, custom_id: "ban_key" }
+            { type: 2, style: 3, label: "إرسال لشخص", emoji: { name: "✉️" }, custom_id: "send_to_user" },
           ]
         },
         {
           type: 1,
           components: [
+            { type: 2, style: 4, label: "حذف مفتاح", emoji: { name: "🗑️" }, custom_id: "delete_key" },
+            { type: 2, style: 4, label: "حظر مفتاح", emoji: { name: "🚫" }, custom_id: "ban_key" },
             { type: 2, style: 2, label: "كشف صاحب المفتاح", emoji: { name: "🔍" }, custom_id: "info_key" },
             { type: 2, style: 2, label: "الإحصائيات", emoji: { name: "📊" }, custom_id: "stats" }
           ]
@@ -117,14 +118,19 @@ function getPanelUI() {
 }
 
 function getProductSelectUI(mode) {
-  // mode = 'single' or 'multi'
-  const prefix = mode === 'single' ? 'pick_single_' : 'pick_multi_';
+  // mode = 'single' or 'multi' or 'send_USERID'
+  let prefix = '';
+  let title = "اختر نوع المنتج";
+  if (mode === 'single') { prefix = 'pick_single_'; title = "🔑 اختر نوع المنتج"; }
+  else if (mode === 'multi') { prefix = 'pick_multi_'; title = "🗂️ اختر نوع المنتج (إنشاء متعدد)"; }
+  else if (mode.startsWith('send_')) { prefix = `pick_${mode}_`; title = "✉️ اختر المنتج للإرسال"; }
+
   return {
     type: 4,
     data: {
       flags: 64,
       embeds: [{
-        title: mode === 'single' ? "🔑 اختر نوع المنتج" : "🗂️ اختر نوع المنتج (إنشاء متعدد)",
+        title: title,
         description: "اضغط على المنتج المطلوب:",
         color: T3N_COLOR,
         footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
@@ -147,6 +153,39 @@ function getProductSelectUI(mode) {
       ]
     }
   };
+}
+
+async function sendDM(userId, messageData) {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) return false;
+  
+  try {
+    // 1. Create DM Channel
+    const dmRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bot ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ recipient_id: userId })
+    });
+    const dmChannel = await dmRes.json();
+    if (!dmChannel.id) return false;
+
+    // 2. Send Message
+    const msgRes = await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bot ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+    return msgRes.ok;
+  } catch (e) {
+    console.error("DM Error:", e);
+    return false;
+  }
 }
 
 export default async function handler(req, res) {
@@ -178,22 +217,94 @@ export default async function handler(req, res) {
       }
     }
 
-    // ==== Type 3: Button Clicks ====
+    // ==== Type 3: Component Clicks / Selects ====
     if (interaction.type === 3) {
       const cid = interaction.data.custom_id;
 
-      // Show product selection for single key
-      if (cid === 'gen_single') {
-        return res.status(200).json(getProductSelectUI('single'));
+      // Handle User Select for Sending Key
+      if (cid === 'select_user_for_key' && interaction.data.component_type === 5) {
+        const selectedUserId = interaction.data.values[0];
+        return res.status(200).json(getProductSelectUI(`send_${selectedUserId}`));
       }
 
-      // Show product selection for multi key
-      if (cid === 'gen_multi') {
-        return res.status(200).json(getProductSelectUI('multi'));
+      if (cid === 'gen_single') return res.status(200).json(getProductSelectUI('single'));
+      if (cid === 'gen_multi') return res.status(200).json(getProductSelectUI('multi'));
+      
+      if (cid === 'send_to_user') {
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            embeds: [{
+              title: "👤 اختر العضو",
+              description: "حدد الشخص الذي تريد إرسال المفتاح إليه في الخاص:",
+              color: T3N_COLOR
+            }],
+            components: [{
+              type: 1,
+              components: [{
+                type: 5, // User Select Menu
+                custom_id: "select_user_for_key",
+                placeholder: "اضغط هنا لاختيار العضو..."
+              }]
+            },
+            {
+              type: 1,
+              components: [
+                { type: 2, style: 2, label: "رجوع", emoji: { name: "🔙" }, custom_id: "back_to_panel" }
+              ]
+            }]
+          }
+        });
+      }
+
+      // Handle Send to User generation
+      if (cid && cid.startsWith('pick_send_')) {
+        // cid format: pick_send_<USERID>_<PRODUCT>
+        const parts = cid.replace('pick_send_', '').split('_');
+        const targetUserId = parts[0];
+        const productType = parts.slice(1).join('_');
+        const productName = PRODUCT_NAMES[productType] || productType;
+        
+        const newKey = generateRandomKey();
+        await db.collection('keys').doc(newKey).set({
+          productType: productType,
+          status: 'unused',
+          createdAt: new Date().toISOString(),
+          createdBy: interaction.member?.user?.username || 'DiscordBot',
+          usedByUid: null,
+          sentToUser: targetUserId
+        });
+
+        // Send DM
+        const dmContent = {
+          content: "https://t3n-2a2i.vercel.app/\n\n`" + newKey + "` *مفتاح موقع*\n\n**خطوات التفعيل:**\n1. يرجى تسجيل الدخول في الموقع عبر حساب الديسكورد.\n2. الذهاب إلى \"بوابة التفعيل\" وتفعيل المفتاح.\n3. الانتقال إلى تحميل الملفات ومشاهدة شروحات الفيديو.",
+          embeds: [{
+            title: "بوابة تعن T3N | الرقمية",
+            description: "متجر تعن T3N - وجهتك الأولى للمنتجات الرقمية المتميزة. سبوفر بيرم، فك باند فورت نايت، وأكثر.",
+            color: T3N_COLOR,
+            url: "https://t3n-2a2i.vercel.app/"
+          }]
+        };
+
+        const dmSuccess = await sendDM(targetUserId, dmContent);
+
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            embeds: [{
+              title: "✉️ T3N | Key Sent",
+              description: `✅ **تم إنشاء المفتاح بنجاح!**\n\n👤 **تم الإرسال إلى:** <@${targetUserId}>\n📦 **المنتج:** ${productName}\n🔹 **المفتاح:**\n\`\`\`\n${newKey}\n\`\`\`\n📨 **حالة الإرسال بالخاص:** ${dmSuccess ? '✅ نجح' : '❌ فشل (قد يكون الخاص مغلق لديه)'}`,
+              color: T3N_COLOR,
+              footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+            }]
+          }
+        });
       }
 
       // Handle single key generation after product selection
-      if (cid.startsWith('pick_single_')) {
+      if (cid && cid.startsWith('pick_single_')) {
         const productType = cid.replace('pick_single_', '');
         const productName = PRODUCT_NAMES[productType] || productType;
         const newKey = generateRandomKey();
@@ -208,6 +319,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
           type: 4,
           data: {
+            flags: 64,
             embeds: [{
               title: "🔑 T3N | Key Generated",
               description: `✅ **Key Generation Successful!**\n\n📦 **المنتج:** ${productName}\n🔹 **Your License Key:**\n\`\`\`\n${newKey}\n\`\`\`\n⏳ **Duration:** مدى الحياة (Lifetime)`,
@@ -221,7 +333,7 @@ export default async function handler(req, res) {
       }
 
       // Handle multi key - show modal to enter count, with product type stored in custom_id
-      if (cid.startsWith('pick_multi_')) {
+      if (cid && cid.startsWith('pick_multi_')) {
         const productType = cid.replace('pick_multi_', '');
         return res.status(200).json({
           type: 9,
