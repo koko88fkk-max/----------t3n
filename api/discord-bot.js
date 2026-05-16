@@ -156,8 +156,12 @@ function getProductSelectUI(mode) {
 }
 
 async function sendDM(userId, messageData) {
-  const token = process.env.DISCORD_BOT_TOKEN;
-  if (!token) return false;
+  // Check multiple possible env vars for the bot token
+  const token = process.env.DISCORD_BOT_TOKEN || process.env.BOT_TOKEN || process.env.DISCORD_TOKEN;
+  if (!token) {
+    console.error("Missing Bot Token in Environment Variables");
+    return false;
+  }
   
   try {
     // 1. Create DM Channel
@@ -170,7 +174,10 @@ async function sendDM(userId, messageData) {
       body: JSON.stringify({ recipient_id: userId })
     });
     const dmChannel = await dmRes.json();
-    if (!dmChannel.id) return false;
+    if (!dmChannel.id) {
+      console.error("Failed to create DM channel:", dmChannel);
+      return false;
+    }
 
     // 2. Send Message
     const msgRes = await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
@@ -181,7 +188,12 @@ async function sendDM(userId, messageData) {
       },
       body: JSON.stringify(messageData)
     });
-    return msgRes.ok;
+    
+    if (!msgRes.ok) {
+      console.error("Failed to send message:", await msgRes.text());
+      return false;
+    }
+    return true;
   } catch (e) {
     console.error("DM Error:", e);
     return false;
@@ -221,38 +233,28 @@ export default async function handler(req, res) {
     if (interaction.type === 3) {
       const cid = interaction.data.custom_id;
 
-      // Handle User Select for Sending Key
-      if (cid === 'select_user_for_key' && interaction.data.component_type === 5) {
-        const selectedUserId = interaction.data.values[0];
-        return res.status(200).json(getProductSelectUI(`send_${selectedUserId}`));
-      }
-
       if (cid === 'gen_single') return res.status(200).json(getProductSelectUI('single'));
       if (cid === 'gen_multi') return res.status(200).json(getProductSelectUI('multi'));
       
+      // Changed: Instead of a Select Menu message, we open a Modal directly
       if (cid === 'send_to_user') {
         return res.status(200).json({
-          type: 4,
+          type: 9,
           data: {
-            flags: 64,
-            embeds: [{
-              title: "👤 اختر العضو",
-              description: "حدد الشخص الذي تريد إرسال المفتاح إليه في الخاص:",
-              color: T3N_COLOR
-            }],
+            title: "إرسال مفتاح لشخص",
+            custom_id: "modal_send_user_id",
             components: [{
               type: 1,
               components: [{
-                type: 5, // User Select Menu
-                custom_id: "select_user_for_key",
-                placeholder: "اضغط هنا لاختيار العضو..."
+                type: 4, // Text Input
+                custom_id: "input_val",
+                style: 1, // Short text
+                label: "أدخل أيدي الشخص (User ID):",
+                placeholder: "مثال: 123456789012345678",
+                required: true,
+                min_length: 15,
+                max_length: 22
               }]
-            },
-            {
-              type: 1,
-              components: [
-                { type: 2, style: 2, label: "رجوع", emoji: { name: "🔙" }, custom_id: "back_to_panel" }
-              ]
             }]
           }
         });
@@ -295,7 +297,7 @@ export default async function handler(req, res) {
             flags: 64,
             embeds: [{
               title: "✉️ T3N | Key Sent",
-              description: `✅ **تم إنشاء المفتاح بنجاح!**\n\n👤 **تم الإرسال إلى:** <@${targetUserId}>\n📦 **المنتج:** ${productName}\n🔹 **المفتاح:**\n\`\`\`\n${newKey}\n\`\`\`\n📨 **حالة الإرسال بالخاص:** ${dmSuccess ? '✅ نجح' : '❌ فشل (قد يكون الخاص مغلق لديه)'}`,
+              description: `✅ **تم إنشاء المفتاح بنجاح!**\n\n👤 **تم الإرسال إلى:** <@${targetUserId}>\n📦 **المنتج:** ${productName}\n🔹 **المفتاح:**\n\`\`\`\n${newKey}\n\`\`\`\n📨 **حالة الإرسال بالخاص:** ${dmSuccess ? '✅ نجح' : '❌ فشل (يجب وضع توكن البوت في Vercel، أو الخاص مغلق)'}`,
               color: T3N_COLOR,
               footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
             }]
@@ -424,6 +426,18 @@ export default async function handler(req, res) {
     if (interaction.type === 5) {
       const cid = interaction.data.custom_id;
       const inputVal = interaction.data.components[0].components[0].value.trim();
+
+      // Handle User ID Modal Submit
+      if (cid === 'modal_send_user_id') {
+        const userId = inputVal.match(/\d+/)?.[0];
+        if (!userId || userId.length < 15) {
+          return res.status(200).json({
+            type: 4,
+            data: { content: "❌ أيدي الشخص غير صحيح (User ID). تأكد من إدخال الأرقام فقط.", flags: 64 }
+          });
+        }
+        return res.status(200).json(getProductSelectUI(`send_${userId}`));
+      }
 
       // Handle multi-key generation with product type in custom_id
       if (cid.startsWith('modal_gen_multi_')) {
