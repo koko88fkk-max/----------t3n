@@ -375,23 +375,7 @@ function ActivationGateway({ user, onLogin, onActivate, loading, result, onReset
                   </button>
                 </div>
 
-                {/* Discord Role Card */}
-                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-[#5865F2]/30 transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col text-right">
-                      <h4 className="text-xl font-bold text-white mb-1">رتبة ديسكورد</h4>
-                      <p className="text-sm text-zinc-500">اربط حسابك بالسيرفر للوصول للدعم.</p>
-                    </div>
-                    <div className="w-14 h-14 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2]">
-                      <MessageCircle className="w-7 h-7" />
-                    </div>
-                  </div>
-                  <button onClick={handleAssignRole} disabled={roleLoading} className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                    {roleLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <MessageCircle className="w-5 h-5" />}
-                    ربط الحساب وإستلام الرتبة
-                  </button>
-                  {roleMsg && <p className="text-center text-sm mt-1 text-[#5865F2] font-bold">{roleMsg}</p>}
-                </div>
+
               </div>
 
               <button onClick={() => { setKeyInput(''); setRoleMsg(''); onReset?.(); }} className="mt-8 text-zinc-500 hover:text-white transition-colors text-sm underline decoration-white/20 underline-offset-4">تفعيل مفتاح آخر</button>
