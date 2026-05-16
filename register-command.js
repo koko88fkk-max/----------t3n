@@ -8,22 +8,29 @@ const APP_ID = 'ضع_الـ_Application_ID_هنا';
 
 const url = `https://discord.com/api/v10/applications/${APP_ID}/commands`;
 
-const commandData = {
-  name: 'genkey',
-  description: 'لوحة تحكم بوابة تعن',
-  options: []
-};
+const commands = [
+  {
+    name: 'genkey',
+    description: 'لوحة تحكم بوابة تعن',
+    type: 1, // CHAT_INPUT
+    options: []
+  },
+  {
+    name: 'إرسال مفتاح', // User Command
+    type: 2 // USER
+  }
+];
 
 async function registerCommand() {
   try {
-    console.log('جاري تسجيل الأمر في الديسكورد...');
-    const response = await axios.post(url, commandData, {
+    console.log('جاري تسجيل الأوامر في الديسكورد...');
+    const response = await axios.put(url, commands, {
       headers: {
         Authorization: `Bot ${BOT_TOKEN}`,
         'Content-Type': 'application/json'
       }
     });
-    console.log('✅ تم تسجيل الأمر بنجاح!');
+    console.log('✅ تم تسجيل الأوامر بنجاح!');
     console.log(response.data);
   } catch (error) {
     console.error('❌ حدث خطأ:', error.response ? error.response.data : error.message);

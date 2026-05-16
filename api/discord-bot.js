@@ -222,10 +222,24 @@ export default async function handler(req, res) {
       });
     }
 
-    // ==== Type 2: Slash Command ====
+    // ==== Type 2: Commands (Slash & Context Menu) ====
     if (interaction.type === 2) {
-      if (interaction.data.name === 'genkey') {
+      // 1. Slash Command
+      if (interaction.data.name === 'genkey' && interaction.data.type === 1) {
         return res.status(200).json(getPanelUI());
+      }
+      
+      // 2. User Context Menu Command
+      if (interaction.data.name === 'إرسال مفتاح' && interaction.data.type === 2) {
+        const targetUserId = interaction.data.target_id;
+        if (!targetUserId) {
+          return res.status(200).json({
+            type: 4,
+            data: { content: "❌ تعذر العثور على الشخص.", flags: 64 }
+          });
+        }
+        // Return the product selection UI directly for this user
+        return res.status(200).json(getProductSelectUI(`send_${targetUserId}`));
       }
     }
 
