@@ -25,15 +25,18 @@ export default async function handler(req, res) {
     },
     {
       name: 'temp-key',
-      type: 2 // USER context menu command
+      type: 2, // USER context menu command
+      default_member_permissions: '0' // Hide from normal users
     },
     {
       name: 'fortnite-key',
-      type: 2
+      type: 2,
+      default_member_permissions: '0'
     },
     {
       name: 'perm-key',
-      type: 2
+      type: 2,
+      default_member_permissions: '0'
     }
   ];
 

@@ -220,6 +220,18 @@ export default async function handler(req, res) {
       // This works from ANY channel and directly generates & sends the key
       if (['temp-key', 'fortnite-key', 'perm-key'].includes(interaction.data.name) && interaction.data.type === 2) {
         const targetUserId = interaction.data.target_id;
+        const requiredRole = '1396965033316978839';
+        
+        // Check if the user executing the command has the required role
+        const hasRole = interaction.member?.roles?.includes(requiredRole);
+        
+        if (!hasRole) {
+          return res.status(200).json({
+            type: 4,
+            data: { content: "❌ عذراً، لا تملك الصلاحية لاستخدام هذا الأمر (تحتاج رتبة الإدارة المخصصة).", flags: 64 }
+          });
+        }
+
         if (!targetUserId) {
           return res.status(200).json({
             type: 4,
