@@ -216,9 +216,9 @@ export default async function handler(req, res) {
 
     // ==== Type 2: Commands (Slash & Context Menu) ====
     if (interaction.type === 2) {
-      // 2. User Context Menu Command (right-click on user -> Apps -> send-key)
-      // This works from ANY channel
-      if ((interaction.data.name === 'send-key' || interaction.data.name === 'إرسال مفتاح') && interaction.data.type === 2) {
+      // 2. User Context Menu Commands (right-click on user -> Apps)
+      // This works from ANY channel and directly generates & sends the key
+      if (['temp-key', 'fortnite-key', 'perm-key'].includes(interaction.data.name) && interaction.data.type === 2) {
         const targetUserId = interaction.data.target_id;
         if (!targetUserId) {
           return res.status(200).json({
@@ -226,8 +226,49 @@ export default async function handler(req, res) {
             data: { content: "❌ تعذر العثور على الشخص.", flags: 64 }
           });
         }
-        // Return the product selection UI directly for this user
-        return res.status(200).json(getProductSelectUI(`send_${targetUserId}`));
+        
+        let productType = '';
+        if (interaction.data.name === 'temp-key') productType = 'spoofer_temp';
+        else if (interaction.data.name === 'fortnite-key') productType = 'fortnite_unban';
+        else if (interaction.data.name === 'perm-key') productType = 'spoofer_t3n';
+        
+        const productName = PRODUCT_NAMES[productType] || productType;
+        const newKey = generateRandomKey();
+        
+        await db.collection('keys').doc(newKey).set({
+          productType: productType,
+          status: 'unused',
+          createdAt: new Date().toISOString(),
+          createdBy: interaction.member?.user?.username || 'DiscordBot',
+          usedByUid: null,
+          sentToUser: targetUserId
+        });
+
+        // Send DM
+        const dmContent = {
+          content: "https://t3n-2a2i.vercel.app/\n\n`" + newKey + "` *مفتاح موقع*\n\n**خطوات التفعيل:**\n1. يرجى تسجيل الدخول في الموقع عبر حساب الديسكورد.\n2. الذهاب إلى \"بوابة التفعيل\" وتفعيل المفتاح.\n3. الانتقال إلى تحميل الملفات ومشاهدة شروحات الفيديو.",
+          embeds: [{
+            title: "بوابة تعن T3N | الرقمية",
+            description: "متجر تعن T3N - وجهتك الأولى للمنتجات الرقمية المتميزة. سبوفر بيرم، فك باند فورت نايت، وأكثر.",
+            color: T3N_COLOR,
+            url: "https://t3n-2a2i.vercel.app/"
+          }]
+        };
+
+        const dmSuccess = await sendDM(targetUserId, dmContent);
+
+        return res.status(200).json({
+          type: 4,
+          data: {
+            flags: 64,
+            embeds: [{
+              title: "✉️ T3N | Key Sent Directly",
+              description: `✅ **تم إنشاء المفتاح بنجاح!**\n\n👤 **تم الإرسال إلى:** <@${targetUserId}>\n📦 **المنتج:** ${productName}\n🔹 **المفتاح:**\n\`\`\`\n${newKey}\n\`\`\`\n📨 **حالة الإرسال بالخاص:** ${dmSuccess ? '✅ نجح' : '❌ فشل (يجب وضع توكن البوت في Vercel، أو الخاص مغلق)'}`,
+              color: T3N_COLOR,
+              footer: { text: "© 2026 Copyright T3N. All Rights Reserved." }
+            }]
+          }
+        });
       }
 
       // 1. Slash Command - restricted to admin channel

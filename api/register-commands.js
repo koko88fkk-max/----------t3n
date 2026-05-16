@@ -24,8 +24,16 @@ export default async function handler(req, res) {
       type: 1
     },
     {
-      name: 'send-key',
+      name: 'temp-key',
       type: 2 // USER context menu command
+    },
+    {
+      name: 'fortnite-key',
+      type: 2
+    },
+    {
+      name: 'perm-key',
+      type: 2
     }
   ];
 
