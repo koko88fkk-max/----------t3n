@@ -85,7 +85,23 @@ export function AdminDashboard({ onClose }: { onClose: () => void }) {
 
         {loading ? <div className="flex justify-center py-20"><RefreshCw className="animate-spin text-blue-500 w-10 h-10" /></div> : stats && (
           <>
-            {/* Stats Grid */}
+            {/* Traffic Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+              {[
+                { label: 'زوار الآن (لايف)', val: stats.detailedVisits?.live || 0, color: 'text-red-500 animate-pulse drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]' },
+                { label: 'زيارات اليوم', val: stats.detailedVisits?.daily || 0, color: 'text-emerald-400' },
+                { label: 'زيارات الأسبوع', val: stats.detailedVisits?.weekly || 0, color: 'text-blue-400' },
+                { label: 'زيارات الشهر', val: stats.detailedVisits?.monthly || 0, color: 'text-purple-400' },
+                { label: 'إجمالي الزيارات', val: stats.totalVisits || 0, color: 'text-white' },
+              ].map((s, i) => (
+                <div key={i} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center relative overflow-hidden">
+                  <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
+                  <span className="text-zinc-500 text-[10px] font-bold">{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Users & Keys Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
               {[
                 { label: 'المستخدمين', val: stats.totalUsers, color: 'text-white' },

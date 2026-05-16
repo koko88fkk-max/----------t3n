@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, OAuthProvider, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot, runTransaction } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot, runTransaction, writeBatch } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB9mFTUF1_mBzTl3VvxNq5G-mdhrJvzI0A",
@@ -194,30 +194,88 @@ export async function loginWithDiscord() {
   }
 }
 
-// 📈 Track site visit (called once per page load)
-export async function trackSiteVisit() {
+// 📈 Track site visit (called once per session)
+export async function trackSiteVisit(sessionId?: string) {
   try {
-    const statsRef = doc(db, "siteStats", "visits");
-    await setDoc(statsRef, {
-      totalVisits: increment(1),
-      lastVisitAt: new Date().toISOString()
-    }, { merge: true });
+    const now = new Date();
+    // Saudi Arabia Time (UTC+3)
+    const dateStr = new Date(now.getTime() + (3 * 60 * 60 * 1000)).toISOString().split('T')[0]; // YYYY-MM-DD
+    const monthStr = dateStr.substring(0, 7); // YYYY-MM
+    
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
+    const weekStr = `${now.getFullYear()}-W${weekNo}`;
+
+    const batch = writeBatch(db);
+    
+    batch.set(doc(db, "siteStats", `daily_${dateStr}`), { visits: increment(1), date: dateStr }, { merge: true });
+    batch.set(doc(db, "siteStats", `weekly_${weekStr}`), { visits: increment(1), week: weekStr }, { merge: true });
+    batch.set(doc(db, "siteStats", `monthly_${monthStr}`), { visits: increment(1), month: monthStr }, { merge: true });
+    batch.set(doc(db, "siteStats", "visits"), { totalVisits: increment(1), lastVisitAt: now.toISOString() }, { merge: true });
+
+    await batch.commit();
   } catch (err) {
     console.error('Failed to track visit:', err);
   }
 }
 
-// 📈 Get total site visits
-export async function getSiteVisits(): Promise<number> {
+export async function pingLiveSession(sessionId: string) {
   try {
-    const statsRef = doc(db, "siteStats", "visits");
-    const snap = await getDoc(statsRef);
-    if (snap.exists()) {
-      return snap.data().totalVisits || 0;
-    }
-    return 0;
-  } catch {
-    return 0;
+    const sessionRef = doc(db, "liveSessions", sessionId);
+    await setDoc(sessionRef, {
+      lastPing: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {}
+}
+
+// 📈 Get detailed site visits
+export async function getDetailedVisits() {
+  try {
+    const now = new Date();
+    const dateStr = new Date(now.getTime() + (3 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    const monthStr = dateStr.substring(0, 7);
+    
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
+    const weekStr = `${now.getFullYear()}-W${weekNo}`;
+
+    const [totalSnap, dailySnap, weeklySnap, monthlySnap] = await Promise.all([
+      getDoc(doc(db, "siteStats", "visits")),
+      getDoc(doc(db, "siteStats", `daily_${dateStr}`)),
+      getDoc(doc(db, "siteStats", `weekly_${weekStr}`)),
+      getDoc(doc(db, "siteStats", `monthly_${monthStr}`))
+    ]);
+
+    let liveCount = 0;
+    const twoMinutesAgo = new Date(Date.now() - 120000).toISOString();
+    const liveSnap = await getDocs(collection(db, "liveSessions"));
+    const batch = writeBatch(db);
+    liveSnap.forEach(doc => {
+      if (doc.data().lastPing < twoMinutesAgo) {
+        batch.delete(doc.ref);
+      } else {
+        liveCount++;
+      }
+    });
+    // Fire and forget cleanup
+    batch.commit().catch(() => {});
+
+    return {
+      total: totalSnap.exists() ? totalSnap.data().totalVisits || 0 : 0,
+      daily: dailySnap.exists() ? dailySnap.data().visits || 0 : 0,
+      weekly: weeklySnap.exists() ? weeklySnap.data().visits || 0 : 0,
+      monthly: monthlySnap.exists() ? monthlySnap.data().visits || 0 : 0,
+      live: liveCount
+    };
+  } catch (err) {
+    console.error('Failed to get visits:', err);
+    return { total: 0, daily: 0, weekly: 0, monthly: 0, live: 0 };
   }
 }
 
@@ -704,12 +762,12 @@ export async function getAdminStats() {
   const admins: any[] = [{ email: MAIN_ADMIN_EMAIL, role: 'مالك' }];
   adminsSnap.forEach((d) => admins.push({ email: d.id, ...d.data(), role: 'مشرف' }));
 
-  const totalVisits = await getSiteVisits();
+  const detailedVisits = await getDetailedVisits();
 
   return {
     totalUsers: users.length, vipUsers: vipCount,
     totalKeys: keys.length, spooferKeys, fortniteKeys, usedKeys, unusedKeys, bannedKeys, frozenKeys,
-    bannedCount: banned.length, totalVisits,
+    bannedCount: banned.length, totalVisits: detailedVisits.total, detailedVisits,
     users: users.sort((a, b) => (b.verifiedAt || b.lastLoginAt || '').localeCompare(a.verifiedAt || a.lastLoginAt || '')),
     keys: keys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')),
     banned, admins,

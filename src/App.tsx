@@ -13,7 +13,7 @@ import {
   getAdminStats, banUser, unbanUser, removeVIP, deleteUserData, 
   addAdminUser, removeAdminUser, checkIsAdmin, checkBanned, getAllKeys, 
   deleteKey, deleteAllKeys, banKey, unbanKey, freezeKey, unfreezeKey, 
-  isValidKeyFormat, trackSiteVisit, checkKeyStatus, createKeys, 
+  isValidKeyFormat, trackSiteVisit, pingLiveSession, checkKeyStatus, createKeys, 
   listenToNotifications, deleteNotification, listenToMaintenanceMode, 
   toggleMaintenanceMode, getUserData, resetAllUsersAndCounter 
 } from './lib/firebase';
@@ -1219,7 +1219,19 @@ export default function App() {
 
   // Auth state + site visits + notifications
   useEffect(() => {
-    trackSiteVisit();
+    let sessionId = sessionStorage.getItem('t3n_session_id');
+    if (!sessionId) {
+      sessionId = Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('t3n_session_id', sessionId);
+      trackSiteVisit(sessionId);
+    }
+    
+    pingLiveSession(sessionId);
+    const pingInterval = setInterval(() => {
+      if (sessionId) pingLiveSession(sessionId);
+    }, 30000);
+
+
     const unsubAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -1239,7 +1251,7 @@ export default function App() {
       setUnreadNotifs(notifs.filter(n => !n.read).length);
     });
 
-    return () => { unsubAuth(); unsubNotifs(); };
+    return () => { unsubAuth(); unsubNotifs(); clearInterval(pingInterval); };
   }, []);
 
   const handleLogin = async () => {
