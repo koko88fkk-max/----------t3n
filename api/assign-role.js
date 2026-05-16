@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     ipCache.set(clientIp, { count: 1, startTime: currentTime });
   }
 
-  const BOT_TOKEN = process.env.BOT_TOKEN;
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.BOT_TOKEN || process.env.DISCORD_TOKEN;
   const GUILD_ID = process.env.GUILD_ID || '1396959491786018826';
   const CUSTOMER_ROLE = '1397221350095192074'; // العميل الكستمر
   const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY;
@@ -269,6 +269,34 @@ export default async function handler(req, res) {
       } catch (logErr) {
         console.error("Failed to send log embed (non-critical):", logErr.response?.data || logErr.message);
       }
+    }
+
+    // ==== إرسال DM للشخص بعد الربط ====
+    try {
+      // Open DM channel
+      const dmChannelRes = await axios.post(
+        'https://discord.com/api/v10/users/@me/channels',
+        { recipient_id: discordId },
+        { headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' } }
+      );
+      const dmChannelId = dmChannelRes.data?.id;
+      if (dmChannelId) {
+        await axios.post(
+          `https://discord.com/api/v10/channels/${dmChannelId}/messages`,
+          {
+            embeds: [{
+              title: '✅ تم ربط رتبتك بنجاح!',
+              description: `مرحباً! تم منحك الرتبة في سيرفر تعن T3N بنجاح.\n\nيمكنك الآن الوصول إلى جميع مميزات الرتبة في السيرفر.\n\n🌐 **الموقع:** https://t3n-2a2i.vercel.app/`,
+              color: 0x2563EB,
+              footer: { text: '© 2026 T3N. All Rights Reserved.' }
+            }]
+          },
+          { headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' } }
+        );
+        console.log('DM sent to user successfully.');
+      }
+    } catch (dmErr) {
+      console.error('Failed to send DM to user (non-critical):', dmErr.response?.data || dmErr.message);
     }
 
     res.json({ success: true, message: 'تم إعطاء الرتبة بنجاح!' });
