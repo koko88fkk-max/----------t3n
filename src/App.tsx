@@ -162,14 +162,10 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
             <motion.img 
               whileHover={{ rotate: 10, scale: 1.1 }}
               src={LOGO_URL} 
-              alt="T3N | تعن" 
+              alt="تعن T3N" 
               className="w-10 h-10 object-contain rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
             />
-            <span dir="ltr" className="inline-flex items-center gap-2 font-bold text-xl tracking-tight text-white drop-shadow-md">
-              <span>T3N</span>
-              <span className="text-blue-400 font-normal opacity-75">|</span>
-              <span>تعن</span>
-            </span>
+            <span className="font-bold text-xl tracking-tight text-white drop-shadow-md">تعن T3N</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-300">
@@ -495,8 +491,8 @@ function Hero({ onSiteGuideClick }: { onSiteGuideClick: () => void }) {
             </div>
           </motion.div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-200 to-zinc-500 drop-shadow-lg" dir="ltr">
-            T3N <span className="text-blue-500 font-normal">|</span> تعن
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-200 to-zinc-500 drop-shadow-lg">
+            تعن T3N
           </h1>
           <p className="text-xl md:text-2xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium">
             وجهتك الأولى للمنتجات الرقمية المتميزة. جودة، سرعة، وموثوقية في مكان واحد.

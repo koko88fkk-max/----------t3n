@@ -137,14 +137,10 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
             <motion.img 
               whileHover={{ rotate: 10, scale: 1.1 }}
               src={LOGO_URL} 
-              alt="T3N | تعن" 
+              alt="تعن T3N" 
               className="w-10 h-10 object-contain rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
             />
-            <span dir="ltr" className="inline-flex items-center gap-2 font-bold text-xl tracking-tight text-white drop-shadow-md">
-              <span>T3N</span>
-              <span className="text-blue-400 font-normal opacity-75">|</span>
-              <span>تعن</span>
-            </span>
+            <span className="font-bold text-xl tracking-tight text-white drop-shadow-md">تعن T3N</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-300">
