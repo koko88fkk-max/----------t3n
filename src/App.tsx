@@ -3306,7 +3306,8 @@ export default function App() {
     return saved ? saved === 'dark' : true;
   });
 
-  const [appLoading, setAppLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile'>('overview');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -3546,49 +3547,8 @@ export default function App() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#06060c] text-zinc-200 font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* 🚀 Initial Loading Screen */}
-      <AnimatePresence>
-        {appLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[999999] bg-[#06060c] flex flex-col items-center justify-center"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="relative w-32 h-32 mb-8"
-            >
-              <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full animate-pulse" />
-              <img src={LOGO_URL} alt="T3N Logo" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(59,130,246,0.6)]" />
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-col items-center gap-4"
-            >
-              <h2 className="text-3xl font-extrabold text-white tracking-widest drop-shadow-lg">T3N STORE</h2>
-              <div className="flex gap-2 mt-2">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
-                    className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div dir="rtl" className="min-h-screen bg-[#05080f] text-zinc-200 font-sans selection:bg-blue-500/30 flex overflow-hidden">
+      
       {/* Professional Toast Notification */}
       {toast && createPortal(
         <AnimatePresence>
@@ -3627,154 +3587,362 @@ export default function App() {
         document.body
       )}
 
-      {/* Scroll to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            whileHover={{ scale: 1.1, y: -5 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 right-6 z-40 w-12 h-12 rounded-full bg-blue-600/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-[0_8px_25px_rgba(37,99,235,0.3)]"
-          >
-            <ChevronUp className="w-6 h-6" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Sidebar Component */}
+      <aside className="w-[280px] bg-[#0b111e]/90 backdrop-blur-2xl border-l border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40">
+        <div className="p-8 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src={LOGO_URL} alt="T3N Logo" className="w-12 h-12 object-contain rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)]" />
+            <span className="font-extrabold text-2xl tracking-widest text-white drop-shadow-md">T3N</span>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto py-8 flex flex-col gap-8 px-5 custom-scrollbar">
+          {/* Section 1: General */}
+          <div>
+            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">عام</h3>
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="font-semibold text-[15px]">نظرة عامة</span>
+            </button>
+          </div>
 
-      {/* Theme Toggle Button */}
-      <motion.button
-        whileHover={{ scale: 1.1, rotate: 15 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setDarkMode(!darkMode)}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-[0_8px_25px_rgba(0,0,0,0.3)]"
-      >
-        {darkMode ? <Sun className="w-5 h-5 text-blue-400" /> : <Moon className="w-5 h-5 text-blue-400" />}
-      </motion.button>
+          {/* Section 2: License */}
+          <div>
+            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">الترخيص</h3>
+            <button 
+              onClick={() => setActiveTab('products')}
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'products' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+            >
+              <Package className="w-5 h-5" />
+              <span className="font-semibold text-[15px]">منتجاتي</span>
+            </button>
+          </div>
 
-      <Navbar 
-        isVerified={isVerifiedCustomer} 
-        user={user} 
-        onLogin={() => setShowLoginModal(true)} 
-        onLogout={logout} 
-        authLoading={authLoading}
-        onSuperstarClick={() => setShowSuperstarGuide(true)} 
-        onFortniteClick={() => setShowFortniteGuide(true)}
-        onFortniteHackClick={() => setShowFortniteHackGuide(true)}
-        onTroubleshootClick={() => setShowTroubleshoot(true)}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        onReadNotifications={handleReadNotifications}
-        isAdminUser={isAdminUser}
-        activatedProducts={activatedProducts}
-      />
+          {/* Section 3: Account */}
+          <div>
+            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">الحساب</h3>
+            <button 
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+            >
+              <UserX className="w-5 h-5" />
+              <span className="font-semibold text-[15px]">الملف الشخصي</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-white/5 bg-[#0b111e]">
+          {user ? (
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <div className="flex items-center gap-3">
+                 <img src={user.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-12 h-12 rounded-full border border-white/20" />
+                 <div className="flex flex-col">
+                   <span className="font-bold text-sm text-white truncate max-w-[100px]">{user.displayName || 'User'}</span>
+                   <span className="text-[11px] text-zinc-400">Discord</span>
+                 </div>
+              </div>
+              <button onClick={logout} className="text-zinc-500 hover:text-red-400 transition-colors bg-white/5 p-2 rounded-xl" title="تسجيل خروج">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowLoginModal(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] transition-colors font-bold text-white shadow-lg">
+               <LogIn className="w-5 h-5" /> تسجيل الدخول
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative">
+        <div className="p-8 md:p-12 max-w-[1600px] mx-auto w-full min-h-full">
+          
+          {activeTab === 'overview' && (
+            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-between items-center mb-8">
+                 <h1 className="text-4xl font-extrabold text-white drop-shadow-md">نظرة عامة</h1>
+               </div>
+               
+               <div className="flex flex-col xl:flex-row gap-8 items-start">
+                 {/* Main Overview Area */}
+                 <div className="flex-1 space-y-8 w-full">
+                   {/* Welcome Banner */}
+                   <div className="glass-panel p-10 rounded-[2.5rem] relative overflow-hidden flex items-center justify-between">
+                     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+                     <div className="relative z-10">
+                       <h2 className="text-4xl font-extrabold mb-3 text-white">مرحباً بعودتك، {user?.displayName ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{user.displayName}</span> : 'المستخدم'}!</h2>
+                       <p className="text-zinc-400 text-lg">لديك <span className="text-white font-bold">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
+                     </div>
+                     <div className="hidden sm:block relative z-10">
+                       <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-32 h-32 rounded-full border-4 border-white/10 shadow-2xl object-cover" />
+                     </div>
+                   </div>
+
+                   {/* Stats Grid */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
+                        <div className="flex items-center justify-between mb-6 text-zinc-400">
+                          <span className="text-sm font-bold">المنتجات المفعلة</span>
+                          <Package className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div className="text-4xl font-extrabold text-white">{activatedProducts.length}</div>
+                      </div>
+                      
+                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
+                        <div className="flex items-center justify-between mb-6 text-zinc-400">
+                          <span className="text-sm font-bold">حالة الحساب</span>
+                          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <div className="text-3xl font-extrabold text-emerald-400">نشط</div>
+                      </div>
+                      
+                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
+                        <div className="flex items-center justify-between mb-6 text-zinc-400">
+                          <span className="text-sm font-bold">العضوية منذ</span>
+                          <Clock className="w-6 h-6 text-orange-400" />
+                        </div>
+                        <div className="text-3xl font-extrabold text-white">-</div>
+                      </div>
+                      
+                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
+                        <div className="flex items-center justify-between mb-6 text-zinc-400">
+                          <span className="text-sm font-bold">مشاركات المنتدى</span>
+                          <MessageCircle className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <div className="text-4xl font-extrabold text-white">0</div>
+                      </div>
+                   </div>
+                 </div>
+
+                 {/* Quick Actions Sidebar */}
+                 <div className="w-full xl:w-[400px] shrink-0">
+                   <div className="glass-panel rounded-[2.5rem] p-8">
+                     <h3 className="text-sm font-bold text-zinc-500 mb-6 tracking-wider">إجراءات سريعة</h3>
+                     <div className="space-y-3">
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                         <div className="flex items-center gap-5">
+                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors shadow-inner">
+                             <Package className="w-6 h-6 text-blue-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-base">منتجاتي</div>
+                             <div className="text-xs text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
+                           </div>
+                         </div>
+                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
+                       </button>
+                       
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                         <div className="flex items-center gap-5">
+                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors shadow-inner">
+                             <Key className="w-6 h-6 text-emerald-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-base">تفعيل مفتاح</div>
+                             <div className="text-xs text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
+                           </div>
+                         </div>
+                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
+                       </button>
+                       
+                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                         <div className="flex items-center gap-5">
+                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-[#5865F2]/20 transition-colors shadow-inner">
+                             <MessageCircle className="w-6 h-6 text-[#5865F2]" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-base">الانضمام للديسكورد</div>
+                             <div className="text-xs text-zinc-500 mt-1">الدعم والمنتجات</div>
+                           </div>
+                         </div>
+                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
+                       </a>
+                       
+                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                         <div className="flex items-center gap-5">
+                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors shadow-inner">
+                             <ShoppingBag className="w-6 h-6 text-orange-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-base">المتجر</div>
+                             <div className="text-xs text-zinc-500 mt-1">شراء ترخيص جديد</div>
+                           </div>
+                         </div>
+                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'products' && (
+            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-extrabold text-white drop-shadow-md">منتجاتي</h1>
+                <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl transition-all border border-white/10 shadow-lg font-bold">
+                  <Key className="w-5 h-5" />
+                  تفعيل مفتاح
+                </button>
+              </div>
+
+              {activatedProducts.length === 0 ? (
+                <div className="glass-panel p-16 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+                  <Package className="w-20 h-20 text-zinc-600 mb-6" />
+                  <h3 className="text-2xl font-bold text-white mb-2">لا يوجد منتجات مفعلة</h3>
+                  <p className="text-zinc-400 mb-8 max-w-md">قم بشراء ترخيص من المتجر ثم فعل المفتاح هنا للوصول إلى التحميلات.</p>
+                  <a href={STORE_URL} target="_blank" className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg">شراء من المتجر</a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {activatedProducts.includes('fortnite') && (
+                    <div className="glass-panel rounded-3xl overflow-hidden group">
+                      <div className="relative h-64 overflow-hidden">
+                        <img src="/fortnite-bg.jpg" alt="Fortnite" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0b111e] via-[#0b111e]/50 to-transparent" />
+                        <div className="absolute bottom-6 right-6 left-6">
+                           <div className="flex items-center justify-between">
+                             <div>
+                               <h3 className="text-2xl font-bold text-white drop-shadow-lg mb-1">هاك فورت نايت Private</h3>
+                               <span className="text-emerald-400 text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> مفعل</span>
+                             </div>
+                             <img src="/logo.png" alt="T3N" className="w-12 h-12 opacity-50 drop-shadow-md" />
+                           </div>
+                        </div>
+                      </div>
+                      <div className="p-6 bg-[#0b111e] flex gap-3">
+                        <button onClick={() => setShowFortniteGuide(true)} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                          <Play className="w-5 h-5" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md">
+                          <Download className="w-5 h-5" /> تحميل الملف
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activatedProducts.includes('spoofer') && (
+                    <div className="glass-panel rounded-3xl overflow-hidden group">
+                      <div className="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=2000&auto=format&fit=crop" alt="Spoofer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0b111e] via-[#0b111e]/50 to-transparent" />
+                        <div className="absolute bottom-6 right-6 left-6">
+                           <div className="flex items-center justify-between">
+                             <div>
+                               <h3 className="text-2xl font-bold text-white drop-shadow-lg mb-1">سبوفر تعن فك باند نهائي</h3>
+                               <span className="text-emerald-400 text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> مفعل</span>
+                             </div>
+                             <span className="text-2xl font-black text-white/50 tracking-widest drop-shadow-md">T3N</span>
+                           </div>
+                        </div>
+                      </div>
+                      <div className="p-6 bg-[#0b111e] flex gap-3">
+                        <button className="flex-1 bg-white/5 text-zinc-500 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-not-allowed border border-white/5">
+                          <Play className="w-5 h-5" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md">
+                          <Download className="w-5 h-5" /> تحميل الملف
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-between items-center mb-8">
+                 <h1 className="text-4xl font-extrabold text-white drop-shadow-md">الملف الشخصي</h1>
+               </div>
+
+               <div className="glass-panel p-10 rounded-[2.5rem] max-w-3xl mx-auto">
+                 <div className="flex items-center gap-6 mb-10 pb-10 border-b border-white/5">
+                   <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-24 h-24 rounded-full border-4 border-white/10 shadow-xl" alt="Avatar" />
+                   <div>
+                     <h2 className="text-2xl font-bold text-white">{user?.displayName || 'User'}</h2>
+                     <p className="text-zinc-400 mt-1 flex items-center gap-2">
+                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                       متصل
+                     </p>
+                   </div>
+                 </div>
+
+                 <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); setToast({type: 'success', message: 'تم حفظ الملف الشخصي بنجاح!'}); }}>
+                   <div>
+                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2">اسم العرض</label>
+                     <input type="text" defaultValue={user?.displayName || 'User'} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors" dir="rtl" />
+                     <p className="text-[11px] text-zinc-500 mt-2 ml-2">يظهر في جميع الأماكن العامة في الموقع</p>
+                   </div>
+                   
+                   <div>
+                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2">رابط الصورة المخصصة</label>
+                     <input type="url" defaultValue={user?.photoURL || ''} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors text-left" dir="ltr" />
+                   </div>
+
+                   <div>
+                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2 flex items-center gap-2">النبذة <span className="text-xs font-normal text-zinc-600">(الحد الأقصى 200 حرف)</span></label>
+                     <textarea rows={4} defaultValue={user?.displayName || 'متصل'} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors custom-scrollbar" dir="rtl"></textarea>
+                     <p className="text-[11px] text-zinc-500 mt-2 ml-2">4/200</p>
+                   </div>
+
+                   <div className="pt-6 flex justify-end">
+                     <button type="submit" className="bg-white text-black hover:bg-zinc-200 font-bold py-3.5 px-10 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                       حفظ الملف الشخصي
+                     </button>
+                   </div>
+                 </form>
+               </div>
+            </div>
+          )}
+
+        </div>
+      </main>
 
       {/* Admin Controls - Floating Buttons */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-4">
-        <motion.button
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => toggleMaintenanceMode(isMaintenance)}
-          className={`w-14 h-14 rounded-full text-white flex items-center justify-center shadow-lg border transition-all duration-300 ${isMaintenance ? 'bg-orange-600 border-orange-400/50 shadow-[0_8px_25px_rgba(234,88,12,0.5)]' : 'bg-black/60 backdrop-blur-md border-white/10 hover:border-orange-500/50 hover:bg-black/80 shadow-xl hover:shadow-[0_8px_25px_rgba(249,115,22,0.3)]'}`}
-          title={isMaintenance ? "الموقع في وضع الصيانة - اضغط للإيقاف" : "تفعيل وضع الصيانة"}
-        >
-          {isMaintenance ? <Wrench className="w-6 h-6 animate-pulse" /> : <ShieldAlert className="w-6 h-6 text-orange-400/70" />}
-        </motion.button>
-
-        <motion.button
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowAdmin(true)}
-          className="w-14 h-14 rounded-full bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(239,68,68,0.4)] border border-red-400/30 hover:shadow-[0_8px_35px_rgba(239,68,68,0.6)] transition-shadow"
-          title="لوحة التحكم"
-        >
-          <LayoutDashboard className="w-6 h-6" />
-        </motion.button>
+        {isAdminUser && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowAdmin(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(239,68,68,0.4)] border border-red-400/30 hover:shadow-[0_8px_35px_rgba(239,68,68,0.6)] transition-shadow"
+            title="لوحة التحكم"
+          >
+            <LayoutDashboard className="w-5 h-5" />
+          </motion.button>
+        )}
+        {isAdminUser && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowKeyManager(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(16,185,129,0.4)] border border-emerald-400/30 hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-shadow"
+            title="إدارة المفاتيح"
+          >
+            <Key className="w-5 h-5" />
+          </motion.button>
+        )}
       </div>
 
-      {/* 📦 Order Management Button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setShowKeyManager(true)}
-        className="fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(59,130,246,0.4)] border border-blue-400/30 hover:shadow-[0_8px_35px_rgba(59,130,246,0.6)] transition-shadow"
-      >
-        <Hash className="w-5 h-5" />
-      </motion.button>
-      <main>
-        <Hero onSiteGuideClick={() => setShowSiteGuide(true)} onFortniteClick={() => setShowFortniteGuide(true)} />
-        <OrderDelivery 
-          user={user}
-          onLogin={() => setShowLoginModal(true)}
-          onVerify={async (keyId, products) => {
-            setIsVerifiedCustomer(true);
-            if (products && Array.isArray(products) && products.length > 0) {
-              setActivatedProducts(products);
-            } else {
-              try {
-                const { doc: firestoreDoc, getDoc } = await import('firebase/firestore');
-                const { db: firestoreDb } = await import('./lib/firebase');
-                const userDocRef = firestoreDoc(firestoreDb, 'users', user!.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                  const prods = userDocSnap.data()?.activatedProducts;
-                  if (prods && Array.isArray(prods)) setActivatedProducts(prods);
-                }
-              } catch (e) {
-                console.log('Could not read activatedProducts');
-              }
-            }
-          }}
-          onFortniteClick={() => setShowFortniteGuide(true)}
-          onSuperstarClick={() => setShowSuperstarGuide(true)}
-          onFortniteHackClick={() => setShowFortniteHackGuide(true)}
-          activatedProducts={activatedProducts}
-        />
-        <Products />
-        <Reviews />
-        <FAQ />
-        <Policies />
-      </main>
-      <Footer />
-
-      {/* Superstar Guide Page - VIP Only */}
-      <AnimatePresence>
-        {showSuperstarGuide && <SuperstarGuide onClose={() => setShowSuperstarGuide(false)} />}
-      </AnimatePresence>
-
-      {/* Fortnite Hack Guide Page - VIP Only */}
-      <AnimatePresence>
-        {showFortniteHackGuide && <FortniteHackGuide onClose={() => setShowFortniteHackGuide(false)} />}
-      </AnimatePresence>
-
-      {/* Site Guide Page */}
-      <AnimatePresence>
-        {showSiteGuide && <SiteGuide onClose={() => setShowSiteGuide(false)} />}
-      </AnimatePresence>
-
-      {/* Floating Buttons Removed as requested */}
-
-
-      <AnimatePresence>
-        {showTroubleshoot && <TroubleshootGuide onClose={() => setShowTroubleshoot(false)} />}
-      </AnimatePresence>
-
-      {/* 🔒 Admin Dashboard */}
+      {/* Modals */}
       <AnimatePresence>
         {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
       </AnimatePresence>
-
-      {/* 🔑 Key Manager */}
       <AnimatePresence>
         {showKeyManager && <KeyManagement onClose={() => setShowKeyManager(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showFortniteGuide && <FortniteHackGuide onClose={() => setShowFortniteGuide(false)} />}
       </AnimatePresence>
 
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
