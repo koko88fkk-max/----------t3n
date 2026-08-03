@@ -799,8 +799,9 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                         setOrderInput(e.target.value);
                         if (status === 'error') setStatus('idle');
                       }}
-                      placeholder="أدخل أي رقم أو كلمة للتفعيل فوراً"
-                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-500 shadow-inner font-bold tracking-wider"
+                      disabled={true}
+                      placeholder="تفعيل المفاتيح متوقف حالياً"
+                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-500 shadow-inner font-bold tracking-wider opacity-50 cursor-not-allowed"
                       dir="rtl"
                     />
                   </div>
@@ -817,14 +818,12 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                   )}
 
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(212,175,55,0.4)" }}
-                    whileTap={{ scale: 0.98 }}
                     type="submit"
-                    disabled={!orderInput.trim()}
-                    className="w-full bg-gradient-gold text-white font-bold py-5 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(59,130,246,0.2)] border-t border-blue-200/30 mt-2"
+                    disabled={true}
+                    className="w-full bg-zinc-800 text-zinc-500 font-bold py-5 rounded-2xl transition-all cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,0,0,0.2)] border-t border-white/5 mt-2"
                   >
                     <Key className="w-6 h-6" />
-                    تفعيل المفتاح
+                    التفعيل متوقف
                   </motion.button>
                 </motion.form>
               ) : status === 'loading' ? (
