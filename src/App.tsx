@@ -4090,8 +4090,6 @@ export default function App() {
             </div>
           )}
 
-        </div>
-
           {activeTab === 'activate' && (
             <div className="animate-in fade-in zoom-in duration-500">
                <OrderDelivery 
@@ -4108,7 +4106,8 @@ export default function App() {
                />
             </div>
           )}
-              </main>
+        </div>
+      </main>
 
       {/* Admin Controls - Floating Buttons */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-4">
