@@ -3547,7 +3547,7 @@ export default function App() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#060606] text-zinc-200 font-sans selection:bg-blue-500/30 flex flex-row-reverse overflow-hidden">
+    <div dir="ltr" className="min-h-screen bg-[#060606] text-zinc-200 font-sans selection:bg-blue-500/30 flex overflow-hidden">
       
       {/* Professional Toast Notification */}
       {toast && createPortal(
@@ -3559,11 +3559,20 @@ export default function App() {
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
             className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-md"
           >
-            <div className={`rounded-2xl p-5 shadow-2xl border backdrop-blur-xl flex items-center gap-4 ${
+            <div className={`rounded-2xl p-5 shadow-2xl border backdrop-blur-xl flex items-center justify-end gap-4 ${
               toast.type === 'success' 
                 ? 'bg-emerald-950/80 border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]' 
                 : 'bg-red-950/80 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)]'
             }`}>
+              <button onClick={() => setToast(null)} className="text-zinc-500 hover:text-white transition-colors shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex-1 text-right">
+                <p className={`font-bold text-sm mb-0.5 ${toast.type === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
+                  {toast.type === 'success' ? 'تمت العملية بنجاح' : 'حدث خطأ'}
+                </p>
+                <p className="text-zinc-300 text-sm">{toast.message}</p>
+              </div>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                 toast.type === 'success' ? 'bg-emerald-500/20' : 'bg-red-500/20'
               }`}>
@@ -3572,27 +3581,18 @@ export default function App() {
                   : <AlertCircle className="w-6 h-6 text-red-400" />
                 }
               </div>
-              <div className="flex-1">
-                <p className={`font-bold text-sm mb-0.5 ${toast.type === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
-                  {toast.type === 'success' ? 'تمت العملية بنجاح' : 'حدث خطأ'}
-                </p>
-                <p className="text-zinc-300 text-sm">{toast.message}</p>
-              </div>
-              <button onClick={() => setToast(null)} className="text-zinc-500 hover:text-white transition-colors shrink-0">
-                <X className="w-5 h-5" />
-              </button>
             </div>
           </motion.div>
         </AnimatePresence>,
         document.body
       )}
 
-      {/* Sidebar Component (Visually on left due to flex-row-reverse) */}
-      <aside className="w-[280px] bg-transparent border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40 relative">
-        <div className="p-8 flex items-center justify-between">
-          <div className="flex items-center gap-4 w-full justify-start">
-            <span className="font-extrabold text-2xl tracking-widest text-white drop-shadow-md">T3N</span>
+      {/* Sidebar Component */}
+      <aside className="w-[280px] bg-[#060606] border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40 relative">
+        <div className="p-8 flex items-center">
+          <div className="flex items-center gap-4">
             <img src={LOGO_URL} alt="T3N Logo" className="w-10 h-10 object-contain rounded-xl opacity-80" />
+            <span className="font-extrabold text-2xl tracking-widest text-white drop-shadow-md">T3N</span>
           </div>
         </div>
         
@@ -3602,10 +3602,10 @@ export default function App() {
             <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">عام</h3>
             <button 
               onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
+              <LayoutDashboard className="w-5 h-5 ml-1" />
               <span className="font-semibold text-sm">نظرة عامة</span>
-              <LayoutDashboard className="w-5 h-5" />
             </button>
           </div>
 
@@ -3614,10 +3614,10 @@ export default function App() {
             <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الترخيص</h3>
             <button 
               onClick={() => setActiveTab('products')}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
+              <Package className="w-5 h-5 ml-1" />
               <span className="font-semibold text-sm">منتجاتي</span>
-              <Package className="w-5 h-5" />
             </button>
           </div>
 
@@ -3626,10 +3626,10 @@ export default function App() {
             <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الحساب</h3>
             <button 
               onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
+              <UserX className="w-5 h-5 ml-1" />
               <span className="font-semibold text-sm">الملف الشخصي</span>
-              <UserX className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -3638,7 +3638,7 @@ export default function App() {
           {user ? (
             <div className="flex items-center justify-between p-3 rounded-xl bg-transparent hover:bg-white/5 transition-colors cursor-pointer">
               <button onClick={logout} className="text-zinc-600 hover:text-red-400 transition-colors flex items-center gap-2 text-xs font-bold" title="تسجيل خروج">
-                تسجيل خروج <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" /> تسجيل خروج
               </button>
               <div className="flex items-center gap-3">
                  <div className="flex flex-col text-right">
@@ -3650,7 +3650,7 @@ export default function App() {
             </div>
           ) : (
             <button onClick={() => setShowLoginModal(true)} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] transition-colors font-bold text-white shadow-lg text-sm">
-               تسجيل الدخول <LogIn className="w-4 h-4" /> 
+               <LogIn className="w-4 h-4" /> تسجيل الدخول
             </button>
           )}
         </div>
@@ -3662,65 +3662,124 @@ export default function App() {
           
           {activeTab === 'overview' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
-               <div className="flex justify-between items-center mb-6">
+               <div className="flex justify-end mb-6">
                  <h1 className="text-2xl font-extrabold text-white">نظرة عامة</h1>
                </div>
                
-               <div className="flex flex-col xl:flex-row gap-6 items-start">
-                 {/* Main Overview Area (Right visually in RTL flex) */}
+               <div className="flex flex-col xl:flex-row gap-6 items-start justify-end">
+                 
+                 {/* Quick Actions Sidebar (Left visually in LTR flex) */}
+                 <div className="w-full xl:w-[320px] shrink-0">
+                   <div className="glass-panel rounded-2xl p-6">
+                     <h3 className="text-[11px] font-bold text-zinc-500 mb-6 text-right">إجراءات سريعة</h3>
+                     <div className="space-y-2">
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Package className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">منتجاتي</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
+                           </div>
+                         </div>
+                       </button>
+                       
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Key className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">تفعيل مفتاح</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
+                           </div>
+                         </div>
+                       </button>
+                       
+                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <MessageCircle className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">الانضمام للديسكورد</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">الدعم والمنتجات</div>
+                           </div>
+                         </div>
+                       </a>
+                       
+                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <ShoppingBag className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">المتجر</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">شراء ترخيص جديد</div>
+                           </div>
+                         </div>
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Main Overview Area (Right visually in LTR flex) */}
                  <div className="flex-1 space-y-6 w-full">
                    {/* Welcome Banner */}
-                   <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex items-center justify-between">
-                     <div className="flex items-center gap-4 ml-auto w-full justify-end">
-                       <div className="text-right">
-                         <h2 className="text-2xl font-extrabold mb-1 text-white">مرحباً بعودتك، {user?.displayName || 'المستخدم'}!</h2>
-                         <p className="text-zinc-500 text-sm">لديك <span className="text-white">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
-                       </div>
-                       <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-16 h-16 rounded-full border-2 border-white/5 grayscale" />
+                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-start gap-4">
+                     <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-14 h-14 rounded-full grayscale" />
+                     <div className="text-right flex-1 pr-4 border-r border-white/5">
+                       <h2 className="text-2xl font-bold mb-1 text-white">مرحباً بعودتك، {user?.displayName || 'المستخدم'}!</h2>
+                       <p className="text-zinc-500 text-sm">لديك <span className="text-white">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
                      </div>
                    </div>
 
                    {/* Stats Grid */}
-                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" dir="rtl">
                       {/* Products Stat */}
-                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
-                          <Package className="w-4 h-4" />
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Package className="w-4 h-4 text-zinc-400" />
                         </div>
-                        <div className="text-right w-full">
+                        <div className="text-right">
                           <div className="text-3xl font-extrabold text-white">{activatedProducts.length}</div>
                           <div className="text-xs font-semibold text-zinc-500 mt-1">المنتجات المفعلة</div>
                         </div>
                       </div>
                       
                       {/* Status Stat */}
-                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
-                          <Shield className="w-4 h-4" />
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Shield className="w-4 h-4 text-zinc-400" />
                         </div>
-                        <div className="text-right w-full">
+                        <div className="text-right">
                           <div className="text-2xl font-extrabold text-white">نشط</div>
                           <div className="text-xs font-semibold text-zinc-500 mt-1">حالة الحساب</div>
                         </div>
                       </div>
                       
                       {/* Member Since Stat */}
-                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
-                          <Clock className="w-4 h-4" />
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Clock className="w-4 h-4 text-zinc-400" />
                         </div>
-                        <div className="text-right w-full">
+                        <div className="text-right">
                           <div className="text-3xl font-extrabold text-zinc-500">—</div>
                           <div className="text-xs font-semibold text-zinc-500 mt-1">العضوية منذ</div>
                         </div>
                       </div>
                       
                       {/* Forum Posts Stat */}
-                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
-                          <MessageCircle className="w-4 h-4" />
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <MessageCircle className="w-4 h-4 text-zinc-400" />
                         </div>
-                        <div className="text-right w-full">
+                        <div className="text-right">
                           <div className="text-3xl font-extrabold text-white">0</div>
                           <div className="text-xs font-semibold text-zinc-500 mt-1">مشاركات المنتدى</div>
                         </div>
@@ -3728,65 +3787,6 @@ export default function App() {
                    </div>
                  </div>
 
-                 {/* Quick Actions Sidebar (Left visually) */}
-                 <div className="w-full xl:w-[320px] shrink-0">
-                   <div className="glass-panel rounded-2xl p-6">
-                     <h3 className="text-[11px] font-bold text-zinc-500 mb-6 text-right">إجراءات سريعة</h3>
-                     <div className="space-y-2">
-                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
-                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
-                         <div className="flex items-center gap-4">
-                           <div className="text-right">
-                             <div className="font-bold text-white text-sm">منتجاتي</div>
-                             <div className="text-[10px] text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
-                           </div>
-                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                             <Package className="w-4 h-4 text-zinc-400" />
-                           </div>
-                         </div>
-                       </button>
-                       
-                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
-                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
-                         <div className="flex items-center gap-4">
-                           <div className="text-right">
-                             <div className="font-bold text-white text-sm">تفعيل مفتاح</div>
-                             <div className="text-[10px] text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
-                           </div>
-                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                             <Key className="w-4 h-4 text-zinc-400" />
-                           </div>
-                         </div>
-                       </button>
-                       
-                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
-                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
-                         <div className="flex items-center gap-4">
-                           <div className="text-right">
-                             <div className="font-bold text-white text-sm">الانضمام للديسكورد</div>
-                             <div className="text-[10px] text-zinc-500 mt-1">الدعم والمنتجات</div>
-                           </div>
-                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                             <MessageCircle className="w-4 h-4 text-zinc-400" />
-                           </div>
-                         </div>
-                       </a>
-                       
-                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
-                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
-                         <div className="flex items-center gap-4">
-                           <div className="text-right">
-                             <div className="font-bold text-white text-sm">المتجر</div>
-                             <div className="text-[10px] text-zinc-500 mt-1">شراء ترخيص جديد</div>
-                           </div>
-                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                             <ShoppingBag className="w-4 h-4 text-zinc-400" />
-                           </div>
-                         </div>
-                       </a>
-                     </div>
-                   </div>
-                 </div>
                </div>
             </div>
           )}
@@ -3794,10 +3794,10 @@ export default function App() {
           {activeTab === 'products' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
                 <button className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
-                  تفعيل مفتاح <Key className="w-4 h-4" />
+                  <Key className="w-4 h-4" /> تفعيل مفتاح
                 </button>
+                <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
               </div>
 
               {activatedProducts.length === 0 ? (
@@ -3825,11 +3825,11 @@ export default function App() {
                         </div>
                       </div>
                       <div className="p-5 flex gap-3">
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
-                          تحميل الملف <Download className="w-4 h-4" />
-                        </button>
                         <button onClick={() => setShowFortniteGuide(true)} className="flex-1 bg-transparent hover:bg-white/5 border border-white/10 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
-                          الشروحات <Play className="w-4 h-4" />
+                          الشروحات
+                        </button>
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                          <Download className="w-4 h-4" /> تحميل الملف
                         </button>
                       </div>
                     </div>
@@ -3851,11 +3851,11 @@ export default function App() {
                         </div>
                       </div>
                       <div className="p-5 flex gap-3">
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
-                          تحميل الملف <Download className="w-4 h-4" />
-                        </button>
                         <button className="flex-1 bg-transparent border border-white/5 text-zinc-600 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm cursor-not-allowed">
-                          الشروحات <Play className="w-4 h-4" />
+                          الشروحات
+                        </button>
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                          <Download className="w-4 h-4" /> تحميل الملف
                         </button>
                       </div>
                     </div>
@@ -3867,7 +3867,7 @@ export default function App() {
 
           {activeTab === 'profile' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
-               <div className="flex justify-between items-center mb-6">
+               <div className="flex justify-end mb-6">
                  <h1 className="text-2xl font-extrabold text-white">الملف الشخصي</h1>
                </div>
 
@@ -3901,7 +3901,7 @@ export default function App() {
                      <p className="text-[10px] text-zinc-600 mt-2 text-left">4/200</p>
                    </div>
 
-                   <div className="pt-2 flex justify-end">
+                   <div className="pt-2 flex justify-start">
                      <button type="submit" className="bg-white text-black hover:bg-zinc-200 font-bold py-2.5 px-6 rounded-lg transition-all text-sm">
                        حفظ الملف الشخصي
                      </button>
