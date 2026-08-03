@@ -736,11 +736,18 @@ function CustomVideoPlayer() {
   );
 }
 
-function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteClick, onFortniteHackClick, activatedProducts }: { onVerify?: (keyId: string, products: string[]) => void, user?: User | null, onLogin?: () => void, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, activatedProducts?: string[] }) {
+function ActivationModal({ isOpen, onClose, onVerify, user, onLogin, onSuperstarClick, onFortniteClick, onFortniteHackClick, activatedProducts }: { isOpen: boolean, onClose: () => void, onVerify?: (keyId: string, products: string[]) => void, user?: User | null, onLogin?: () => void, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, activatedProducts?: string[] }) {
   const [orderInput, setOrderInput] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [lastActivatedType, setLastActivatedType] = useState('');
+
+  // Lock scroll
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; }
+  }, [isOpen]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -773,24 +780,26 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
   };
 
   return (
-    <section id="delivery" className="py-20 md:py-28 relative z-10">
-      <div className="container mx-auto px-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">بوابة التفعيل</h2>
-          <p className="text-zinc-400 text-lg">من هنا يمكنك تفعيل مفتاحك فوراً واستلام كافة ملفاتك وشروحاتك</p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch max-w-[85rem] mx-auto w-full">
-          {/* Right Side: Form (Order 2 on mobile, 1 on Desktop RTL) */}
-          <TiltCard className="glass-panel-hover glass-panel rounded-[2rem] p-8 md:p-12 relative overflow-hidden h-full order-2 lg:order-1 min-h-[500px]">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-xl bg-[#0a0a0c] border border-white/10 rounded-[2rem] p-8 overflow-hidden shadow-2xl"
+          >
+            <button onClick={onClose} className="absolute top-6 left-6 text-zinc-500 hover:text-white transition-colors">
+              <X className="w-6 h-6" />
+            </button>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
 
-            <div className="flex flex-col items-center justify-start h-full min-h-[300px] pt-4">
+            <div className="flex flex-col items-center justify-start min-h-[300px] pt-4">
 
               <AnimatePresence mode="wait">
               {status === 'idle' || status === 'error' ? (
@@ -799,18 +808,29 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
                   onSubmit={handleVerify}
-                  className="flex flex-col items-center w-full mx-auto relative z-10 p-4"
+                  className="flex flex-col items-center w-full max-w-md mx-auto"
                 >
-                  <div className="w-16 h-16 bg-gradient-gold rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(59,130,246,0.4)]">
-                    <Key className="w-8 h-8 text-white" />
+                  <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mb-8 border border-blue-500/20 shadow-[0_0_30px_rgba(37,99,235,0.15)] relative">
+                    <Key className="w-8 h-8" />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4 text-white drop-shadow-md text-center">تفعيل المفتاح</h3>
-                  <p className="text-zinc-400 mb-8 text-center text-lg leading-relaxed max-w-sm">
-                    أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك والملفات والشروحات فوراً.
-                  </p>
+                  
+                  <h3 className="text-2xl font-bold mb-2 text-white">تفعيل المفتاح</h3>
+                  <p className="text-zinc-400 mb-8 text-center text-sm">أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك والملفات والشروحات فوراً.</p>
 
-                  <div className="w-full mb-4 relative">
+                  {errorMsg && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="w-full bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 text-sm"
+                    >
+                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      <p className="text-right flex-1">{errorMsg}</p>
+                    </motion.div>
+                  )}
+
+                  <div className="w-full relative group">
                     <input
                       type="text"
                       value={orderInput}
@@ -825,47 +845,33 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                     />
                   </div>
 
-                  {status === 'error' && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="w-full mb-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 flex items-center justify-center gap-2"
-                    >
-                      <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-                      <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
-                    </motion.div>
-                  )}
-
                   <motion.button
                     type="submit"
-                    disabled={true}
-                    className="w-full bg-zinc-800 text-zinc-500 font-bold py-5 rounded-2xl transition-all cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,0,0,0.2)] border-t border-white/5 mt-2"
+                    disabled={false}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,0,0,0.2)] border-t border-white/10 mt-6"
                   >
                     <Key className="w-6 h-6" />
-                    التفعيل متوقف
+                    تفعيل المفتاح
                   </motion.button>
                 </motion.form>
               ) : status === 'loading' ? (
                 <motion.div
                   key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-12 relative z-10 w-full h-full"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex flex-col items-center justify-center h-[300px]"
                 >
-                  <div className="w-20 h-20 relative mb-8">
-                    <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-                    <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin" />
-                    <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
-                  </div>
-                  <p className="text-zinc-300 font-medium animate-pulse text-lg">جاري التفعيل وبناء الصلاحيات...</p>
+                  <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(37,99,235,0.2)]"></div>
+                  <h3 className="text-xl font-bold text-white mb-2">جاري التحقق...</h3>
+                  <p className="text-zinc-400">يرجى الانتظار بينما نتحقق من صحة المفتاح.</p>
                 </motion.div>
               ) : (
                 <motion.div
                   key="success"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center text-center relative z-10 w-full h-full justify-center mt-8"
+                  className="flex flex-col items-center text-center relative w-full h-full justify-center"
                 >
                   <motion.div 
                     initial={{ scale: 0 }}
@@ -876,120 +882,22 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                     <CheckCircle2 className="w-10 h-10" />
                   </motion.div>
                   <h3 className="text-2xl font-bold mb-2 text-white">تم التفعيل بنجاح!</h3>
-                  <p className="text-zinc-400 mb-2 text-md">المفتاح <span className="text-white font-mono bg-white/10 px-2 py-1 rounded-md text-sm">{orderInput}</span> مُفعّل ومرتبط بحسابك.</p>
-                  <p className="text-emerald-400 text-sm mb-8 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> مرتبط بحسابك للأبد</p>
-
-                  <div className="flex flex-col gap-4 w-full">
-
-                    {/* === SUPERSTAR SECTION === */}
-                    {(activatedProducts?.includes('superstar') || lastActivatedType === 'superstar' || activatedProducts?.includes('spoofer') || lastActivatedType === 'spoofer') && (
-                      <motion.div 
-                        whileHover={{ y: -2 }}
-                        className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-blue-500/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-4 mb-4 w-full">
-                          <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
-                            <Cpu className="w-6 h-6 text-blue-400" />
-                          </div>
-                          <div className="text-right flex-1">
-                            <h4 className="font-bold text-lg text-white">السبوفر</h4>
-                            <p className="text-xs text-zinc-400 mt-1">منتج السبوفر والشروحات الخاصة به.</p>
-                          </div>
-                        </div>
-                        <motion.button
-                          onClick={onSuperstarClick}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-500/20"
-                        >
-                          <MonitorPlay className="w-5 h-5" />
-                          الانتقال إلى الشرح والملفات
-                        </motion.button>
-                      </motion.div>
-                    )}
-
-                    {/* === FORTNITE HACK SECTION === */}
-                    {(activatedProducts?.includes('fortnite') || lastActivatedType === 'fortnite') && (
-                      <div className="bg-black/40 border border-blue-500/30 rounded-2xl p-5 flex flex-col items-center shadow-lg transition-colors hover:border-blue-500/50">
-                        <div className="flex items-center gap-4 mb-4 w-full">
-                          <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
-                            <Gamepad2 className="w-6 h-6 text-blue-400" />
-                          </div>
-                          <div className="text-right flex-1">
-                            <h4 className="font-bold text-lg text-white">فورت نايت</h4>
-                            <p className="text-xs text-zinc-400 mt-1">شرح وتحميل ملفات المنتج.</p>
-                          </div>
-                        </div>
-                        <motion.button 
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={onFortniteHackClick}
-                          className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
-                        >
-                          <MonitorPlay className="w-5 h-5" />
-                          الانتقال لشرح فورت نايت
-                        </motion.button>
-                      </div>
-                    )}
-
-                    {/* === DISCORD ROLE - shown for ALL products === */}
-                    <motion.div 
-                      whileHover={{ y: -2 }}
-                      className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-[#5865F2]/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-[#5865F2]/10 rounded-xl flex items-center justify-center border border-[#5865F2]/20 shrink-0">
-                          <Server className="w-6 h-6 text-[#5865F2]" />
-                        </div>
-                        <div className="text-right flex-1">
-                          <h4 className="font-bold text-lg text-white">رتبة ديسكورد</h4>
-                          <p className="text-xs text-zinc-400 mt-1">اربط حسابك بالسيرفر للوصول للدعم.</p>
-                        </div>
-                      </div>
-                      <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => window.location.href = DISCORD_OAUTH_URL}
-                        onContextMenu={(e) => e.preventDefault()}
-                        className="w-full bg-[#5865F2] text-white hover:bg-[#4752C4] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        ربط الحساب وإستلام الرتبة
-                      </motion.button>
-                    </motion.div>
-
-                  </div>
+                  <p className="text-zinc-400 mb-2 text-sm">المفتاح <span className="text-white font-mono bg-white/10 px-2 py-1 rounded-md text-xs">{orderInput}</span> صالح وتمت إضافته لحسابك.</p>
                   
                   <button 
-                    onClick={() => { setStatus('idle'); setOrderInput(''); }}
-                    className="mt-6 text-sm text-zinc-500 hover:text-white transition-colors underline underline-offset-4"
+                    onClick={() => { setStatus('idle'); setOrderInput(''); onClose(); }}
+                    className="mt-8 bg-white text-black font-bold py-3 px-8 rounded-xl hover:bg-zinc-200 transition-colors"
                   >
-                    تفعيل مفتاح آخر
+                    متابعة
                   </button>
                 </motion.div>
               )}
               </AnimatePresence>
             </div>
-          </TiltCard>
-
-          {/* Left Side: Video (Order 1 on mobile, 2 on Desktop RTL) */}
-          <TiltCard className="glass-panel rounded-[2rem] p-8 md:p-12 relative overflow-hidden h-full flex flex-col items-center justify-center order-1 lg:order-2">
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl border border-blue-500/30 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-                <MonitorPlay className="w-8 h-8 text-blue-400" />
-              </div>
-              <h3 className="text-3xl font-bold mb-4 text-white drop-shadow-md text-center">فيديو الشرح</h3>
-              <p className="text-zinc-400 mb-8 text-center text-lg leading-relaxed max-w-md">
-                شاهد هذا المقطع القصير لمعرفة كيفية تفعيل رقم طلبك واستلام الملفات بطريقة صحيحة وبكل سهولة.
-              </p>
-              
-              <CustomVideoPlayer />
-
-            </div>
-          </TiltCard>
+          </motion.div>
         </div>
-      </div>
-    </section>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -3486,7 +3394,8 @@ export default function App() {
   });
 
   const [appLoading, setAppLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile' | 'activate'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile'>('overview');
+  const [showActivationModal, setShowActivationModal] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -3865,7 +3774,7 @@ export default function App() {
                          </div>
                        </button>
                        
-                       <button onClick={() => setActiveTab('activate')}e="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                       <button onClick={() => setShowActivationModal(true)}e="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
                          <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
                          <div className="flex items-center justify-end gap-4">
                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
@@ -3973,7 +3882,7 @@ export default function App() {
           {activeTab === 'products' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
               <div className="flex justify-between items-center mb-6">
-                <button  onClick={() => setActiveTab('activate')}className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
+                <button  onClick={() => setShowActivationModal(true)}className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
                   <Key className="w-4 h-4" /> تفعيل مفتاح
                 </button>
                 <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
@@ -4090,22 +3999,20 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'activate' && (
-            <div className="animate-in fade-in zoom-in duration-500">
-               <OrderDelivery 
-                 user={user} 
-                 onLogin={() => setShowLoginModal(true)} 
-                 onVerify={(keyId, products) => {
-                   setActivatedProducts(prev => {
-                     const newProds = [...prev];
-                     products.forEach(p => { if (!newProds.includes(p)) newProds.push(p); });
-                     return newProds;
-                   });
-                   setActiveTab('products');
-                 }}
-               />
-            </div>
-          )}
+          <ActivationModal 
+        isOpen={showActivationModal}
+        onClose={() => setShowActivationModal(false)}
+        user={user} 
+        onLogin={() => setShowLoginModal(true)} 
+        onVerify={(keyId, products) => {
+          setActivatedProducts(prev => {
+            const newProds = [...prev];
+            products.forEach(p => { if (!newProds.includes(p)) newProds.push(p); });
+            return newProds;
+          });
+          setActiveTab('products');
+        }}
+      />
         </div>
       </main>
 
