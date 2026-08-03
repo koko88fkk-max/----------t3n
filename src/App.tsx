@@ -3486,7 +3486,7 @@ export default function App() {
   });
 
   const [appLoading, setAppLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile' | 'activate'>('overview');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -3865,7 +3865,7 @@ export default function App() {
                          </div>
                        </button>
                        
-                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                       <button onClick={() => setActiveTab('activate')}e="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
                          <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
                          <div className="flex items-center justify-end gap-4">
                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
@@ -3973,7 +3973,7 @@ export default function App() {
           {activeTab === 'products' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
               <div className="flex justify-between items-center mb-6">
-                <button className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
+                <button  onClick={() => setActiveTab('activate')}className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
                   <Key className="w-4 h-4" /> تفعيل مفتاح
                 </button>
                 <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
@@ -4091,7 +4091,24 @@ export default function App() {
           )}
 
         </div>
-      </main>
+
+          {activeTab === 'activate' && (
+            <div className="animate-in fade-in zoom-in duration-500">
+               <OrderDelivery 
+                 user={user} 
+                 onLogin={() => setShowLoginModal(true)} 
+                 onVerify={(keyId, products) => {
+                   setActivatedProducts(prev => {
+                     const newProds = [...prev];
+                     products.forEach(p => { if (!newProds.includes(p)) newProds.push(p); });
+                     return newProds;
+                   });
+                   setActiveTab('products');
+                 }}
+               />
+            </div>
+          )}
+              </main>
 
       {/* Admin Controls - Floating Buttons */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-4">
