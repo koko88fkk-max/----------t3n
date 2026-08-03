@@ -2498,7 +2498,13 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
   const filteredKeys = keys.filter(k => {
     if (filterProduct !== 'all' && k.productType !== filterProduct) return false;
     if (filterStatus !== 'all' && k.status !== filterStatus) return false;
-    if (searchQuery && !k.id.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchId = k.id.toLowerCase().includes(q);
+      const matchName = (k.usedByName || '').toLowerCase().includes(q);
+      const matchEmail = (k.usedByEmail || '').toLowerCase().includes(q);
+      if (!matchId && !matchName && !matchEmail) return false;
+    }
     return true;
   });
 
@@ -2580,6 +2586,20 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
                     {st === 'all' ? 'الكل' : st === 'active' ? 'مفعل' : st === 'unused' ? 'غير مستخدم' : st === 'frozen' ? 'مجمد' : 'محظور'}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Discord/Key Search Bar */}
+            <div className="px-6 py-4 border-b border-white/5 bg-[#09090b]/30">
+              <div className="relative">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="ابحث عن طريق الديسكورد، الايميل، أو المفتاح..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#111113] border border-white/10 rounded-xl pl-4 pr-11 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                />
               </div>
             </div>
 
