@@ -774,7 +774,7 @@ function ActivationModal({ isOpen, onClose, onVerify, user, onLogin, onSuperstar
         onVerify(orderInput.trim(), res.activatedProducts || [res.productType || 'superstar']);
       }
     } else {
-      setErrorMsg(res.error || 'حدث خطأ أثناء التفعيل');
+      setErrorMsg(res.error || 'المفتاح غير صالح أو مستخدم مسبقاً');
       setStatus('error');
     }
   };
@@ -782,55 +782,54 @@ function ActivationModal({ isOpen, onClose, onVerify, user, onLogin, onSuperstar
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-xl bg-[#0a0a0c] border border-white/10 rounded-[2rem] p-8 overflow-hidden shadow-2xl"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-[420px] bg-[#09090b] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl"
           >
-            <button onClick={onClose} className="absolute top-6 left-6 text-zinc-500 hover:text-white transition-colors">
-              <X className="w-6 h-6" />
+            <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors bg-white/5 rounded-full p-1.5 border border-white/5">
+              <X className="w-4 h-4" />
             </button>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
 
-            <div className="flex flex-col items-center justify-start min-h-[300px] pt-4">
-
+            <div className="flex flex-col items-center justify-start min-h-[260px]">
               <AnimatePresence mode="wait">
               {status === 'idle' || status === 'error' ? (
                 <motion.form
                   key="form"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
                   onSubmit={handleVerify}
-                  className="flex flex-col items-center w-full max-w-md mx-auto"
+                  className="flex flex-col items-center w-full"
                 >
-                  <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mb-8 border border-blue-500/20 shadow-[0_0_30px_rgba(37,99,235,0.15)] relative">
-                    <Key className="w-8 h-8" />
+                  <div className="w-12 h-12 bg-white/5 text-white rounded-xl flex items-center justify-center mb-5 border border-white/10 shadow-sm">
+                    <Key className="w-5 h-5" />
                   </div>
                   
-                  <h3 className="text-2xl font-bold mb-2 text-white">تفعيل المفتاح</h3>
-                  <p className="text-zinc-400 mb-8 text-center text-sm">أدخل مفتاح المنتج الخاص بك لاستلام مشترياتك والملفات والشروحات فوراً.</p>
+                  <h3 className="text-xl font-bold mb-1.5 text-white tracking-tight">تفعيل المفتاح</h3>
+                  <p className="text-zinc-400 mb-6 text-center text-xs leading-relaxed px-4">أدخل مفتاح المنتج الخاص بك المكون من 12 خانة لتفعيل اشتراكك.</p>
 
                   {errorMsg && (
                     <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="w-full bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 text-sm"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="w-full bg-red-500/5 border border-red-500/20 text-red-400 px-3 py-2.5 rounded-lg mb-5 flex items-center gap-2 text-xs"
                     >
-                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      <AlertCircle className="w-4 h-4 shrink-0" />
                       <p className="text-right flex-1">{errorMsg}</p>
                     </motion.div>
                   )}
 
-                  <div className="w-full relative group">
+                  <div className="w-full relative group mb-4">
                     <input
                       type="text"
                       value={orderInput}
@@ -840,53 +839,55 @@ function ActivationModal({ isOpen, onClose, onVerify, user, onLogin, onSuperstar
                       }}
                       disabled={false}
                       placeholder="T3N-XXXXXX-XXXXXX"
-                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-500 shadow-inner font-bold tracking-wider"
+                      className="w-full bg-[#121214] border border-white/10 rounded-xl px-4 py-3.5 text-center text-sm focus:outline-none focus:border-white/30 transition-all text-white placeholder:text-zinc-600 font-mono tracking-widest shadow-inner"
                       dir="ltr"
                     />
                   </div>
 
                   <motion.button
                     type="submit"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     disabled={false}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,0,0,0.2)] border-t border-white/10 mt-6"
+                    className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-sm"
                   >
-                    <Key className="w-6 h-6" />
+                    <Key className="w-4 h-4" />
                     تفعيل المفتاح
                   </motion.button>
                 </motion.form>
               ) : status === 'loading' ? (
                 <motion.div
                   key="loading"
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="flex flex-col items-center justify-center h-[300px]"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-col items-center justify-center h-[260px] w-full"
                 >
-                  <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(37,99,235,0.2)]"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">جاري التحقق...</h3>
-                  <p className="text-zinc-400">يرجى الانتظار بينما نتحقق من صحة المفتاح.</p>
+                  <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin mb-5"></div>
+                  <h3 className="text-lg font-bold text-white mb-1">جاري التحقق...</h3>
+                  <p className="text-zinc-500 text-xs">يرجى الانتظار للحظات</p>
                 </motion.div>
               ) : (
                 <motion.div
                   key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center text-center relative w-full h-full justify-center"
+                  className="flex flex-col items-center text-center relative w-full h-[260px] justify-center"
                 >
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", bounce: 0.5 }}
-                    className="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+                    className="w-14 h-14 bg-white/5 text-white rounded-full flex items-center justify-center mb-5 border border-white/10"
                   >
-                    <CheckCircle2 className="w-10 h-10" />
+                    <CheckCircle2 className="w-6 h-6" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold mb-2 text-white">تم التفعيل بنجاح!</h3>
-                  <p className="text-zinc-400 mb-2 text-sm">المفتاح <span className="text-white font-mono bg-white/10 px-2 py-1 rounded-md text-xs">{orderInput}</span> صالح وتمت إضافته لحسابك.</p>
+                  <h3 className="text-xl font-bold mb-1.5 text-white">تم التفعيل بنجاح</h3>
+                  <p className="text-zinc-400 mb-6 text-xs px-4">تم ربط المفتاح بحسابك بنجاح. يمكنك الآن الوصول إلى منتجاتك.</p>
                   
                   <button 
                     onClick={() => { setStatus('idle'); setOrderInput(''); onClose(); }}
-                    className="mt-8 bg-white text-black font-bold py-3 px-8 rounded-xl hover:bg-zinc-200 transition-colors"
+                    className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-zinc-200 transition-colors text-sm"
                   >
                     متابعة
                   </button>
