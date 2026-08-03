@@ -917,23 +917,23 @@ function Products() {
   const products = [
     {
       id: 1,
-      title: "السبوفر المتميز",
-      desc: "أقوى أداة سبوفر تدعم جميع المذربوردات وحمايات الألعاب. استعمال مرة واحدة لفك الحظر نهائياً للأبد بضمان كامل.",
+      title: "سبوفر تعن فك باند نهائي",
+      desc: "أقوى أداة سبوفر تخفي هويتك الرقمية بالكامل وتمنع الحظر في الالعاب. يتميز بتحديثات مستمرة لضمان الحماية القصوى.",
       url: "https://salla.sa/t3nn",
       image: "/product-spoofer-perm.jpg",
       icon: <Cpu className="w-5 h-5" />,
-      tag: "الإصدار الذهبي",
-      details: "المميزات\n\n[+] يدعم جميع مذربوردات:\nMSI · ASUS · GIGABYTE · ASROCK · HP · EVGA · MICROSTAR · AORUS · COLORFUL · LENOVO · ACER · DELL\n[+] يدعم جميع حمايات الألعاب\n[+] الألعاب المدعومة:\nCall of Duty · Rust · VALORANT · FiveM · فورت نايت\n[+] استعمال مرة واحدة فقط وقت الفك، ولا تحتاج استعماله مرة أخرى للأبد\n[+] يتم تسليم المنتج فورياً\n[+] 100% مضمون وموثوق\n[+] يتم تسليمك مفتاح فوري بعد الشراء"
+      tag: "المنتج الأكثر مبيعاً",
+      details: "المميزات:\n\n[+] يخفي جميع هوياتك:\nMSI • ASUS • GIGABYTE • ASROCK • HP • EVGA • MICROSTAR • AORUS • COLORFUL • LENOVO • ACER • DELL\n[+] يخفي حظر الالعاب\n[+] الالعاب المدعومة:\nCall of Duty • Rust • VALORANT • FiveM • فورت نايت\n[+] يتميز بتحديثات فورية لجميع الالعاب و يتم تعويضك مجاناً\n[+] دعم فني على مدار 24/7\n[+] 100% امن ومضمون\n[+] دعم فني ممتاز في سيرفر الدسكورد"
     },
     {
       id: 2,
-      title: "هاك فورت نايت",
-      desc: "أفضل وأأمن هاك لفورت نايت بمميزات حصرية وتحديثات مستمرة للحماية من الباند. لعب آمن واحترافي.",
+      title: "فك باند فورت نايت هارد وير",
+      desc: "أقوى وأضمن طريقة لفك حظر الهاردوير في لعبة فورت نايت بشكل نهائي، يعمل مع جميع أنواع المذربورد.",
       url: "https://salla.sa/t3nn",
       image: "/product-fortnite-hack.jpg",
-      icon: <Crosshair className="w-5 h-5" />,
-      tag: "الأكثر طلباً",
-      details: "المميزات:\n- آيمبوت احترافي دقيق\n- رادار لكشف أماكن اللاعبين واللوت\n- أمان عالي جداً وتحديثات تلقائية مع كل تحديث للعبة\n- نسبة حظر شبه معدومة\n- تنفيذ سريع وفوري\n- خدمة مضمونة بالكامل\n\nملاحظات مهمة قبل الشراء:\n[+] المنتج لا يُسترد، شغال 100%\n[+] بمجرد شرائك للمنتج: سيتم إرسال كود التفعيل على البريد الإلكتروني"
+      icon: <Cpu className="w-5 h-5" />,
+      tag: "اصدار حصري",
+      details: "المميزات:\n- فك باند نهائي للهاردوير\n- يدعم جميع الأجهزة والمذربورد\n- آمن جداً ومجرب بنسبة 100%\n- تفعيل سريع وفوري\n- دعم فني ومساعدة متكاملة"
     }
   ];
 
@@ -3374,7 +3374,7 @@ function MaintenanceScreen({ onAdminLogin }: { onAdminLogin?: () => void }) {
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isVerifiedCustomer, setIsVerifiedCustomer] = useState(true);
-  const [activatedProducts, setActivatedProducts] = useState<string[]>(['spoofer', 'fortnite', 'fortnite-hack', 'superstar']);
+  const [activatedProducts, setActivatedProducts] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -3883,7 +3883,7 @@ export default function App() {
           {activeTab === 'products' && (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
               <div className="flex justify-between items-center mb-6">
-                <button  onClick={() => setShowActivationModal(true)}className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
+                <button  onClick={() => setShowActivationModal(true)} className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
                   <Key className="w-4 h-4" /> تفعيل مفتاح
                 </button>
                 <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
@@ -3894,7 +3894,7 @@ export default function App() {
                   <Package className="w-16 h-16 text-zinc-600 mb-6" />
                   <h3 className="text-xl font-bold text-white mb-2">لا يوجد منتجات مفعلة</h3>
                   <p className="text-zinc-500 mb-8 max-w-md text-sm">قم بشراء ترخيص من المتجر ثم فعل المفتاح هنا للوصول إلى التحميلات.</p>
-                  <a href={STORE_URL} target="_blank" className="bg-white hover:bg-zinc-200 text-black font-bold py-2.5 px-8 rounded-xl transition-all text-sm">شراء من المتجر</a>
+                  <a href="https://salla.sa/t3nn" target="_blank" className="bg-white hover:bg-zinc-200 text-black font-bold py-2.5 px-8 rounded-xl transition-all text-sm">شراء من المتجر</a>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-6 justify-end">
@@ -3907,18 +3907,21 @@ export default function App() {
                            <div className="flex items-center justify-between">
                              <img src="/logo.png" alt="T3N" className="w-8 h-8 opacity-50" />
                              <div className="text-right">
-                               <h3 className="text-sm font-bold text-white mb-1">هاك فورت نايت Private</h3>
+                               <h3 className="text-sm font-bold text-white mb-1">فك باند فورت نايت هارد وير</h3>
                                <span className="text-emerald-500 text-[10px] font-bold flex items-center justify-end gap-1"><CheckCircle2 className="w-3 h-3" /> مفعل</span>
                              </div>
                            </div>
                         </div>
                       </div>
-                      <div className="p-5 flex gap-3">
-                        <button onClick={() => setShowFortniteGuide(true)} className="flex-1 bg-transparent hover:bg-white/5 border border-white/10 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
-                          الشروحات
-                        </button>
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                      <div className="p-4 grid grid-cols-2 gap-2">
+                        <button onClick={() => {}} className="col-span-2 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
                           <Download className="w-4 h-4" /> تحميل الملف
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Video className="w-4 h-4" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Tool className="w-4 h-4" /> حل المشاكل
                         </button>
                       </div>
                     </div>
@@ -3939,12 +3942,15 @@ export default function App() {
                            </div>
                         </div>
                       </div>
-                      <div className="p-5 flex gap-3">
-                        <button className="flex-1 bg-transparent border border-white/5 text-zinc-600 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm cursor-not-allowed">
-                          الشروحات
-                        </button>
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                      <div className="p-4 grid grid-cols-2 gap-2">
+                        <button onClick={() => {}} className="col-span-2 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
                           <Download className="w-4 h-4" /> تحميل الملف
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Video className="w-4 h-4" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Tool className="w-4 h-4" /> حل المشاكل
                         </button>
                       </div>
                     </div>
