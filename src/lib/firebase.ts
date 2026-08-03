@@ -1,9 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { 
-  getFirestore, doc, setDoc, getDoc, collection, getDocs, 
-  query, orderBy, limit, deleteDoc, increment, onSnapshot 
-} from "firebase/firestore";
+import { getAuth, OAuthProvider, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB9mFTUF1_mBzTl3VvxNq5G-mdhrJvzI0A",
@@ -21,50 +18,16 @@ const MAIN_ADMIN_EMAIL = "koko.88.fkk@gmail.com";
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const provider = new GoogleAuthProvider();
-
-// 📜 Audit Logging System
-export async function logActivity(action: string, details: string, email?: string) {
-  try {
-    const logRef = doc(collection(db, "auditLogs"));
-    await setDoc(logRef, {
-      action,
-      details,
-      email: email || auth.currentUser?.email || 'زائر',
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    console.error("Failed to log activity:", err);
-  }
-}
-
-export async function getAuditLogs(): Promise<any[]> {
-  try {
-    const q = query(collection(db, "auditLogs"), orderBy("timestamp", "desc"), limit(100));
-    const snap = await getDocs(q);
-    const logs: any[] = [];
-    snap.forEach((d) => {
-      logs.push({ id: d.id, ...d.data() });
-    });
-    return logs;
-  } catch (err) {
-    // Fallback if index not ready
-    const snap = await getDocs(collection(db, "auditLogs"));
-    const logs: any[] = [];
-    snap.forEach((d) => {
-      logs.push({ id: d.id, ...d.data() });
-    });
-    return logs.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-  }
-}
+export const provider = new OAuthProvider('discord.com');
+export const googleProvider = new GoogleAuthProvider();
 
 // 🌍 Detect user country/city from IP
 async function detectUserGeo(): Promise<{ country: string; city: string; countryCode: string } | null> {
   try {
-    const res = await fetch('https://ipapi.co/json/');
+    const res = await fetch('http://ip-api.com/json/?fields=status,country,countryCode,city');
     const data = await res.json();
-    if (data && data.country_name) {
-      return { country: data.country_name, city: data.city, countryCode: data.country_code };
+    if (data.status === 'success') {
+      return { country: data.country, city: data.city, countryCode: data.countryCode };
     }
     return null;
   } catch {
@@ -74,44 +37,86 @@ async function detectUserGeo(): Promise<{ country: string; city: string; country
 
 export async function loginWithGoogle() {
   try {
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
-
+    
+    // Detect geo location
     const geo = await detectUserGeo();
+    
+    // Save or update user login in Firestore
     const userRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userRef);
-
+    
     const geoData = geo ? {
       country: geo.country,
       city: geo.city,
       countryCode: geo.countryCode
     } : {};
-
+    
     if (!docSnap.exists()) {
       await setDoc(userRef, {
-        uid: user.uid,
         email: user.email,
-        displayName: user.displayName || user.email?.split('@')[0] || 'مستخدم',
-        photoURL: user.photoURL || '',
         isVIP: false,
-        verifiedOrders: [],
-        adminNotes: '',
+        verifiedOrder: null,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        displayName: user.displayName || 'عميل',
+        photoURL: user.photoURL || null,
+        provider: 'google',
+        ...geoData
+      });
+    } else {
+      await setDoc(userRef, { 
+        lastLoginAt: new Date().toISOString(),
+        displayName: user.displayName || docSnap.data().displayName,
+        photoURL: user.photoURL || docSnap.data().photoURL,
+        provider: 'google',
+        ...geoData
+      }, { merge: true });
+    }
+    
+    return user;
+  } catch (error) {
+    console.error("Google login error:", error);
+    throw error;
+  }
+}
+
+export async function loginWithDiscord() {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    
+    // Detect geo location
+    const geo = await detectUserGeo();
+    
+    // Save or update user login in Firestore
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    
+    const geoData = geo ? {
+      country: geo.country,
+      city: geo.city,
+      countryCode: geo.countryCode
+    } : {};
+    
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        isVIP: false,
+        verifiedOrder: null,
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
         ...geoData
       });
-      await logActivity("تسجيل حساب جديد", `قام العميل ${user.email} بإنشاء وتصفح حساب لأول مرة`, user.email || '');
     } else {
       await setDoc(userRef, { 
         email: user.email,
-        displayName: user.displayName || user.email?.split('@')[0] || docSnap.data().displayName,
-        photoURL: user.photoURL || docSnap.data().photoURL || '',
         lastLoginAt: new Date().toISOString(),
         ...geoData
       }, { merge: true });
-      await logActivity("تسجيل دخول", `سجل العميل ${user.email} الدخول إلى الموقع`, user.email || '');
     }
-
+    
     return user;
   } catch (error) {
     console.error("Error signing in with Google", error);
@@ -119,15 +124,38 @@ export async function loginWithGoogle() {
   }
 }
 
-export async function logout() {
-  const currentEmail = auth.currentUser?.email;
-  if (currentEmail) {
-    await logActivity("تسجيل خروج", `قام المستخدم ${currentEmail} بتسجيل الخروج`, currentEmail);
+// 📈 Track site visit (called once per page load)
+export async function trackSiteVisit() {
+  try {
+    const statsRef = doc(db, "siteStats", "visits");
+    await setDoc(statsRef, {
+      totalVisits: increment(1),
+      lastVisitAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.error('Failed to track visit:', err);
   }
+}
+
+// 📈 Get total site visits
+export async function getSiteVisits(): Promise<number> {
+  try {
+    const statsRef = doc(db, "siteStats", "visits");
+    const snap = await getDoc(statsRef);
+    if (snap.exists()) {
+      return snap.data().totalVisits || 0;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function logout() {
   await signOut(auth);
 }
 
-// 🔒 Check if user is Admin
+// 🔒 Check if user is Admin (main admin or added admins)
 export async function checkIsAdmin(email: string | null): Promise<boolean> {
   if (!email) return false;
   if (email === MAIN_ADMIN_EMAIL) return true;
@@ -136,6 +164,7 @@ export async function checkIsAdmin(email: string | null): Promise<boolean> {
   return adminSnap.exists();
 }
 
+// Sync check (for quick UI checks - only checks main admin)
 export function isAdmin(email: string | null): boolean {
   return email === MAIN_ADMIN_EMAIL;
 }
@@ -150,193 +179,245 @@ export async function checkBanned(uid: string): Promise<{ banned: boolean; reaso
   return { banned: false };
 }
 
-// ==========================================
-// 📦 ORDER NUMBER & KEY SYSTEM
-// ==========================================
+export async function checkUserVIP(uid: string) {
+  const userRef = doc(db, "users", uid);
+  const docSnap = await getDoc(userRef);
+  if (docSnap.exists() && docSnap.data().isVIP === true) {
+    const keys: string[] = docSnap.data().activatedKeys || [];
+    let hasValidKey = false;
+    const currentProducts = docSnap.data().activatedProducts || [];
+    const newProducts = new Set<string>(currentProducts);
 
-export function isValidOrderFormat(value: string): boolean {
-  const cleaned = value.trim();
-  if (cleaned === "T3N-un4U6I-kd8bN2") return true; 
-  return /^2\d{8}$/.test(cleaned) || /^T3N-[A-Za-z0-9]{8,16}$/.test(cleaned); 
+    for (const keyId of keys) {
+      const keyRef = doc(db, "keys", keyId);
+      const keySnap = await getDoc(keyRef);
+      if (keySnap.exists()) {
+        const kd = keySnap.data();
+        if (kd.status === 'banned' || kd.status === 'frozen') {
+          continue;
+        }
+        hasValidKey = true;
+        const pt = kd.productType === 'spoofer' ? 'superstar' : (kd.productType || 'superstar'); // Fallback for old keys
+        if (pt && pt !== '') {
+          newProducts.add(pt);
+        }
+      }
+    }
+
+    if (hasValidKey) {
+      const finalProducts = Array.from(newProducts);
+      // Auto-repair if length differs or any item differs
+      const needsRepair = finalProducts.length !== currentProducts.length || !finalProducts.every(p => currentProducts.includes(p));
+      if (needsRepair) {
+        await setDoc(userRef, { activatedProducts: finalProducts }, { merge: true });
+      }
+      return { isVIP: true, products: finalProducts };
+    }
+
+    if (keys.length > 0) {
+      await setDoc(userRef, { isVIP: false }, { merge: true });
+    }
+    return { isVIP: false, products: [] };
+  }
+  return { isVIP: false, products: [] };
 }
 
-// Activate Order / Product
-export async function activateOrder(orderId: string, uid: string, email: string, productName?: string): Promise<{ success: boolean; error?: string }> {
-  const cleaned = orderId.trim();
+// ==========================================
+// 🔑 KEY SYSTEM - T3N-XXXXXX-XXXXXX
+// ==========================================
 
-  if (!isValidOrderFormat(cleaned)) {
-    return { success: false, error: 'رقم الطلب أو المفتاح غير صحيح' };
+function generateKeyId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let part1 = '', part2 = '';
+  for (let i = 0; i < 6; i++) {
+    part1 += chars.charAt(Math.floor(Math.random() * chars.length));
+    part2 += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return `T3N-${part1}-${part2}`;
+}
 
-  const orderRef = doc(db, "orders", cleaned);
-  const orderSnap = await getDoc(orderRef);
+export function isValidKeyFormat(value: string): boolean {
+  return /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(value.trim());
+}
 
-  if (orderSnap.exists()) {
-    const orderData = orderSnap.data();
-
-    if (orderData.status === 'banned') {
-      return { success: false, error: 'رقم الطلب هذا محظور' };
+export async function createKeys(count: number, productType: 'fortnite' | 'superstar' | 'fortnite-hack'): Promise<string[]> {
+  const created: string[] = [];
+  const now = new Date().toISOString();
+  for (let i = 0; i < Math.min(count, 100); i++) {
+    let keyId = generateKeyId();
+    let exists = true;
+    while (exists) {
+      const snap = await getDoc(doc(db, "keys", keyId));
+      if (!snap.exists()) { exists = false; } else { keyId = generateKeyId(); }
     }
-
-    if (orderData.status === 'frozen') {
-      return { success: false, error: 'رقم الطلب هذا مُجمّد مؤقتاً' };
-    }
-
-    if (orderData.usedByUid && orderData.usedByUid !== uid) {
-      return { success: false, error: 'رقم الطلب هذا مرتبط بحساب آخر' };
-    }
-
-    if (orderData.usedByUid === uid) {
-      return { success: true };
-    }
+    await setDoc(doc(db, "keys", keyId), {
+      keyId, productType, status: 'unused', createdAt: now,
+      activatedAt: null, usedByUid: null, usedByEmail: null,
+      usedByName: null, usedByPhoto: null, usedByProvider: null
+    });
+    created.push(keyId);
   }
+  return created;
+}
 
-  const now = new Date();
-
-  await setDoc(orderRef, {
-    orderId: cleaned,
-    productName: productName || 'سبوفر T3N الشامل',
-    status: 'active',
-    activatedAt: now.toISOString(),
-    usedByEmail: email,
-    usedByUid: uid
-  }, { merge: true });
-
-  // Update user active orders
-  const userRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userRef);
-  let currentOrders: any[] = [];
-  if (userSnap.exists() && Array.isArray(userSnap.data().verifiedOrders)) {
-    currentOrders = userSnap.data().verifiedOrders;
+export async function activateKey(keyId: string, uid: string, email: string, userData?: { displayName?: string; photoURL?: string; provider?: string }): Promise<{ success: boolean; error?: string; productType?: string; activatedProducts?: string[] }> {
+  const cleaned = keyId.trim();
+  if (!isValidKeyFormat(cleaned)) {
+    return { success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' };
   }
   
-  if (!currentOrders.some(o => (typeof o === 'string' ? o === cleaned : o.orderId === cleaned))) {
-    currentOrders.push({
-      orderId: cleaned,
-      productName: productName || 'سبوفر T3N الشامل',
-      activatedAt: now.toISOString()
+  try {
+    const response = await fetch('/api/activate-key', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        keyId: cleaned,
+        uid,
+        email,
+        userData
+      })
     });
+
+    const data = await response.json();
+    return data;
+  } catch (err: any) {
+    console.error('activateKey error:', err);
+    return { success: false, error: 'فشل الاتصال بالسيرفر. تأكد من اتصالك بالإنترنت.' };
   }
-
-  await setDoc(userRef, {
-    isVIP: true,
-    verifiedOrders: currentOrders,
-    email: email,
-    lastActiveAt: now.toISOString()
-  }, { merge: true });
-
-  await logActivity("تفعيل مفتاح/منتج", `قام العميل ${email} بتفعيل المفتاح (${cleaned}) بنجاح`, email);
-
-  return { success: true };
 }
 
-// 📦 Admin: Revoke specific product/key from a user
-export async function revokeUserProduct(uid: string, orderId: string) {
-  const userRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userRef);
-  let userEmail = '';
-
-  if (userSnap.exists()) {
-    const data = userSnap.data();
-    userEmail = data.email || '';
-    const updatedOrders = (data.verifiedOrders || []).filter(
-      (o: any) => (typeof o === 'string' ? o !== orderId : o.orderId !== orderId)
-    );
-    await setDoc(userRef, {
-      verifiedOrders: updatedOrders,
-      isVIP: updatedOrders.length > 0
-    }, { merge: true });
-  }
-
-  // Update order document status
-  const orderRef = doc(db, "orders", orderId);
-  await setDoc(orderRef, { status: 'revoked', revokedAt: new Date().toISOString() }, { merge: true });
-
-  await logActivity("إلغاء مفتاح/ترخيص", `قامت الإدارة بسحب وإلغاء المفتاح (${orderId}) من العميل ${userEmail || uid}`, auth.currentUser?.email || '');
+export async function getAllKeys() {
+  const snap = await getDocs(collection(db, "keys"));
+  const keys: any[] = [];
+  snap.forEach((d) => keys.push({ id: d.id, ...d.data() }));
+  return keys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 }
 
-// 📝 Admin: Save internal notes on a user
-export async function saveUserAdminNotes(uid: string, notes: string) {
-  const userRef = doc(db, "users", uid);
-  await setDoc(userRef, { adminNotes: notes }, { merge: true });
-  await logActivity("تحديث ملاحظات عميل", `تم حفظ ملاحظات إدارية جديدة على العميل (UID: ${uid})`, auth.currentUser?.email || '');
-}
-
-// 📦 Delete an order
-export async function deleteOrder(orderId: string) {
-  const orderRef = doc(db, "orders", orderId);
-  const orderSnap = await getDoc(orderRef);
-  if (orderSnap.exists()) {
-    const orderData = orderSnap.data();
-    if (orderData.usedByUid) {
-      await revokeUserProduct(orderData.usedByUid, orderId);
+export async function deleteKey(keyId: string) {
+  const ref = doc(db, "keys", keyId);
+  const snap = await getDoc(ref);
+  if (snap.exists() && snap.data().usedByUid) {
+    const userRef = doc(db, "users", snap.data().usedByUid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const prods = (userSnap.data().activatedProducts || []).filter((p: string) => p !== snap.data().productType);
+      const keys = (userSnap.data().activatedKeys || []).filter((k: string) => k !== keyId);
+      await setDoc(userRef, { activatedProducts: prods, activatedKeys: keys, isVIP: prods.length > 0 }, { merge: true });
     }
   }
-  await deleteDoc(orderRef);
-  await logActivity("حذف ترخيص", `حذف المفتاح (${orderId}) نهائياً من قاعدة البيانات`, auth.currentUser?.email || '');
+  await deleteDoc(ref);
 }
 
-// 📦 Ban an order
-export async function banOrder(orderId: string) {
-  const orderRef = doc(db, "orders", orderId);
-  await setDoc(orderRef, { status: 'banned' }, { merge: true });
-  await logActivity("حظر ترخيص", `تم حظر المفتاح/الطلب (${orderId})`, auth.currentUser?.email || '');
+export async function deleteAllKeys() {
+  const snap = await getDocs(collection(db, "keys"));
+  for (const d of snap.docs) {
+    await deleteKey(d.id);
+  }
+  await wipeAllLegacyData();
 }
 
-// 📦 Unban an order
-export async function unbanOrder(orderId: string) {
-  const orderRef = doc(db, "orders", orderId);
-  await setDoc(orderRef, { status: 'active' }, { merge: true });
-  await logActivity("فك حظر ترخيص", `تم إلغاء حظر المفتاح (${orderId})`, auth.currentUser?.email || '');
+export async function banKey(keyId: string) {
+  const ref = doc(db, "keys", keyId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await setDoc(ref, { status: 'banned' }, { merge: true });
+    if (snap.data().usedByUid) {
+      const userRef = doc(db, "users", snap.data().usedByUid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const prods = (userSnap.data().activatedProducts || []).filter((p: string) => p !== snap.data().productType);
+        await setDoc(userRef, { activatedProducts: prods, isVIP: prods.length > 0 }, { merge: true });
+      }
+    }
+  }
 }
 
-// 👑 Get all users for admin with search & notes
-export async function getAdminUsersList() {
-  const usersSnap = await getDocs(collection(db, "users"));
-  const users: any[] = [];
-  usersSnap.forEach((d) => {
-    users.push({ id: d.id, ...d.data() });
-  });
-  return users;
+export async function unbanKey(keyId: string) {
+  const ref = doc(db, "keys", keyId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const newStatus = snap.data().usedByUid ? 'active' : 'unused';
+    await setDoc(ref, { status: newStatus }, { merge: true });
+    if (snap.data().usedByUid) {
+      const userRef = doc(db, "users", snap.data().usedByUid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const prods = userSnap.data().activatedProducts || [];
+        if (!prods.includes(snap.data().productType)) prods.push(snap.data().productType);
+        await setDoc(userRef, { activatedProducts: prods, isVIP: true }, { merge: true });
+      }
+    }
+  }
 }
 
-// 📊 Admin: Get full stats
-export async function getAdminStats() {
-  const usersSnap = await getDocs(collection(db, "users"));
-  const users: any[] = [];
-  let vipCount = 0;
-  usersSnap.forEach((d) => {
-    const data = d.data();
-    users.push({ id: d.id, ...data });
-    if (data.isVIP || (data.verifiedOrders && data.verifiedOrders.length > 0)) vipCount++;
-  });
-
-  const ordersSnap = await getDocs(collection(db, "orders"));
-  const orders: any[] = [];
-  ordersSnap.forEach((d) => {
-    orders.push({ id: d.id, ...d.data() });
-  });
-
-  const bannedSnap = await getDocs(collection(db, "bannedUsers"));
-  const banned: any[] = [];
-  bannedSnap.forEach((d) => {
-    banned.push({ id: d.id, ...d.data() });
-  });
-
-  const logs = await getAuditLogs();
-
-  return {
-    totalUsers: users.length,
-    vipUsers: vipCount,
-    totalOrders: orders.length,
-    bannedCount: banned.length,
-    users,
-    orders,
-    banned,
-    logs
-  };
+export async function freezeKey(keyId: string) {
+  const ref = doc(db, "keys", keyId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await setDoc(ref, { status: 'frozen', previousStatus: snap.data().status }, { merge: true });
+    if (snap.data().usedByUid) {
+      const userRef = doc(db, "users", snap.data().usedByUid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const prods = (userSnap.data().activatedProducts || []).filter((p: string) => p !== snap.data().productType);
+        await setDoc(userRef, { activatedProducts: prods, isVIP: prods.length > 0 }, { merge: true });
+      }
+    }
+  }
 }
 
+export async function unfreezeKey(keyId: string) {
+  const ref = doc(db, "keys", keyId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const newStatus = snap.data().previousStatus || (snap.data().usedByUid ? 'active' : 'unused');
+    await setDoc(ref, { status: newStatus, previousStatus: null }, { merge: true });
+    if (newStatus === 'active' && snap.data().usedByUid) {
+      const userRef = doc(db, "users", snap.data().usedByUid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const prods = userSnap.data().activatedProducts || [];
+        if (!prods.includes(snap.data().productType)) prods.push(snap.data().productType);
+        await setDoc(userRef, { activatedProducts: prods, isVIP: true }, { merge: true });
+      }
+    }
+  }
+}
+
+export async function checkKeyStatus(keyId: string): Promise<any> {
+  const cleaned = keyId.trim();
+  if (!isValidKeyFormat(cleaned)) throw new Error('صيغة المفتاح غير صحيحة');
+  const ref = doc(db, "keys", cleaned);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return { status: 'not_found' };
+  return { ...snap.data() };
+}
+
+// ==========================================
+// 🔒 ADMIN ACTIONS
+// ==========================================
+
+// 📋 Admin Actions Logger
+async function logAdminAction(actionType: string, details: string) {
+  try {
+    const authUser = auth.currentUser;
+    if (!authUser) return;
+    const logRef = doc(collection(db, "auditLogs"));
+    await setDoc(logRef, {
+      action: actionType,
+      details: details,
+      adminEmail: authUser.email,
+      adminUid: authUser.uid,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error("Failed to log admin action:", err);
+  }
+}
+
+// 🚫 Ban a user
 export async function banUser(uid: string, email: string, reason: string) {
   const banRef = doc(db, "bannedUsers", uid);
   await setDoc(banRef, {
@@ -346,13 +427,243 @@ export async function banUser(uid: string, email: string, reason: string) {
   });
   const userRef = doc(db, "users", uid);
   await setDoc(userRef, { isVIP: false, banned: true }, { merge: true });
-  await logActivity("حظر عميل", `تم حظر العميل ${email} بالسبب: ${reason}`, auth.currentUser?.email || '');
+  await logAdminAction("BAN_USER", `Banned user ${email} (UID: ${uid}) for: ${reason}`);
 }
 
+// ✅ Unban a user
 export async function unbanUser(uid: string) {
   const banRef = doc(db, "bannedUsers", uid);
   await deleteDoc(banRef);
   const userRef = doc(db, "users", uid);
   await setDoc(userRef, { banned: false }, { merge: true });
-  await logActivity("إلغاء حظر عميل", `تم فك حظر العميل (UID: ${uid})`, auth.currentUser?.email || '');
+  await logAdminAction("UNBAN_USER", `Removed ban from user UID: ${uid}`);
+}
+
+// ❌ Remove VIP from user
+export async function removeVIP(uid: string) {
+  const userRef = doc(db, "users", uid);
+  await setDoc(userRef, { isVIP: false }, { merge: true });
+  await logAdminAction("REMOVE_VIP", `Removed VIP status from user UID: ${uid}`);
+}
+
+// 🗑️ Delete user data completely
+export async function deleteUserData(uid: string) {
+  const userRef = doc(db, "users", uid);
+  await deleteDoc(userRef);
+  const banRef = doc(db, "bannedUsers", uid);
+  await deleteDoc(banRef);
+  await logAdminAction("DELETE_USER", `Deleted all data for user UID: ${uid}`);
+}
+
+// 👑 Add another admin
+export async function addAdminUser(email: string) {
+  const adminRef = doc(db, "admins", email);
+  await setDoc(adminRef, {
+    addedAt: new Date().toISOString(),
+    addedBy: MAIN_ADMIN_EMAIL
+  });
+  await logAdminAction("ADD_ADMIN", `Added new admin: ${email}`);
+}
+
+// 🗑️ Remove an admin
+export async function removeAdminUser(email: string) {
+  if (email === MAIN_ADMIN_EMAIL) return;
+  const adminRef = doc(db, "admins", email);
+  await deleteDoc(adminRef);
+  await logAdminAction("REMOVE_ADMIN", `Removed admin access for: ${email}`);
+}
+
+// 📊 Admin: Get dashboard statistics
+export async function getAdminStats() {
+  const usersSnap = await getDocs(collection(db, "users"));
+  const users: any[] = [];
+  let vipCount = 0;
+  usersSnap.forEach((d) => {
+    const data = d.data();
+    users.push({ id: d.id, ...data });
+    if (data.isVIP) vipCount++;
+  });
+
+  const keysSnap = await getDocs(collection(db, "keys"));
+  const keys: any[] = [];
+  let spooferKeys = 0, fortniteKeys = 0, usedKeys = 0, unusedKeys = 0, bannedKeys = 0, frozenKeys = 0;
+  keysSnap.forEach((d) => {
+    const data = d.data();
+    keys.push({ id: d.id, ...data });
+    if (data.productType === 'spoofer') spooferKeys++;
+    if (data.productType === 'fortnite') fortniteKeys++;
+    if (data.status === 'active') usedKeys++;
+    if (data.status === 'unused') unusedKeys++;
+    if (data.status === 'banned') bannedKeys++;
+    if (data.status === 'frozen') frozenKeys++;
+  });
+
+  const bannedSnap = await getDocs(collection(db, "bannedUsers"));
+  const banned: any[] = [];
+  bannedSnap.forEach((d) => banned.push({ id: d.id, ...d.data() }));
+
+  const adminsSnap = await getDocs(collection(db, "admins"));
+  const admins: any[] = [{ email: MAIN_ADMIN_EMAIL, role: 'مالك' }];
+  adminsSnap.forEach((d) => admins.push({ email: d.id, ...d.data(), role: 'مشرف' }));
+
+  const totalVisits = await getSiteVisits();
+
+  return {
+    totalUsers: users.length, vipUsers: vipCount,
+    totalKeys: keys.length, spooferKeys, fortniteKeys, usedKeys, unusedKeys, bannedKeys, frozenKeys,
+    bannedCount: banned.length, totalVisits,
+    users: users.sort((a, b) => (b.verifiedAt || b.lastLoginAt || '').localeCompare(a.verifiedAt || a.lastLoginAt || '')),
+    keys: keys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')),
+    banned, admins,
+  };
+}
+
+// ==========================================
+// 🔧 MAINTENANCE MODE
+// ==========================================
+
+// Toggle maintenance mode on/off
+export async function toggleMaintenance(enabled: boolean, message?: string) {
+  const ref = doc(db, "settings", "maintenance");
+  await setDoc(ref, {
+    enabled,
+    message: message || 'الموقع تحت الصيانة حالياً، نرجع لكم قريب!',
+    updatedAt: new Date().toISOString()
+  });
+}
+
+// Get current maintenance status
+export async function getMaintenanceStatus(): Promise<{ enabled: boolean; message: string }> {
+  const ref = doc(db, "settings", "maintenance");
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    return { enabled: snap.data().enabled || false, message: snap.data().message || '' };
+  }
+  return { enabled: false, message: '' };
+}
+
+// 🔔 Listen to notifications (Announcements from Discord)
+export function listenToNotifications(callback: (notifs: any[]) => void) {
+  const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50));
+  return onSnapshot(q, (snapshot) => {
+    const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(notifs);
+  });
+}
+
+// 🗑️ Delete a notification
+export async function deleteNotification(notifId: string) {
+  const notifRef = doc(db, "notifications", notifId);
+  await deleteDoc(notifRef);
+}
+
+// ==========================================
+// 📱 PHONE AUTHENTICATION
+// ==========================================
+
+export function initRecaptcha(containerId: string) {
+  // @ts-ignore
+  if (!window.recaptchaVerifier) {
+    try {
+      // @ts-ignore
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        'size': 'invisible',
+        'callback': () => {},
+        'expired-callback': () => {
+          // @ts-ignore
+          window.recaptchaVerifier?.clear();
+          // @ts-ignore
+          window.recaptchaVerifier = null;
+        }
+      });
+    } catch (e) {
+      console.error("Recaptcha Init Error", e);
+    }
+  }
+  // @ts-ignore
+  return window.recaptchaVerifier;
+}
+
+export async function sendPhoneSMS(phoneNumber: string, appVerifier: any) {
+  try {
+    auth.languageCode = 'ar';
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    return { success: true, confirmationResult };
+  } catch (error: any) {
+    console.error('SMS Error:', error);
+    let msg = error.code + ': ' + error.message;
+    if (error.code === 'auth/invalid-phone-number') msg = 'رقم الجوال غير صحيح تأكد من كتابته بشكل صحيح (مثال: +966500000000)';
+    if (error.code === 'auth/too-many-requests') msg = 'حدث خطأ، يرجى المحاولة بعد قليل';
+    return { success: false, error: msg };
+  }
+}
+
+export async function verifyPhoneOTP(confirmationResult: any, code: string) {
+  try {
+    const result = await confirmationResult.confirm(code);
+    const user = result.user;
+    
+    // Save or update user login in Firestore
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        email: user.phoneNumber, // Use phone number as identifier
+        isVIP: false,
+        verifiedOrder: null,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
+      });
+    } else {
+      await setDoc(userRef, { lastLoginAt: new Date().toISOString() }, { merge: true });
+    }
+    return { success: true, user };
+  } catch (error: any) {
+    console.error('OTP Verify Error:', error);
+    return { success: false, error: 'رمز التحقق غير صحيح، تأكد منه وحاول مجدداً' };
+  }
+}
+
+// 🚧 Maintenance Mode Functions
+export function listenToMaintenanceMode(callback: (isMaintenance: boolean) => void) {
+  const settingsRef = doc(db, "settings", "global");
+  return onSnapshot(settingsRef, (docSnap) => {
+    if (docSnap.exists()) {
+      callback(docSnap.data().maintenance === true);
+    } else {
+      callback(false);
+    }
+  });
+}
+
+export async function toggleMaintenanceMode(currentState: boolean) {
+  const settingsRef = doc(db, "settings", "global");
+  await setDoc(settingsRef, { maintenance: !currentState }, { merge: true });
+}
+
+export async function wipeAllLegacyData() {
+  // Wipe all orders
+  const ordersSnap = await getDocs(collection(db, "orders"));
+  for (const orderDoc of ordersSnap.docs) {
+    await deleteDoc(doc(db, "orders", orderDoc.id));
+  }
+  
+  // Wipe all keys
+  const keysSnap = await getDocs(collection(db, "keys"));
+  for (const keyDoc of keysSnap.docs) {
+    await deleteDoc(doc(db, "keys", keyDoc.id));
+  }
+
+  // Reset all users
+  const usersSnap = await getDocs(collection(db, "users"));
+  for (const userDoc of usersSnap.docs) {
+    await setDoc(doc(db, "users", userDoc.id), {
+      isVIP: false,
+      activatedProducts: [],
+      activatedKeys: [],
+      verifiedOrder: null
+    }, { merge: true });
+  }
+
+  return true;
 }
