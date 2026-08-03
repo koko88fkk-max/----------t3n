@@ -745,12 +745,31 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderInput.trim()) return;
+    if (!user) {
+      setErrorMsg('يجب تسجيل الدخول أولاً لتفعيل المفتاح');
+      setStatus('error');
+      if (onLogin) onLogin();
+      return;
+    }
     setStatus('loading');
-    setTimeout(() => {
-      setLastActivatedType('spoofer');
+    
+    const res = await activateKey(
+      orderInput.trim(),
+      user.uid,
+      user.email || 'unknown',
+      { displayName: user.displayName || 'مستخدم ديسكورد', photoURL: user.photoURL || '', provider: 'discord' }
+    );
+    
+    if (res.success) {
+      setLastActivatedType(res.productType || 'superstar');
       setStatus('success');
-      if (onVerify) onVerify(orderInput.trim(), ['spoofer', 'fortnite', 'fortnite-hack', 'superstar']);
-    }, 600);
+      if (onVerify) {
+        onVerify(orderInput.trim(), res.activatedProducts || [res.productType || 'superstar']);
+      }
+    } else {
+      setErrorMsg(res.error || 'حدث خطأ أثناء التفعيل');
+      setStatus('error');
+    }
   };
 
   return (
@@ -799,10 +818,10 @@ function OrderDelivery({ onVerify, user, onLogin, onSuperstarClick, onFortniteCl
                         setOrderInput(e.target.value);
                         if (status === 'error') setStatus('idle');
                       }}
-                      disabled={true}
-                      placeholder="تفعيل المفاتيح متوقف حالياً"
-                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-500 shadow-inner font-bold tracking-wider opacity-50 cursor-not-allowed"
-                      dir="rtl"
+                      disabled={false}
+                      placeholder="T3N-XXXXXX-XXXXXX"
+                      className="w-full bg-black/60 border border-blue-500/30 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all text-white placeholder:text-zinc-500 shadow-inner font-bold tracking-wider"
+                      dir="ltr"
                     />
                   </div>
 
