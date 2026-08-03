@@ -3547,7 +3547,7 @@ export default function App() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#05080f] text-zinc-200 font-sans selection:bg-blue-500/30 flex overflow-hidden">
+    <div dir="rtl" className="min-h-screen bg-[#060606] text-zinc-200 font-sans selection:bg-blue-500/30 flex flex-row-reverse overflow-hidden">
       
       {/* Professional Toast Notification */}
       {toast && createPortal(
@@ -3587,70 +3587,70 @@ export default function App() {
         document.body
       )}
 
-      {/* Sidebar Component */}
-      <aside className="w-[280px] bg-[#0b111e]/90 backdrop-blur-2xl border-l border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40">
-        <div className="p-8 border-b border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={LOGO_URL} alt="T3N Logo" className="w-12 h-12 object-contain rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)]" />
+      {/* Sidebar Component (Visually on left due to flex-row-reverse) */}
+      <aside className="w-[280px] bg-transparent border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40 relative">
+        <div className="p-8 flex items-center justify-between">
+          <div className="flex items-center gap-4 w-full justify-start">
             <span className="font-extrabold text-2xl tracking-widest text-white drop-shadow-md">T3N</span>
+            <img src={LOGO_URL} alt="T3N Logo" className="w-10 h-10 object-contain rounded-xl opacity-80" />
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto py-8 flex flex-col gap-8 px-5 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-6 px-4 custom-scrollbar">
           {/* Section 1: General */}
           <div>
-            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">عام</h3>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">عام</h3>
             <button 
               onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
             >
+              <span className="font-semibold text-sm">نظرة عامة</span>
               <LayoutDashboard className="w-5 h-5" />
-              <span className="font-semibold text-[15px]">نظرة عامة</span>
             </button>
           </div>
 
           {/* Section 2: License */}
           <div>
-            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">الترخيص</h3>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الترخيص</h3>
             <button 
               onClick={() => setActiveTab('products')}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'products' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
             >
+              <span className="font-semibold text-sm">منتجاتي</span>
               <Package className="w-5 h-5" />
-              <span className="font-semibold text-[15px]">منتجاتي</span>
             </button>
           </div>
 
           {/* Section 3: Account */}
           <div>
-            <h3 className="text-xs font-bold text-zinc-500 mb-4 px-4 tracking-wider">الحساب</h3>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الحساب</h3>
             <button 
               onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white shadow-lg border border-white/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'} justify-end`}
             >
+              <span className="font-semibold text-sm">الملف الشخصي</span>
               <UserX className="w-5 h-5" />
-              <span className="font-semibold text-[15px]">الملف الشخصي</span>
             </button>
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/5 bg-[#0b111e]">
+        <div className="p-4 border-t border-white/5 mt-auto">
           {user ? (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                 <img src={user.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-12 h-12 rounded-full border border-white/20" />
-                 <div className="flex flex-col">
-                   <span className="font-bold text-sm text-white truncate max-w-[100px]">{user.displayName || 'User'}</span>
-                   <span className="text-[11px] text-zinc-400">Discord</span>
-                 </div>
-              </div>
-              <button onClick={logout} className="text-zinc-500 hover:text-red-400 transition-colors bg-white/5 p-2 rounded-xl" title="تسجيل خروج">
-                <LogOut className="w-5 h-5" />
+            <div className="flex items-center justify-between p-3 rounded-xl bg-transparent hover:bg-white/5 transition-colors cursor-pointer">
+              <button onClick={logout} className="text-zinc-600 hover:text-red-400 transition-colors flex items-center gap-2 text-xs font-bold" title="تسجيل خروج">
+                تسجيل خروج <LogOut className="w-4 h-4" />
               </button>
+              <div className="flex items-center gap-3">
+                 <div className="flex flex-col text-right">
+                   <span className="font-bold text-sm text-white truncate max-w-[80px]">{user.displayName || 'User'}</span>
+                   <span className="text-[10px] text-zinc-500">Discord</span>
+                 </div>
+                 <img src={user.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-10 h-10 rounded-full border border-white/10 grayscale hover:grayscale-0 transition-all" />
+              </div>
             </div>
           ) : (
-            <button onClick={() => setShowLoginModal(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] transition-colors font-bold text-white shadow-lg">
-               <LogIn className="w-5 h-5" /> تسجيل الدخول
+            <button onClick={() => setShowLoginModal(true)} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] transition-colors font-bold text-white shadow-lg text-sm">
+               تسجيل الدخول <LogIn className="w-4 h-4" /> 
             </button>
           )}
         </div>
@@ -3658,120 +3658,131 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative">
-        <div className="p-8 md:p-12 max-w-[1600px] mx-auto w-full min-h-full">
+        <div className="p-8 md:p-10 max-w-[1600px] mx-auto w-full min-h-full">
           
           {activeTab === 'overview' && (
-            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
-               <div className="flex justify-between items-center mb-8">
-                 <h1 className="text-4xl font-extrabold text-white drop-shadow-md">نظرة عامة</h1>
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-between items-center mb-6">
+                 <h1 className="text-2xl font-extrabold text-white">نظرة عامة</h1>
                </div>
                
-               <div className="flex flex-col xl:flex-row gap-8 items-start">
-                 {/* Main Overview Area */}
-                 <div className="flex-1 space-y-8 w-full">
+               <div className="flex flex-col xl:flex-row gap-6 items-start">
+                 {/* Main Overview Area (Right visually in RTL flex) */}
+                 <div className="flex-1 space-y-6 w-full">
                    {/* Welcome Banner */}
-                   <div className="glass-panel p-10 rounded-[2.5rem] relative overflow-hidden flex items-center justify-between">
-                     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
-                     <div className="relative z-10">
-                       <h2 className="text-4xl font-extrabold mb-3 text-white">مرحباً بعودتك، {user?.displayName ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{user.displayName}</span> : 'المستخدم'}!</h2>
-                       <p className="text-zinc-400 text-lg">لديك <span className="text-white font-bold">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
-                     </div>
-                     <div className="hidden sm:block relative z-10">
-                       <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-32 h-32 rounded-full border-4 border-white/10 shadow-2xl object-cover" />
+                   <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex items-center justify-between">
+                     <div className="flex items-center gap-4 ml-auto w-full justify-end">
+                       <div className="text-right">
+                         <h2 className="text-2xl font-extrabold mb-1 text-white">مرحباً بعودتك، {user?.displayName || 'المستخدم'}!</h2>
+                         <p className="text-zinc-500 text-sm">لديك <span className="text-white">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
+                       </div>
+                       <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-16 h-16 rounded-full border-2 border-white/5 grayscale" />
                      </div>
                    </div>
 
                    {/* Stats Grid */}
-                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
-                        <div className="flex items-center justify-between mb-6 text-zinc-400">
-                          <span className="text-sm font-bold">المنتجات المفعلة</span>
-                          <Package className="w-6 h-6 text-blue-400" />
+                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                      {/* Products Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
+                          <Package className="w-4 h-4" />
                         </div>
-                        <div className="text-4xl font-extrabold text-white">{activatedProducts.length}</div>
+                        <div className="text-right w-full">
+                          <div className="text-3xl font-extrabold text-white">{activatedProducts.length}</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">المنتجات المفعلة</div>
+                        </div>
                       </div>
                       
-                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
-                        <div className="flex items-center justify-between mb-6 text-zinc-400">
-                          <span className="text-sm font-bold">حالة الحساب</span>
-                          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                      {/* Status Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
+                          <Shield className="w-4 h-4" />
                         </div>
-                        <div className="text-3xl font-extrabold text-emerald-400">نشط</div>
+                        <div className="text-right w-full">
+                          <div className="text-2xl font-extrabold text-white">نشط</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">حالة الحساب</div>
+                        </div>
                       </div>
                       
-                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
-                        <div className="flex items-center justify-between mb-6 text-zinc-400">
-                          <span className="text-sm font-bold">العضوية منذ</span>
-                          <Clock className="w-6 h-6 text-orange-400" />
+                      {/* Member Since Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
+                          <Clock className="w-4 h-4" />
                         </div>
-                        <div className="text-3xl font-extrabold text-white">-</div>
+                        <div className="text-right w-full">
+                          <div className="text-3xl font-extrabold text-zinc-500">—</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">العضوية منذ</div>
+                        </div>
                       </div>
                       
-                      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between hover:-translate-y-1 transition-transform">
-                        <div className="flex items-center justify-between mb-6 text-zinc-400">
-                          <span className="text-sm font-bold">مشاركات المنتدى</span>
-                          <MessageCircle className="w-6 h-6 text-purple-400" />
+                      {/* Forum Posts Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col items-end justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 border border-white/5">
+                          <MessageCircle className="w-4 h-4" />
                         </div>
-                        <div className="text-4xl font-extrabold text-white">0</div>
+                        <div className="text-right w-full">
+                          <div className="text-3xl font-extrabold text-white">0</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">مشاركات المنتدى</div>
+                        </div>
                       </div>
                    </div>
                  </div>
 
-                 {/* Quick Actions Sidebar */}
-                 <div className="w-full xl:w-[400px] shrink-0">
-                   <div className="glass-panel rounded-[2.5rem] p-8">
-                     <h3 className="text-sm font-bold text-zinc-500 mb-6 tracking-wider">إجراءات سريعة</h3>
-                     <div className="space-y-3">
-                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
-                         <div className="flex items-center gap-5">
-                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors shadow-inner">
-                             <Package className="w-6 h-6 text-blue-400" />
-                           </div>
+                 {/* Quick Actions Sidebar (Left visually) */}
+                 <div className="w-full xl:w-[320px] shrink-0">
+                   <div className="glass-panel rounded-2xl p-6">
+                     <h3 className="text-[11px] font-bold text-zinc-500 mb-6 text-right">إجراءات سريعة</h3>
+                     <div className="space-y-2">
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
+                         <div className="flex items-center gap-4">
                            <div className="text-right">
-                             <div className="font-bold text-white text-base">منتجاتي</div>
-                             <div className="text-xs text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
+                             <div className="font-bold text-white text-sm">منتجاتي</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
+                           </div>
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Package className="w-4 h-4 text-zinc-400" />
                            </div>
                          </div>
-                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
                        </button>
                        
-                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
-                         <div className="flex items-center gap-5">
-                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors shadow-inner">
-                             <Key className="w-6 h-6 text-emerald-400" />
-                           </div>
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
+                         <div className="flex items-center gap-4">
                            <div className="text-right">
-                             <div className="font-bold text-white text-base">تفعيل مفتاح</div>
-                             <div className="text-xs text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
+                             <div className="font-bold text-white text-sm">تفعيل مفتاح</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
+                           </div>
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Key className="w-4 h-4 text-zinc-400" />
                            </div>
                          </div>
-                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
                        </button>
                        
-                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
-                         <div className="flex items-center gap-5">
-                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-[#5865F2]/20 transition-colors shadow-inner">
-                             <MessageCircle className="w-6 h-6 text-[#5865F2]" />
-                           </div>
+                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
+                         <div className="flex items-center gap-4">
                            <div className="text-right">
-                             <div className="font-bold text-white text-base">الانضمام للديسكورد</div>
-                             <div className="text-xs text-zinc-500 mt-1">الدعم والمنتجات</div>
+                             <div className="font-bold text-white text-sm">الانضمام للديسكورد</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">الدعم والمنتجات</div>
+                           </div>
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <MessageCircle className="w-4 h-4 text-zinc-400" />
                            </div>
                          </div>
-                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
                        </a>
                        
-                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
-                         <div className="flex items-center gap-5">
-                           <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors shadow-inner">
-                             <ShoppingBag className="w-6 h-6 text-orange-400" />
-                           </div>
+                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronDown className="w-4 h-4 text-zinc-600 rotate-90" />
+                         <div className="flex items-center gap-4">
                            <div className="text-right">
-                             <div className="font-bold text-white text-base">المتجر</div>
-                             <div className="text-xs text-zinc-500 mt-1">شراء ترخيص جديد</div>
+                             <div className="font-bold text-white text-sm">المتجر</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">شراء ترخيص جديد</div>
+                           </div>
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <ShoppingBag className="w-4 h-4 text-zinc-400" />
                            </div>
                          </div>
-                         <ChevronDown className="w-5 h-5 text-zinc-600 rotate-90 group-hover:text-white transition-colors" />
                        </a>
                      </div>
                    </div>
@@ -3781,71 +3792,70 @@ export default function App() {
           )}
 
           {activeTab === 'products' && (
-            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
-              <div className="flex justify-between items-center mb-8">
-                <h1 className="text-4xl font-extrabold text-white drop-shadow-md">منتجاتي</h1>
-                <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl transition-all border border-white/10 shadow-lg font-bold">
-                  <Key className="w-5 h-5" />
-                  تفعيل مفتاح
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
+                <button className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
+                  تفعيل مفتاح <Key className="w-4 h-4" />
                 </button>
               </div>
 
               {activatedProducts.length === 0 ? (
-                <div className="glass-panel p-16 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
-                  <Package className="w-20 h-20 text-zinc-600 mb-6" />
-                  <h3 className="text-2xl font-bold text-white mb-2">لا يوجد منتجات مفعلة</h3>
-                  <p className="text-zinc-400 mb-8 max-w-md">قم بشراء ترخيص من المتجر ثم فعل المفتاح هنا للوصول إلى التحميلات.</p>
-                  <a href={STORE_URL} target="_blank" className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg">شراء من المتجر</a>
+                <div className="glass-panel p-16 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <Package className="w-16 h-16 text-zinc-600 mb-6" />
+                  <h3 className="text-xl font-bold text-white mb-2">لا يوجد منتجات مفعلة</h3>
+                  <p className="text-zinc-500 mb-8 max-w-md text-sm">قم بشراء ترخيص من المتجر ثم فعل المفتاح هنا للوصول إلى التحميلات.</p>
+                  <a href={STORE_URL} target="_blank" className="bg-white hover:bg-zinc-200 text-black font-bold py-2.5 px-8 rounded-xl transition-all text-sm">شراء من المتجر</a>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="flex flex-wrap gap-6 justify-end">
                   {activatedProducts.includes('fortnite') && (
-                    <div className="glass-panel rounded-3xl overflow-hidden group">
-                      <div className="relative h-64 overflow-hidden">
+                    <div className="w-[340px] glass-panel rounded-2xl overflow-hidden group">
+                      <div className="relative h-44 overflow-hidden">
                         <img src="/fortnite-bg.jpg" alt="Fortnite" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0b111e] via-[#0b111e]/50 to-transparent" />
-                        <div className="absolute bottom-6 right-6 left-6">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-[#111111]/40 to-transparent" />
+                        <div className="absolute bottom-4 right-5 left-5">
                            <div className="flex items-center justify-between">
-                             <div>
-                               <h3 className="text-2xl font-bold text-white drop-shadow-lg mb-1">هاك فورت نايت Private</h3>
-                               <span className="text-emerald-400 text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> مفعل</span>
+                             <img src="/logo.png" alt="T3N" className="w-8 h-8 opacity-50" />
+                             <div className="text-right">
+                               <h3 className="text-sm font-bold text-white mb-1">هاك فورت نايت Private</h3>
+                               <span className="text-emerald-500 text-[10px] font-bold flex items-center justify-end gap-1"><CheckCircle2 className="w-3 h-3" /> مفعل</span>
                              </div>
-                             <img src="/logo.png" alt="T3N" className="w-12 h-12 opacity-50 drop-shadow-md" />
                            </div>
                         </div>
                       </div>
-                      <div className="p-6 bg-[#0b111e] flex gap-3">
-                        <button onClick={() => setShowFortniteGuide(true)} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
-                          <Play className="w-5 h-5" /> الشروحات
+                      <div className="p-5 flex gap-3">
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                          تحميل الملف <Download className="w-4 h-4" />
                         </button>
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md">
-                          <Download className="w-5 h-5" /> تحميل الملف
+                        <button onClick={() => setShowFortniteGuide(true)} className="flex-1 bg-transparent hover:bg-white/5 border border-white/10 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                          الشروحات <Play className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                   )}
 
                   {activatedProducts.includes('spoofer') && (
-                    <div className="glass-panel rounded-3xl overflow-hidden group">
-                      <div className="relative h-64 overflow-hidden">
+                    <div className="w-[340px] glass-panel rounded-2xl overflow-hidden group">
+                      <div className="relative h-44 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=2000&auto=format&fit=crop" alt="Spoofer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0b111e] via-[#0b111e]/50 to-transparent" />
-                        <div className="absolute bottom-6 right-6 left-6">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-[#111111]/40 to-transparent" />
+                        <div className="absolute bottom-4 right-5 left-5">
                            <div className="flex items-center justify-between">
-                             <div>
-                               <h3 className="text-2xl font-bold text-white drop-shadow-lg mb-1">سبوفر تعن فك باند نهائي</h3>
-                               <span className="text-emerald-400 text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> مفعل</span>
+                             <span className="text-sm font-black text-white/50 tracking-widest">T3N</span>
+                             <div className="text-right">
+                               <h3 className="text-sm font-bold text-white mb-1">سبوفر تعن فك باند نهائي</h3>
+                               <span className="text-emerald-500 text-[10px] font-bold flex items-center justify-end gap-1"><CheckCircle2 className="w-3 h-3" /> مفعل</span>
                              </div>
-                             <span className="text-2xl font-black text-white/50 tracking-widest drop-shadow-md">T3N</span>
                            </div>
                         </div>
                       </div>
-                      <div className="p-6 bg-[#0b111e] flex gap-3">
-                        <button className="flex-1 bg-white/5 text-zinc-500 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-not-allowed border border-white/5">
-                          <Play className="w-5 h-5" /> الشروحات
+                      <div className="p-5 flex gap-3">
+                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                          تحميل الملف <Download className="w-4 h-4" />
                         </button>
-                        <button onClick={() => {}} className="flex-1 bg-white text-black hover:bg-zinc-200 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md">
-                          <Download className="w-5 h-5" /> تحميل الملف
+                        <button className="flex-1 bg-transparent border border-white/5 text-zinc-600 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm cursor-not-allowed">
+                          الشروحات <Play className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -3856,43 +3866,43 @@ export default function App() {
           )}
 
           {activeTab === 'profile' && (
-            <div className="space-y-8 animate-in fade-in zoom-in duration-500">
-               <div className="flex justify-between items-center mb-8">
-                 <h1 className="text-4xl font-extrabold text-white drop-shadow-md">الملف الشخصي</h1>
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-between items-center mb-6">
+                 <h1 className="text-2xl font-extrabold text-white">الملف الشخصي</h1>
                </div>
 
-               <div className="glass-panel p-10 rounded-[2.5rem] max-w-3xl mx-auto">
-                 <div className="flex items-center gap-6 mb-10 pb-10 border-b border-white/5">
-                   <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-24 h-24 rounded-full border-4 border-white/10 shadow-xl" alt="Avatar" />
-                   <div>
-                     <h2 className="text-2xl font-bold text-white">{user?.displayName || 'User'}</h2>
-                     <p className="text-zinc-400 mt-1 flex items-center gap-2">
-                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                       متصل
-                     </p>
+               <div className="glass-panel p-8 rounded-2xl max-w-2xl ml-auto mr-0">
+                 <div className="flex items-center justify-end gap-4 mb-8 pb-8 border-b border-white/5">
+                   <div className="text-right">
+                     <h2 className="text-lg font-bold text-white">{user?.displayName || 'koz'}</h2>
+                     <p className="text-zinc-500 text-xs mt-0.5">مشعل</p>
                    </div>
+                   <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-14 h-14 rounded-full border border-white/10 grayscale" alt="Avatar" />
                  </div>
 
-                 <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); setToast({type: 'success', message: 'تم حفظ الملف الشخصي بنجاح!'}); }}>
-                   <div>
-                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2">اسم العرض</label>
-                     <input type="text" defaultValue={user?.displayName || 'User'} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors" dir="rtl" />
-                     <p className="text-[11px] text-zinc-500 mt-2 ml-2">يظهر في جميع الأماكن العامة في الموقع</p>
+                 <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); setToast({type: 'success', message: 'تم حفظ الملف الشخصي بنجاح!'}); }}>
+                   <div className="text-right">
+                     <label className="block text-[11px] font-bold text-zinc-500 mb-2">اسم العرض</label>
+                     <input type="text" defaultValue={user?.displayName || 'koz'} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors text-right text-sm" dir="rtl" />
+                     <p className="text-[10px] text-zinc-600 mt-2">يظهر في جميع الأماكن العامة في الموقع</p>
                    </div>
                    
-                   <div>
-                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2">رابط الصورة المخصصة</label>
-                     <input type="url" defaultValue={user?.photoURL || ''} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors text-left" dir="ltr" />
+                   <div className="text-right">
+                     <label className="block text-[11px] font-bold text-zinc-500 mb-2">رابط الصورة المخصصة</label>
+                     <input type="url" defaultValue={user?.photoURL || ''} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors text-left text-xs" dir="ltr" />
                    </div>
 
-                   <div>
-                     <label className="block text-sm font-bold text-zinc-400 mb-3 ml-2 flex items-center gap-2">النبذة <span className="text-xs font-normal text-zinc-600">(الحد الأقصى 200 حرف)</span></label>
-                     <textarea rows={4} defaultValue={user?.displayName || 'متصل'} className="w-full bg-[#05080f]/80 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-blue-500 focus:bg-[#05080f] transition-colors custom-scrollbar" dir="rtl"></textarea>
-                     <p className="text-[11px] text-zinc-500 mt-2 ml-2">4/200</p>
+                   <div className="text-right">
+                     <div className="flex items-center justify-end gap-2 mb-2">
+                       <span className="text-[10px] font-normal text-zinc-600">(الحد الأقصى 200 حرف)</span>
+                       <label className="text-[11px] font-bold text-zinc-500 block">النبذة</label>
+                     </div>
+                     <textarea rows={4} defaultValue={user?.displayName || 'مشعل'} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors custom-scrollbar text-right text-sm" dir="rtl"></textarea>
+                     <p className="text-[10px] text-zinc-600 mt-2 text-left">4/200</p>
                    </div>
 
-                   <div className="pt-6 flex justify-end">
-                     <button type="submit" className="bg-white text-black hover:bg-zinc-200 font-bold py-3.5 px-10 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                   <div className="pt-2 flex justify-end">
+                     <button type="submit" className="bg-white text-black hover:bg-zinc-200 font-bold py-2.5 px-6 rounded-lg transition-all text-sm">
                        حفظ الملف الشخصي
                      </button>
                    </div>
@@ -3913,10 +3923,10 @@ export default function App() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowAdmin(true)}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(239,68,68,0.4)] border border-red-400/30 hover:shadow-[0_8px_35px_rgba(239,68,68,0.6)] transition-shadow"
+            className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transition-shadow"
             title="لوحة التحكم"
           >
-            <LayoutDashboard className="w-5 h-5" />
+            <LayoutDashboard className="w-4 h-4" />
           </motion.button>
         )}
         {isAdminUser && (
@@ -3926,10 +3936,10 @@ export default function App() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowKeyManager(true)}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(16,185,129,0.4)] border border-emerald-400/30 hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-shadow"
+            className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg transition-shadow"
             title="إدارة المفاتيح"
           >
-            <Key className="w-5 h-5" />
+            <Key className="w-4 h-4" />
           </motion.button>
         )}
       </div>
