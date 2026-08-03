@@ -3731,12 +3731,12 @@ export default function App() {
                  {/* Main Overview Area (Right visually in LTR flex) */}
                  <div className="flex-1 space-y-6 w-full">
                    {/* Welcome Banner */}
-                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-start gap-4">
-                     <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-14 h-14 rounded-full grayscale" />
-                     <div className="text-right flex-1 pr-4 border-r border-white/5">
+                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-end gap-4">
+                     <div className="text-right">
                        <h2 className="text-2xl font-bold mb-1 text-white">مرحباً بعودتك، {user?.displayName || 'المستخدم'}!</h2>
                        <p className="text-zinc-500 text-sm">لديك <span className="text-white">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
                      </div>
+                     <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-14 h-14 rounded-full grayscale" />
                    </div>
 
                    {/* Stats Grid */}
