@@ -3221,7 +3221,7 @@ function FortniteHackGuide({ onClose }: { onClose: () => void }) {
   );
 }
 
-function MaintenanceScreen() {
+function MaintenanceScreen({ onAdminLogin }: { onAdminLogin?: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] bg-[#09090b] text-white flex flex-col items-center justify-center p-6 text-center overflow-hidden">
       {/* Background Effects */}
@@ -3230,6 +3230,17 @@ function MaintenanceScreen() {
       
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
+      {/* Admin Login Button on Maintenance Screen */}
+      {onAdminLogin && (
+        <button 
+          onClick={onAdminLogin}
+          className="absolute top-6 left-6 text-zinc-400 hover:text-white flex items-center gap-2 text-xs font-bold bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-xl transition-all z-50 border border-white/10 shadow-lg"
+        >
+          <Shield className="w-4 h-4 text-orange-400" />
+          <span>دخول الأدمن</span>
+        </button>
+      )}
 
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
@@ -3266,15 +3277,6 @@ function MaintenanceScreen() {
             <MessageCircle className="w-6 h-6" />
             تواصل معنا عبر الديسكورد
           </motion.a>
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => toggleMaintenanceMode(true)} 
-            className="bg-orange-600 hover:bg-orange-500 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg"
-          >
-            <Wrench className="w-6 h-6" />
-            إيقاف وضع الصيانة
-          </motion.button>
         </div>
       </motion.div>
     </div>
@@ -3296,7 +3298,7 @@ export default function App() {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showKeyManager, setShowKeyManager] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(true);
+  const [isAdminUser, setIsAdminUser] = useState(() => localStorage.getItem('t3n_admin_unlocked') === 'true');
   const [isBanned, setIsBanned] = useState(false);
   const [banReason, setBanReason] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(() => {

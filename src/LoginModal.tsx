@@ -45,7 +45,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
         </div>
 
         <div className="space-y-4 relative z-10">
-          {/* Discord Button Only */}
+          {/* Discord Button */}
           <button disabled={loading} onClick={handleDiscordLogin} className="w-full flex items-center justify-center gap-3 p-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-2xl font-bold transition-all shadow-[0_0_20px_rgba(88,101,242,0.3)]">
             {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
               <>
@@ -56,6 +56,32 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
               </>
             )}
           </button>
+
+          {/* Admin Passcode Quick Login */}
+          <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
+            <span className="text-xs text-zinc-500 font-bold text-center">دخول الأدمن السريع</span>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const input = form.elements.namedItem('passcode') as HTMLInputElement;
+              if (input && (input.value === 't3n88' || input.value === '8888' || input.value === 'admin')) {
+                localStorage.setItem('t3n_admin_unlocked', 'true');
+                window.location.reload();
+              } else {
+                alert('كلمة مرور الأدمن غير صحيحة');
+              }
+            }} className="flex gap-2">
+              <input 
+                name="passcode" 
+                type="password" 
+                placeholder="رمز دخول الأدمن" 
+                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 text-center"
+              />
+              <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">
+                دخول
+              </button>
+            </form>
+          </div>
         </div>
       </motion.div>
     </div>
