@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, OAuthProvider, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, deleteDoc, increment, onSnapshot, runTransaction } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB9mFTUF1_mBzTl3VvxNq5G-mdhrJvzI0A",
@@ -240,9 +240,9 @@ export function isValidKeyFormat(value: string): boolean {
   return /^T3N-[A-Za-z0-9]{6}-[A-Za-z0-9]{6}$/.test(value.trim());
 }
 
-export async function createKeys(count: number, productType: 'fortnite' | 'superstar' | 'fortnite-hack'): Promise<string[]> {
+export async function createKeys(count: number, productType: string): Promise<string[]> {
   const created: string[] = [];
-  const now = new Date().toISOString();
+  const now = new Date().toISOString(); // Strict UTC ISO 8601 Timestamp
   for (let i = 0; i < Math.min(count, 100); i++) {
     let keyId = generateKeyId();
     let exists = true;
@@ -251,40 +251,91 @@ export async function createKeys(count: number, productType: 'fortnite' | 'super
       if (!snap.exists()) { exists = false; } else { keyId = generateKeyId(); }
     }
     await setDoc(doc(db, "keys", keyId), {
-      keyId, productType, status: 'unused', createdAt: now,
-      activatedAt: null, usedByUid: null, usedByEmail: null,
-      usedByName: null, usedByPhoto: null, usedByProvider: null
+      keyId, 
+      productType, 
+      status: 'unused', 
+      createdAt: now,
+      activatedAt: null, 
+      usedByUid: null, 
+      usedByEmail: null,
+      usedByName: null, 
+      usedByPhoto: null, 
+      usedByProvider: null
     });
     created.push(keyId);
   }
   return created;
 }
 
-export async function activateKey(keyId: string, uid: string, email: string, userData?: { displayName?: string; photoURL?: string; provider?: string }): Promise<{ success: boolean; error?: string; productType?: string; activatedProducts?: string[] }> {
+export async function activateKey(
+  keyId: string, 
+  uid: string, 
+  email: string, 
+  userData?: { displayName?: string; photoURL?: string; provider?: string }
+): Promise<{ success: boolean; error?: string; productType?: string; activatedProducts?: string[] }> {
   const cleaned = keyId.trim();
   if (!isValidKeyFormat(cleaned)) {
     return { success: false, error: 'صيغة المفتاح غير صحيحة. الصيغة الصحيحة: T3N-XXXXXX-XXXXXX' };
   }
   
   try {
-    const response = await fetch('/api/activate-key', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        keyId: cleaned,
-        uid,
-        email,
-        userData
-      })
+    const keyRef = doc(db, "keys", cleaned);
+    const userRef = doc(db, "users", uid);
+
+    const result = await runTransaction(db, async (transaction) => {
+      const keyDoc = await transaction.get(keyRef);
+      if (!keyDoc.exists()) {
+        throw new Error('KEY_NOT_FOUND');
+      }
+
+      const keyData = keyDoc.data();
+      if (keyData.status !== 'unused') {
+        if (keyData.status === 'active') throw new Error('KEY_ALREADY_USED');
+        if (keyData.status === 'banned') throw new Error('KEY_BANNED');
+        if (keyData.status === 'frozen') throw new Error('KEY_FROZEN');
+        throw new Error('KEY_UNAVAILABLE');
+      }
+
+      const userDoc = await transaction.get(userRef);
+      const currentProducts = userDoc.exists() ? (userDoc.data().activatedProducts || []) : [];
+      const currentKeys = userDoc.exists() ? (userDoc.data().activatedKeys || []) : [];
+      
+      const pt = keyData.productType || 'superstar';
+      const updatedProducts = Array.from(new Set([...currentProducts, pt]));
+      const updatedKeys = Array.from(new Set([...currentKeys, cleaned]));
+
+      const activationTime = new Date().toISOString(); // Precise exact timestamp to the second
+
+      // 1. Lock and Update Key
+      transaction.update(keyRef, {
+        status: 'active',
+        activatedAt: activationTime,
+        usedByUid: uid,
+        usedByEmail: email,
+        usedByName: userData?.displayName || null,
+        usedByPhoto: userData?.photoURL || null,
+        usedByProvider: userData?.provider || null
+      });
+
+      // 2. Update User
+      transaction.set(userRef, {
+        isVIP: true,
+        activatedProducts: updatedProducts,
+        activatedKeys: updatedKeys
+      }, { merge: true });
+
+      return { productType: pt, activatedProducts: updatedProducts };
     });
 
-    const data = await response.json();
-    return data;
+    return { success: true, ...result };
   } catch (err: any) {
-    console.error('activateKey error:', err);
-    return { success: false, error: 'فشل الاتصال بالسيرفر. تأكد من اتصالك بالإنترنت.' };
+    console.error('activateKey transaction error:', err);
+    if (err.message === 'KEY_NOT_FOUND') return { success: false, error: 'المفتاح غير موجود.' };
+    if (err.message === 'KEY_ALREADY_USED') return { success: false, error: 'هذا المفتاح مستخدم بالفعل.' };
+    if (err.message === 'KEY_BANNED') return { success: false, error: 'هذا المفتاح محظور.' };
+    if (err.message === 'KEY_FROZEN') return { success: false, error: 'هذا المفتاح مجمد حالياً.' };
+    
+    return { success: false, error: 'فشل التفعيل. يرجى المحاولة مرة أخرى لاحقاً.' };
   }
 }
 
