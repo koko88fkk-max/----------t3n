@@ -9,7 +9,7 @@ import LoginModal from './LoginModal';
 const LOGO_URL = "/logo.png";
 const STORE_URL = "https://salla.sa/t3nn";
 const DISCORD_URL = "https://discord.gg/tjMWEccj3J";
-const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=https%3A%2F%2Ft3n-2a2i.vercel.app%2F&response_type=token&scope=identify%20guilds.join";
+const getDiscordOAuthUrl = () => `https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=${encodeURIComponent(window.location.origin + "/")}&response_type=token&scope=identify%20guilds.join`;
 
 // Capture Discord OAuth access_token from URL hash IMMEDIATELY on page load
 // Discord implicit grant returns: /#access_token=xxx&token_type=Bearer&...
