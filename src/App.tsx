@@ -3529,7 +3529,20 @@ export default function App() {
 
   // Show Maintenance Screen if active and user is not admin
   if (isMaintenance && !isAdminUser && !authLoading) {
-    return <MaintenanceScreen />;
+    return (
+      <MaintenanceScreen 
+        onAdminLogin={() => {
+          const code = prompt("أدخل رمز الإدارة لفتح الموقع:");
+          if (code === "MAXbdr1420@@!!##") {
+            localStorage.setItem("t3n_admin_unlocked", "true");
+            setIsAdminUser(true);
+            setToast({ type: 'success', message: 'تم تفعيل وضع الإدارة بنجاح!' });
+          } else if (code) {
+            alert("الرمز غير صحيح!");
+          }
+        }} 
+      />
+    );
   }
 
   return (
