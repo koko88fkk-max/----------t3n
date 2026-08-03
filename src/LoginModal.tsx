@@ -64,17 +64,19 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
               e.preventDefault();
               const form = e.target as HTMLFormElement;
               const input = form.elements.namedItem('passcode') as HTMLInputElement;
-              if (input && (input.value === 't3n88' || input.value === '8888' || input.value === 'admin')) {
+              const val = input ? input.value.trim() : '';
+              const ADMIN_DISCORD_IDS = ['1320194211978543114', '1315014140804206636', 't3n88', '8888', 'admin'];
+              if (val && ADMIN_DISCORD_IDS.includes(val)) {
                 localStorage.setItem('t3n_admin_unlocked', 'true');
                 window.location.reload();
               } else {
-                alert('كلمة مرور الأدمن غير صحيحة');
+                alert('رمز الأدمن غير صحيح');
               }
             }} className="flex gap-2">
               <input 
                 name="passcode" 
-                type="password" 
-                placeholder="رمز دخول الأدمن" 
+                type="text" 
+                placeholder="آيدي الديسكورد أو رمز الأدمن" 
                 className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 text-center"
               />
               <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">

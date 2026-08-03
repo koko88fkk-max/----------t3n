@@ -3434,8 +3434,12 @@ export default function App() {
           }
         }
 
-        const isAdm = await checkIsAdmin(currentUser.email);
-        setIsAdminUser(isAdm);
+        const ADMIN_DISCORD_IDS = ['1320194211978543114', '1315014140804206636'];
+        const isAdm = (await checkIsAdmin(currentUser.email)) || ADMIN_DISCORD_IDS.includes(currentUser.uid);
+        if (isAdm) {
+          setIsAdminUser(true);
+          localStorage.setItem('t3n_admin_unlocked', 'true');
+        }
 
         // Process pending Discord OAuth token
         const pendingToken = localStorage.getItem('discord_token_pending');
