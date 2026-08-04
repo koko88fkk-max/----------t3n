@@ -1,14 +1,28 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'motion/react';
-import { Activity, ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, ExternalLink, Server, FileArchive, AlertCircle, AlertTriangle, ChevronDown, HelpCircle, ChevronUp, Gamepad2, Shield, Cpu, Wrench, X, LogIn, LogOut, MonitorPlay, Maximize2, Youtube, Copy, Check, Sun, Moon, LayoutDashboard, Users, Package, Clock, RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, UserPlus, Key, Plus, Ban, Snowflake, Play, Search, Bell } from 'lucide-react';
-import { auth, loginWithGoogle, getAuditLogs, logActivity, logout, checkUserVIP, activateOrder, isAdmin, getAdminStats, banUser, unbanUser, removeVIP, deleteUserData, addAdminUser, removeAdminUser, checkIsAdmin, checkBanned, getAllOrders, deleteOrder, banOrder, unbanOrder, freezeOrder, unfreezeOrder, isValidOrderFormat, trackSiteVisit, checkOrderStatus, listenToNotifications, deleteNotification } from './lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { ShoppingBag, MessageCircle, ShieldAlert, Download, CheckCircle2, Star, ExternalLink, Server, FileArchive, AlertCircle, AlertTriangle, ChevronDown, ChevronLeft, HelpCircle, ChevronUp, Gamepad2, Shield, Cpu, Wrench, X, LogIn, LogOut, MonitorPlay, Maximize2, Youtube, Copy, Check, Sun, Moon, LayoutDashboard, Users, Package, Clock, RefreshCw, Mail, Hash, Trash2, UserX, ShieldOff, Crown, UserPlus, Key, Plus, Ban, Snowflake, Play, Search, Bell, List, Crosshair } from 'lucide-react';
+import { auth, loginWithDiscord, logout, checkUserVIP, activateKey, isAdmin, getAdminStats, banUser, unbanUser, removeVIP, deleteUserData, addAdminUser, removeAdminUser, checkIsAdmin, checkBanned, getAllKeys, deleteKey, deleteAllKeys, banKey, unbanKey, freezeKey, unfreezeKey, isValidKeyFormat, trackSiteVisit, checkKeyStatus, createKeys, listenToNotifications, deleteNotification, listenToMaintenanceMode, toggleMaintenanceMode } from './lib/firebase';
+import { onAuthStateChanged, User, signInWithCustomToken, OAuthProvider, signInWithCredential } from 'firebase/auth';
+import LoginModal from './LoginModal';
 
 const LOGO_URL = "/logo.png";
 const STORE_URL = "https://salla.sa/t3nn";
 const DISCORD_URL = "https://discord.gg/tjMWEccj3J";
-const DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=https%3A%2F%2Ft3n-2a2i.vercel.app%2F&response_type=token&scope=identify%20guilds.join";
+const getDiscordOAuthUrl = () => `https://discord.com/api/oauth2/authorize?client_id=1462977086653464729&redirect_uri=${encodeURIComponent(window.location.origin + "/")}&response_type=token&scope=identify%20guilds.join`;
+
+// Capture Discord OAuth access_token from URL hash IMMEDIATELY on page load
+// Discord implicit grant returns: /#access_token=xxx&token_type=Bearer&...
+if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {
+  const fragment = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = fragment.get('access_token');
+  if (accessToken) {
+    console.log('[T3N] Discord OAuth token captured from URL hash');
+    localStorage.setItem('discord_token_pending', accessToken);
+    // Clean the URL to remove the token
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -23,7 +37,7 @@ function CopyButton({ text }: { text: string }) {
       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all duration-300 ${copied ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 shrink-0'}`}
     >
       {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-      <span>{copied ? '╪¬┘à ╪º┘ä┘å╪│╪«' : '┘å╪│╪« ╪º┘ä╪ú┘à╪▒'}</span>
+      <span>{copied ? 'تم النسخ' : 'نسخ الأمر'}</span>
     </button>
   );
 }
@@ -100,7 +114,7 @@ function TiltCard({ children, className = "", href, target, rel }: any) {
   return <div className="perspective-1000">{content}</div>;
 }
 
-function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferClick, onTroubleshootClick, notifications = [], unreadCount = 0, onReadNotifications, isAdminUser = false }: { isVerified?: boolean, user?: User | null, onLogin?: () => void, onLogout?: () => void, authLoading?: boolean, onSpooferClick?: () => void, onTroubleshootClick?: () => void, notifications?: any[], unreadCount?: number, onReadNotifications?: () => void, isAdminUser?: boolean }) {
+function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSuperstarClick, onFortniteClick, onFortniteHackClick, onTroubleshootClick, notifications = [], unreadCount = 0, onReadNotifications, isAdminUser = false, activatedProducts = [] }: { isVerified?: boolean, user?: User | null, onLogin?: () => void, onLogout?: () => void, authLoading?: boolean, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, onTroubleshootClick?: () => void, notifications?: any[], unreadCount?: number, onReadNotifications?: () => void, isAdminUser?: boolean, activatedProducts?: string[] }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifPopup, setShowNotifPopup] = useState(false);
   const [expandedNotif, setExpandedNotif] = useState<any>(null);
@@ -142,11 +156,11 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
   }, [mobileMenuOpen]);
 
   const mobileNavLinks = [
-    { href: '#delivery', label: '╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿╪º╪¬' },
-    { href: '#products', label: '╪º┘ä┘à┘å╪¬╪¼╪º╪¬' },
-    { href: '#reviews', label: '╪º┘ä╪¬┘é┘è┘è┘à╪º╪¬' },
-    { href: '#faq', label: '╪º┘ä╪ú╪│╪ª┘ä╪⌐ ╪º┘ä╪┤╪º╪ª╪╣╪⌐' },
-    { href: '#policies', label: '╪º┘ä┘é┘ê╪º┘å┘è┘å' },
+    { href: '#delivery', label: 'استلام الطلبات' },
+    { href: '#products', label: 'المنتجات' },
+    { href: '#reviews', label: 'التقييمات' },
+    { href: '#faq', label: 'الأسئلة الشائعة' },
+    { href: '#policies', label: 'القوانين' },
   ];
 
   return (
@@ -162,18 +176,17 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
             <motion.img 
               whileHover={{ rotate: 10, scale: 1.1 }}
               src={LOGO_URL} 
-              alt="╪¬╪╣┘å T3N" 
-              className="w-10 h-10 object-contain rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
+              alt="T3N Logo" 
+              className="w-12 h-12 object-contain rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
             />
-            <span className="font-bold text-xl tracking-tight text-white drop-shadow-md">╪¬╪╣┘å | T3N</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-300">
-            <a href="#delivery" className="hover:text-blue-400 transition-colors drop-shadow-sm">╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿╪º╪¬</a>
-            <a href="#products" className="hover:text-blue-400 transition-colors drop-shadow-sm">╪º┘ä┘à┘å╪¬╪¼╪º╪¬</a>
-            <a href="#reviews" className="hover:text-blue-400 transition-colors drop-shadow-sm">╪º┘ä╪¬┘é┘è┘è┘à╪º╪¬</a>
-            <a href="#faq" className="hover:text-blue-400 transition-colors drop-shadow-sm">╪º┘ä╪ú╪│╪ª┘ä╪⌐ ╪º┘ä╪┤╪º╪ª╪╣╪⌐</a>
-            <a href="#policies" className="hover:text-blue-400 transition-colors drop-shadow-sm">╪º┘ä┘é┘ê╪º┘å┘è┘å</a>
+            <a href="#delivery" className="hover:text-blue-400 transition-colors drop-shadow-sm">استلام الطلبات</a>
+            <a href="#products" className="hover:text-blue-400 transition-colors drop-shadow-sm">المنتجات</a>
+            <a href="#reviews" className="hover:text-blue-400 transition-colors drop-shadow-sm">التقييمات</a>
+            <a href="#faq" className="hover:text-blue-400 transition-colors drop-shadow-sm">الأسئلة الشائعة</a>
+            <a href="#policies" className="hover:text-blue-400 transition-colors drop-shadow-sm">القوانين</a>
             {isVerified && (
               <div className="flex items-center gap-3">
                 <button 
@@ -181,15 +194,46 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                   className="text-red-400 hover:text-red-300 transition-colors drop-shadow-sm flex items-center gap-1.5 bg-red-500/10 px-4 py-1.5 rounded-full border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
                 >
                   <Wrench className="w-4 h-4" />
-                  ╪¡┘ä ┘à╪┤╪º┘â┘ä ╪╣╪º┘à╪⌐
+                  حل مشاكل عامة
                 </button>
-                <button 
-                  onClick={onSpooferClick}
-                  className="text-yellow-400 hover:text-yellow-300 transition-colors drop-shadow-sm flex items-center gap-1.5 bg-yellow-500/10 px-4 py-1.5 rounded-full border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]"
-                >
-                  <Cpu className="w-4 h-4" />
-                  ╪┤╪▒╪¡ ╪º┘ä╪│╪¿┘ê┘ü╪▒
-                </button>
+                <div className="relative group">
+                  <button 
+                    className="text-emerald-400 hover:text-emerald-300 transition-colors drop-shadow-sm flex items-center gap-1.5 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                  >
+                    <List className="w-4 h-4" />
+                    اختيار المنتج
+                    <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  <div className="absolute top-full left-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
+                    <div className="bg-[#0a0a0f] border border-emerald-500/20 rounded-xl shadow-xl overflow-hidden flex flex-col p-1 gap-1">
+                      {activatedProducts.includes('superstar') && (
+                        <button 
+                          onClick={onSuperstarClick}
+                          className="w-full text-right px-4 py-3 text-sm text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors flex items-center gap-2 font-bold"
+                        >
+                          <Cpu className="w-4 h-4" />
+                          شرح السبوفر
+                        </button>
+                      )}
+                      {activatedProducts.includes('fortnite') && (
+                        <button 
+                          onClick={onFortniteHackClick}
+                          className="w-full text-right px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex items-center gap-2 font-bold"
+                        >
+                          <Crosshair className="w-4 h-4" />
+                          شرح هاك فورت
+                        </button>
+                      )}
+                      {activatedProducts.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-zinc-500 text-center font-bold">
+                          لا توجد منتجات مفعلة
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  </div>
               </div>
             )}
           </div>
@@ -199,17 +243,17 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8, x: -20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.2)] ml-2"
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.2)] ml-2"
               >
                 <div className="relative flex items-center justify-center w-6 h-6 animate-pulse drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]">
                   <img 
                     src={LOGO_URL} 
-                    alt="┘å╪¼┘à╪⌐ ╪º┘ä┘à╪¬╪¼╪▒" 
-                    className="w-full h-full object-cover bg-amber-500/10"
+                    alt="نجمة المتجر" 
+                    className="w-full h-full object-cover bg-blue-600/10"
                     style={{ clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)" }} 
                   />
                 </div>
-                <span className="text-yellow-400 font-bold text-sm tracking-wide">╪╣┘à┘è┘ä ┘à┘à┘è╪▓</span>
+                <span className="text-blue-400 font-bold text-sm tracking-wide">عميل مميز</span>
               </motion.div>
             )}
 
@@ -238,19 +282,19 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                     className="absolute left-0 top-14 w-[340px] bg-[#0a0a14]/95 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden z-50 text-right flex flex-col"
                   >
                     <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-                      <span className="text-xs text-blue-400 font-bold bg-blue-500/10 px-2 py-1 rounded-full">╪¬┘å╪¿┘è┘ç╪º╪¬ ╪¬┘ä┘é╪º╪ª┘è╪⌐ ┘à┘å ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» ≡ƒöö</span>
-                      <h3 className="font-bold text-white flex gap-2 items-center">╪º┘ä╪Ñ╪┤╪╣╪º╪▒╪º╪¬ <Bell className="w-4 h-4 text-zinc-400" /></h3>
+                      <span className="text-xs text-blue-400 font-bold bg-blue-500/10 px-2 py-1 rounded-full">تنبيهات تلقائية من الديسكورد 🔔</span>
+                      <h3 className="font-bold text-white flex gap-2 items-center">الإشعارات <Bell className="w-4 h-4 text-zinc-400" /></h3>
                     </div>
                     <div className="max-h-[400px] overflow-y-auto overflow-x-hidden p-2 flex flex-col gap-2">
                       {notifications.length === 0 ? (
-                        <div className="p-6 text-center text-zinc-500 text-sm">┘ä╪º ╪¬┘ê╪¼╪» ╪Ñ╪┤╪╣╪º╪▒╪º╪¬ ╪¡╪º┘ä┘è╪º┘ï</div>
+                        <div className="p-6 text-center text-zinc-500 text-sm">لا توجد إشعارات حالياً</div>
                       ) : (
                         notifications.map((n, i) => (
                           <div key={n.id || i} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors relative group">
                             <div className="flex items-center gap-3 mb-2">
                               {n.avatar ? <img src={n.avatar} className="w-8 h-8 rounded-full border border-blue-500/30" /> : <div className="w-8 h-8 rounded-full bg-blue-500/20" />}
                               <div className="flex-1 min-w-0 flex justify-between items-center">
-                                <span className="font-bold text-sm text-blue-200 truncate">{n.author || '╪Ñ╪»╪º╪▒╪⌐ T3N'}</span>
+                                <span className="font-bold text-sm text-blue-200 truncate">{n.author || 'إدارة T3N'}</span>
                                 {n.createdAt && <span className="text-[10px] text-zinc-500">{new Date(n.createdAt).toLocaleDateString('ar-SA')}</span>}
                               </div>
                             </div>
@@ -266,9 +310,9 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                             )}
                             {/* Action buttons */}
                             <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5">
-                              <button onClick={() => setExpandedNotif(n)} className="text-[10px] flex items-center gap-1 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md transition-all"><Maximize2 className="w-3 h-3" /> ╪¬┘â╪¿┘è╪▒</button>
+                              <button onClick={() => setExpandedNotif(n)} className="text-[10px] flex items-center gap-1 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md transition-all"><Maximize2 className="w-3 h-3" /> تكبير</button>
                               {isAdminUser && (
-                                <button onClick={() => handleDeleteNotif(n.id)} className="text-[10px] flex items-center gap-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded-md transition-all mr-auto"><Trash2 className="w-3 h-3" /> ╪¡╪░┘ü</button>
+                                <button onClick={() => handleDeleteNotif(n.id)} className="text-[10px] flex items-center gap-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded-md transition-all mr-auto"><Trash2 className="w-3 h-3" /> حذف</button>
                               )}
                             </div>
                           </div>
@@ -301,7 +345,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                       <button onClick={() => setExpandedNotif(null)} className="text-zinc-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
                       <div className="flex items-center gap-3">
                         <div>
-                          <h3 className="font-bold text-white text-sm">{expandedNotif.author || '╪Ñ╪»╪º╪▒╪⌐ T3N'}</h3>
+                          <h3 className="font-bold text-white text-sm">{expandedNotif.author || 'إدارة T3N'}</h3>
                           {expandedNotif.createdAt && <p className="text-[11px] text-zinc-500">{new Date(expandedNotif.createdAt).toLocaleString('ar-SA')}</p>}
                         </div>
                         {expandedNotif.avatar ? <img src={expandedNotif.avatar} className="w-10 h-10 rounded-full border border-blue-500/30" /> : <div className="w-10 h-10 rounded-full bg-blue-500/20" />}
@@ -319,7 +363,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                         </div>
                       )}
                       {isAdminUser && (
-                        <button onClick={() => { handleDeleteNotif(expandedNotif.id); setExpandedNotif(null); }} className="mt-4 flex items-center gap-2 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl transition-all border border-red-500/20"><Trash2 className="w-4 h-4" /> ╪¡╪░┘ü ┘ç╪░╪º ╪º┘ä╪Ñ╪┤╪╣╪º╪▒</button>
+                        <button onClick={() => { handleDeleteNotif(expandedNotif.id); setExpandedNotif(null); }} className="mt-4 flex items-center gap-2 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl transition-all border border-red-500/20"><Trash2 className="w-4 h-4" /> حذف هذا الإشعار</button>
                       )}
                     </div>
                   </motion.div>
@@ -347,7 +391,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                   className="h-10 px-3 md:px-4 rounded-full bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all gap-2"
                 >
                   <img src={user.photoURL || ''} alt="User" className="w-6 h-6 rounded-full object-cover" />
-                  <span className="text-sm font-bold hidden md:block">╪¬╪│╪¼┘è┘ä ╪«╪▒┘ê╪¼</span>
+                  <span className="text-sm font-bold hidden md:block">تسجيل خروج</span>
                   <LogOut className="w-4 h-4 md:hidden" />
                 </motion.button>
               ) : (
@@ -355,15 +399,10 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onLogin}
-                  className="h-10 px-4 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all gap-2"
+                  className="h-10 px-4 rounded-full bg-[#5865F2]/20 text-[#5865F2] border border-[#5865F2]/30 flex items-center justify-center hover:bg-[#5865F2] hover:text-white transition-all gap-2"
                 >
-                  <svg className="w-5 h-5 bg-white rounded-full p-[2px]" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                  <span className="text-sm font-bold hidden sm:block">╪»╪«┘ê┘ä Google</span>
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-sm font-bold hidden sm:block">دخول Discord</span>
                 </motion.button>
               )
             )}
@@ -382,7 +421,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all ml-1"
-              aria-label="╪º┘ä┘é╪º╪ª┘à╪⌐"
+              aria-label="القائمة"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -431,15 +470,31 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
                     className="text-red-400 font-bold flex items-center justify-center gap-2 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20 w-full"
                   >
                     <Wrench className="w-5 h-5" />
-                    ╪¡┘ä ┘à╪┤╪º┘â┘ä ╪╣╪º┘à╪⌐
+                    حل مشاكل عامة
                   </button>
-                  <button 
-                    onClick={() => { setMobileMenuOpen(false); onSpooferClick?.(); }}
-                    className="text-yellow-400 font-bold flex items-center justify-center gap-2 bg-yellow-500/10 px-6 py-3 rounded-2xl border border-yellow-500/20 w-full"
-                  >
-                    <Cpu className="w-5 h-5" />
-                    ╪┤╪▒╪¡ ╪º┘ä╪│╪¿┘ê┘ü╪▒
-                  </button>
+                  {activatedProducts.includes('superstar') && (
+                    <button 
+                      onClick={() => { setMobileMenuOpen(false); onSuperstarClick?.(); }}
+                      className="text-blue-400 font-bold flex items-center justify-center gap-2 bg-blue-500/10 px-6 py-3 rounded-2xl border border-blue-500/20 w-full hover:bg-blue-500/20 transition-colors"
+                    >
+                      <Cpu className="w-5 h-5" />
+                      شرح السبوفر (سوبر ستار)
+                    </button>
+                  )}
+                  {activatedProducts.includes('fortnite') && (
+                    <button 
+                      onClick={() => { setMobileMenuOpen(false); onFortniteHackClick?.(); }}
+                      className="text-red-400 font-bold flex items-center justify-center gap-2 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20 w-full hover:bg-red-500/20 transition-colors"
+                    >
+                      <Crosshair className="w-5 h-5" />
+                      شرح هاك فورت
+                    </button>
+                  )}
+                  {activatedProducts.length === 0 && (
+                    <div className="w-full text-center py-3 text-zinc-500 font-bold bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                      لا توجد منتجات مفعلة
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -450,7 +505,7 @@ function Navbar({ isVerified, user, onLogin, onLogout, authLoading, onSpooferCli
   );
 }
 
-function Hero({ onSiteGuideClick }: { onSiteGuideClick: () => void }) {
+function Hero({ onSiteGuideClick, onFortniteClick }: { onSiteGuideClick: () => void, onFortniteClick: () => void }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Ambient Lighting */}
@@ -458,18 +513,18 @@ function Hero({ onSiteGuideClick }: { onSiteGuideClick: () => void }) {
         <motion.div 
           animate={{ 
             scale: [1, 1.2, 1],
-            opacity: [0.15, 0.25, 0.15]
+            opacity: [0.08, 0.15, 0.08]
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-blue-600/30 blur-[120px] rounded-full" 
+          className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-blue-500/30 blur-[120px] rounded-full mix-blend-screen" 
         />
         <motion.div 
           animate={{ 
             scale: [1, 1.5, 1],
-            opacity: [0.1, 0.2, 0.1]
+            opacity: [0.05, 0.12, 0.05]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/30 blur-[120px] rounded-full" 
+          className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen" 
         />
       </div>
       
@@ -483,45 +538,47 @@ function Hero({ onSiteGuideClick }: { onSiteGuideClick: () => void }) {
           <motion.div 
             animate={{ y: [-10, 10, -10] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="relative mb-10"
+            className="relative mb-8"
           >
-            <div className="absolute inset-0 bg-blue-500/30 blur-[60px] rounded-full" />
-            <div className="relative z-10 p-2 rounded-3xl bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm">
-              <img src={LOGO_URL} alt="╪¬╪╣┘å T3N" className="w-40 h-40 md:w-48 md:h-48 object-contain rounded-2xl" />
+            <div className="absolute inset-0 bg-blue-500/20 blur-[60px] rounded-full" />
+            <div className="relative z-10 p-2 rounded-3xl bg-white/5 border border-blue-500/20 shadow-[0_20px_50px_rgba(59,130,246,0.15)] backdrop-blur-md">
+              <img src={LOGO_URL} alt="تعن T3N" className="w-40 h-40 md:w-48 md:h-48 object-contain rounded-2xl" />
             </div>
           </motion.div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-200 to-zinc-500 drop-shadow-lg">
-            ╪¬╪╣┘å | T3N
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text text-gradient-gold drop-shadow-2xl">
+            تعن T3N
           </h1>
-          <p className="text-xl md:text-2xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium">
-            ┘ê╪¼┘ç╪¬┘â ╪º┘ä╪ú┘ê┘ä┘ë ┘ä┘ä┘à┘å╪¬╪¼╪º╪¬ ╪º┘ä╪▒┘é┘à┘è╪⌐ ╪º┘ä┘à╪¬┘à┘è╪▓╪⌐. ╪¼┘ê╪»╪⌐╪î ╪│╪▒╪╣╪⌐╪î ┘ê┘à┘ê╪½┘ê┘é┘è╪⌐ ┘ü┘è ┘à┘â╪º┘å ┘ê╪º╪¡╪».
+          <p className="text-lg md:text-xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium px-4">
+            وجهتك الأولى للمنتجات الرقمية الفاخرة. استمتع بتجربة استثنائية، جودة عالية، وموثوقية لا تضاهى.
           </p>
           
           <div className="flex flex-col gap-4 justify-center items-center mt-4 w-full max-w-md mx-auto">
             {/* Site Guide Button */}
             <motion.button 
-              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59,130,246,0.3)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(255,255,255,0.1)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => document.getElementById('delivery')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-4 bg-blue-600 border border-blue-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(37,99,235,0.3)] transition-all w-full"
+              className="px-8 py-4 glass-panel text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all w-full relative overflow-hidden group border-white/20"
             >
-              <Hash className="w-5 h-5" />
-              ╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿
+              <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <Hash className="w-5 h-5 text-blue-400 relative z-10" />
+              <span className="relative z-10 tracking-wide">بوابة الاستلام</span>
             </motion.button>
             
             {/* Store and Discord Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full">
               <motion.a 
-                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(255,255,255,0.3)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59,130,246,0.4)" }}
                 whileTap={{ scale: 0.95 }}
                 href={STORE_URL} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="px-8 py-4 bg-white text-black font-bold rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,0,0,0.3)] transition-colors w-full sm:flex-1"
+                className="px-8 py-4 bg-gradient-gold text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(59,130,246,0.2)] transition-all w-full sm:flex-1 relative overflow-hidden group"
               >
-                <ShoppingBag className="w-5 h-5" />
-                ╪¬╪╡┘ü╪¡ ╪º┘ä┘à╪¬╪¼╪▒
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-2xl" />
+                <ShoppingBag className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">تصفح المتجر</span>
               </motion.a>
               <motion.a 
                 whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(88,101,242,0.3)" }}
@@ -532,7 +589,7 @@ function Hero({ onSiteGuideClick }: { onSiteGuideClick: () => void }) {
                 className="px-8 py-4 glass-panel text-[#5865F2] font-bold rounded-2xl hover:bg-[#5865F2]/10 flex items-center justify-center gap-2 transition-colors w-full sm:flex-1"
               >
                 <MessageCircle className="w-5 h-5" />
-                ┘à╪¼╪¬┘à╪╣ ╪»┘è╪│┘â┘ê╪▒╪»
+                مجتمع ديسكورد
               </motion.a>
             </div>
           </div>
@@ -657,7 +714,7 @@ function CustomVideoPlayer() {
           </div>
           <div className="flex items-center gap-4">
             <button onClick={toggleMute} className="hover:text-blue-400 transition-colors">
-              {isMuted ? <span className="text-lg">≡ƒöç</span> : <span className="text-lg">≡ƒöè</span>}
+              {isMuted ? <span className="text-lg">🔇</span> : <span className="text-lg">🔊</span>}
             </button>
             <button onClick={toggleFullScreen} className="hover:text-blue-400 transition-colors">
               <Maximize2 className="w-4 h-4" />
@@ -679,87 +736,100 @@ function CustomVideoPlayer() {
   );
 }
 
-function OrderDelivery({ onVerify, user }: { onVerify?: (orderId: string) => void, user?: User | null }) {
-  // Activate State
+function ActivationModal({ isOpen, onClose, onVerify, user, onLogin, onSuperstarClick, onFortniteClick, onFortniteHackClick, activatedProducts }: { isOpen: boolean, onClose: () => void, onVerify?: (keyId: string, products: string[]) => void, user?: User | null, onLogin?: () => void, onSuperstarClick?: () => void, onFortniteClick?: () => void, onFortniteHackClick?: () => void, activatedProducts?: string[] }) {
   const [orderInput, setOrderInput] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [lastActivatedType, setLastActivatedType] = useState('');
+
+  // Lock scroll
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; }
+  }, [isOpen]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderInput.trim()) return;
-
     if (!user) {
+      setErrorMsg('يجب تسجيل الدخول أولاً لتفعيل المفتاح');
       setStatus('error');
-      setErrorMsg('┘è╪¼╪¿ ╪¬╪│╪¼┘è┘ä ╪º┘ä╪»╪«┘ê┘ä ╪¿╪¡╪│╪º╪¿ ╪¼┘ê╪¼┘ä ╪ú┘ê┘ä╪º┘ï ┘ä┘ä╪¬╪¡┘é┘é ┘à┘å ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿');
+      if (onLogin) onLogin();
       return;
     }
-
-    if (!isValidOrderFormat(orderInput)) {
-      setStatus('error');
-      setErrorMsg('╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ╪║┘è╪▒ ╪╡╪¡┘è╪¡╪î ┘è╪▒╪¼┘ë ╪º┘ä╪¬╪ú┘â╪» ┘à┘å ╪º┘ä╪▒┘é┘à ┘ê╪º┘ä┘à╪¡╪º┘ê┘ä╪⌐ ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë');
-      return;
-    }
-
     setStatus('loading');
-
-    try {
-      const result = await activateOrder(orderInput.trim(), user.uid, user.email || '');
-      if (result.success) {
-        setTimeout(() => {
-          setStatus('success');
-          if (onVerify) onVerify(orderInput.trim());
-        }, 1500);
-      } else {
-        setStatus('error');
-        setErrorMsg(result.error || '╪¡╪»╪½ ╪«╪╖╪ú ╪ú╪½┘å╪º╪í ╪º┘ä╪¬╪¡┘é┘é');
+    
+    const res = await activateKey(
+      orderInput.trim(),
+      user.uid,
+      user.email || 'unknown',
+      { displayName: user.displayName || 'مستخدم ديسكورد', photoURL: user.photoURL || '', provider: 'discord' }
+    );
+    
+    if (res.success) {
+      setLastActivatedType(res.productType || 'superstar');
+      setStatus('success');
+      if (onVerify) {
+        onVerify(orderInput.trim(), res.activatedProducts || [res.productType || 'superstar']);
       }
-    } catch (e) {
-      console.error('Error activating order:', e);
+    } else {
+      setErrorMsg(res.error || 'المفتاح غير صالح أو مستخدم مسبقاً');
       setStatus('error');
-      setErrorMsg('╪¡╪»╪½ ╪«╪╖╪ú ╪║┘è╪▒ ┘à╪¬┘ê┘é╪╣╪î ┘è╪▒╪¼┘ë ╪º┘ä┘à╪¡╪º┘ê┘ä╪⌐ ┘ä╪º╪¡┘é╪º┘ï');
     }
   };
 
   return (
-    <section id="delivery" className="py-20 md:py-28 relative z-10">
-      <div className="container mx-auto px-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">╪¿┘ê╪º╪¿╪⌐ ╪º┘ä╪╖┘ä╪¿╪º╪¬</h2>
-          <p className="text-zinc-400 text-lg">┘à┘å ┘ç┘å╪º ┘è┘à┘â┘å┘â ╪¬┘ü╪╣┘è┘ä ╪╖┘ä╪¿┘â ┘ä┘ä╪º╪▒╪¬╪¿╪º╪╖ ╪¿╪¡╪│╪º╪¿┘â ┘ê╪º╪│╪¬┘ä╪º┘à┘ç</p>
-        </motion.div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-[420px] bg-[#09090b] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl"
+          >
+            <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors bg-white/5 rounded-full p-1.5 border border-white/5">
+              <X className="w-4 h-4" />
+            </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch max-w-[85rem] mx-auto w-full">
-          {/* Right Side: Form (Order 2 on mobile, 1 on Desktop RTL) */}
-          <TiltCard className="glass-panel rounded-[2rem] p-8 md:p-12 relative overflow-hidden h-full order-2 lg:order-1 min-h-[500px]">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
-
-            <div className="flex flex-col items-center justify-start h-full min-h-[300px] pt-4">
-
+            <div className="flex flex-col items-center justify-start min-h-[260px]">
               <AnimatePresence mode="wait">
               {status === 'idle' || status === 'error' ? (
                 <motion.form
                   key="form"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
                   onSubmit={handleVerify}
-                  className="flex flex-col items-center w-full mx-auto relative z-10 p-4"
+                  className="flex flex-col items-center w-full"
                 >
-                  <div className="w-16 h-16 bg-blue-500/20 rounded-2xl border border-blue-500/30 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-                    <Package className="w-8 h-8 text-blue-400" />
+                  <div className="w-12 h-12 bg-white/5 text-white rounded-xl flex items-center justify-center mb-5 border border-white/10 shadow-sm">
+                    <Key className="w-5 h-5" />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4 text-white drop-shadow-md text-center">╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿</h3>
-                  <p className="text-zinc-400 mb-8 text-center text-lg leading-relaxed max-w-sm">
-                    ┘é┘à ╪¿╪Ñ╪»╪«╪º┘ä ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ╪º┘ä╪«╪º╪╡ ╪¿┘â ┘ä╪º╪│╪¬┘ä╪º┘à ┘à╪┤╪¬╪▒┘è╪º╪¬┘â ┘ü┘ê╪▒╪º┘ï.
-                  </p>
+                  
+                  <h3 className="text-xl font-bold mb-1.5 text-white tracking-tight">تفعيل المفتاح</h3>
+                  <p className="text-zinc-400 mb-6 text-center text-xs leading-relaxed px-4">أدخل مفتاح المنتج الخاص بك المكون من 12 خانة لتفعيل اشتراكك.</p>
 
-                  <div className="w-full mb-4 relative">
+                  {errorMsg && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="w-full bg-red-500/5 border border-red-500/20 text-red-400 px-3 py-2.5 rounded-lg mb-5 flex items-center gap-2 text-xs"
+                    >
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <p className="text-right flex-1">{errorMsg}</p>
+                    </motion.div>
+                  )}
+
+                  <div className="w-full relative group mb-4">
                     <input
                       type="text"
                       value={orderInput}
@@ -767,157 +837,68 @@ function OrderDelivery({ onVerify, user }: { onVerify?: (orderId: string) => voi
                         setOrderInput(e.target.value);
                         if (status === 'error') setStatus('idle');
                       }}
-                      placeholder="╪ú╪»╪«┘ä ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ╪º┘ä╪«╪º╪╡ ╪¿┘â..."
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-center text-xl focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all text-white placeholder:text-zinc-600 shadow-inner font-mono tracking-wider"
+                      disabled={false}
+                      placeholder="T3N-XXXXXX-XXXXXX"
+                      className="w-full bg-[#121214] border border-white/10 rounded-xl px-4 py-3.5 text-center text-sm focus:outline-none focus:border-white/30 transition-all text-white placeholder:text-zinc-600 font-mono tracking-widest shadow-inner"
                       dir="ltr"
                     />
                   </div>
 
-                  {status === 'error' && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="w-full mb-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 flex items-center justify-center gap-2"
-                    >
-                      <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-                      <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
-                    </motion.div>
-                  )}
-
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(37,99,235,0.4)" }}
-                    whileTap={{ scale: 0.98 }}
                     type="submit"
-                    disabled={!orderInput.trim()}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-5 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(37,99,235,0.2)] border-t border-blue-400/30 w-full mt-2"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    disabled={false}
+                    className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-sm"
                   >
-                    <Hash className="w-6 h-6" />
-                    ╪¬┘ü╪╣┘è┘ä ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿
+                    <Key className="w-4 h-4" />
+                    تفعيل المفتاح
                   </motion.button>
                 </motion.form>
               ) : status === 'loading' ? (
                 <motion.div
                   key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-12 relative z-10 w-full h-full"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-col items-center justify-center h-[260px] w-full"
                 >
-                  <div className="w-20 h-20 relative mb-8">
-                    <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-                    <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin" />
-                    <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
-                  </div>
-                  <p className="text-zinc-300 font-medium animate-pulse text-lg">╪¼╪º╪▒┘è ╪º┘ä╪¬┘ü╪╣┘è┘ä ┘ê╪¿┘å╪º╪í ╪º┘ä╪╡┘ä╪º╪¡┘è╪º╪¬...</p>
+                  <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin mb-5"></div>
+                  <h3 className="text-lg font-bold text-white mb-1">جاري التحقق...</h3>
+                  <p className="text-zinc-500 text-xs">يرجى الانتظار للحظات</p>
                 </motion.div>
               ) : (
                 <motion.div
                   key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center text-center relative z-10 w-full h-full justify-center mt-8"
+                  className="flex flex-col items-center text-center relative w-full h-[260px] justify-center"
                 >
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", bounce: 0.5 }}
-                    className="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+                    className="w-14 h-14 bg-white/5 text-white rounded-full flex items-center justify-center mb-5 border border-white/10"
                   >
-                    <CheckCircle2 className="w-10 h-10" />
+                    <CheckCircle2 className="w-6 h-6" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold mb-2 text-white">╪¬┘à ╪º┘ä╪¬┘ü╪╣┘è┘ä ╪¿┘å╪¼╪º╪¡!</h3>
-                  <p className="text-zinc-400 mb-2 text-md">╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ <span className="text-white font-mono bg-white/10 px-2 py-1 rounded-md text-sm">{orderInput}</span> ┘à┘Å┘ü╪╣┘æ┘ä ┘ê┘à╪▒╪¬╪¿╪╖ ╪¿╪¡╪│╪º╪¿┘â.</p>
-                  <p className="text-emerald-400 text-sm mb-8 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> ┘à╪▒╪¬╪¿╪╖ ╪¿╪¡╪│╪º╪¿┘â ┘ä┘ä╪ú╪¿╪»</p>
-
-                  <div className="flex flex-col gap-4 w-full">
-                    <motion.div 
-                      whileHover={{ y: -2 }}
-                      className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-blue-500/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
-                          <FileArchive className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div className="text-right flex-1">
-                          <h4 className="font-bold text-lg text-white">┘à┘ä┘ü╪º╪¬ ╪º┘ä╪╖┘ä╪¿</h4>
-                          <p className="text-xs text-zinc-400 mt-1">┘à┘ä┘ü ┘è╪▒╪¼┘ë ┘ü┘â ╪╢╪║╪╖┘ç ┘è╪¡╪¬┘ê┘è ╪╣┘ä┘ë ╪º┘ä╪┤╪▒┘ê╪¡╪º╪¬.</p>
-                        </div>
-                      </div>
-                      <motion.button 
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = '/discord.gg_t3n.rar';
-                          link.download = 'discord.gg_t3n.rar';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                        onContextMenu={(e) => e.preventDefault()}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
-                      >
-                        <Download className="w-5 h-5" />
-                        ╪¬╪¡┘à┘è┘ä ╪º┘ä┘à┘ä┘ü╪º╪¬
-                      </motion.button>
-                    </motion.div>
-
-                    <motion.div 
-                      whileHover={{ y: -2 }}
-                      className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-[#5865F2]/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-[#5865F2]/10 rounded-xl flex items-center justify-center border border-[#5865F2]/20 shrink-0">
-                          <Server className="w-6 h-6 text-[#5865F2]" />
-                        </div>
-                        <div className="text-right flex-1">
-                          <h4 className="font-bold text-lg text-white">╪▒╪¬╪¿╪⌐ ╪»┘è╪│┘â┘ê╪▒╪»</h4>
-                          <p className="text-xs text-zinc-400 mt-1">╪º╪▒╪¿╪╖ ╪¡╪│╪º╪¿┘â ╪¿╪º┘ä╪│┘è╪▒┘ü╪▒ ┘ä┘ä┘ê╪╡┘ê┘ä ┘ä┘ä╪»╪╣┘à.</p>
-                        </div>
-                      </div>
-                      <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => window.location.href = DISCORD_OAUTH_URL}
-                        onContextMenu={(e) => e.preventDefault()}
-                        className="w-full bg-[#5865F2] text-white hover:bg-[#4752C4] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        ╪▒╪¿╪╖ ╪º┘ä╪¡╪│╪º╪¿ ┘ê╪Ñ╪│╪¬┘ä╪º┘à ╪º┘ä╪▒╪¬╪¿╪⌐
-                      </motion.button>
-                    </motion.div>
-                  </div>
+                  <h3 className="text-xl font-bold mb-1.5 text-white">تم التفعيل بنجاح</h3>
+                  <p className="text-zinc-400 mb-6 text-xs px-4">تم ربط المفتاح بحسابك بنجاح. يمكنك الآن الوصول إلى منتجاتك.</p>
                   
                   <button 
-                    onClick={() => { setStatus('idle'); setOrderInput(''); }}
-                    className="mt-6 text-sm text-zinc-500 hover:text-white transition-colors underline underline-offset-4"
+                    onClick={() => { setStatus('idle'); setOrderInput(''); onClose(); }}
+                    className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-zinc-200 transition-colors text-sm"
                   >
-                    ╪¬┘ü╪╣┘è┘ä ╪▒┘é┘à ╪╖┘ä╪¿ ╪ó╪«╪▒
+                    متابعة
                   </button>
                 </motion.div>
               )}
               </AnimatePresence>
             </div>
-          </TiltCard>
-
-          {/* Left Side: Video (Order 1 on mobile, 2 on Desktop RTL) */}
-          <TiltCard className="glass-panel rounded-[2rem] p-8 md:p-12 relative overflow-hidden h-full flex flex-col items-center justify-center order-1 lg:order-2">
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl border border-blue-500/30 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-                <MonitorPlay className="w-8 h-8 text-blue-400" />
-              </div>
-              <h3 className="text-3xl font-bold mb-4 text-white drop-shadow-md text-center">┘ü┘è╪»┘è┘ê ╪º┘ä╪┤╪▒╪¡</h3>
-              <p className="text-zinc-400 mb-8 text-center text-lg leading-relaxed max-w-md">
-                ╪┤╪º┘ç╪» ┘ç╪░╪º ╪º┘ä┘à┘é╪╖╪╣ ╪º┘ä┘é╪╡┘è╪▒ ┘ä┘à╪╣╪▒┘ü╪⌐ ┘â┘è┘ü┘è╪⌐ ╪¬┘ü╪╣┘è┘ä ╪▒┘é┘à ╪╖┘ä╪¿┘â ┘ê╪º╪│╪¬┘ä╪º┘à ╪º┘ä┘à┘ä┘ü╪º╪¬ ╪¿╪╖╪▒┘è┘é╪⌐ ╪╡╪¡┘è╪¡╪⌐ ┘ê╪¿┘â┘ä ╪│┘ç┘ê┘ä╪⌐.
-              </p>
-              
-              <CustomVideoPlayer />
-
-            </div>
-          </TiltCard>
+          </motion.div>
         </div>
-      </div>
-    </section>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -936,58 +917,41 @@ function Products() {
   const products = [
     {
       id: 1,
-      title: "╪│╪¿┘ê┘ü╪▒ ╪¿┘è╪▒┘à ╪º┘ä╪ú┘ä╪╣╪º╪¿",
-      desc: "┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ╪º┘ä┘à╪░╪▒╪¿┘ê╪▒╪»╪º╪¬ ┘ê╪¼┘à┘è╪╣ ╪¡┘à╪º┘è╪º╪¬ ╪º┘ä╪ú┘ä╪╣╪º╪¿. ╪º╪│╪¬╪╣┘à╪º┘ä ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ┘ü┘é╪╖ ┘ä┘ä╪ú╪¿╪». ┘è╪»╪╣┘à COD╪î Rust╪î VALORANT╪î FiveM ┘ê╪║┘è╪▒┘ç╪º.",
-      url: "https://salla.sa/t3nn/EXGRXdv",
+      title: "سبوفر تعن فك باند نهائي",
+      desc: "أقوى أداة سبوفر تخفي هويتك الرقمية بالكامل وتمنع الحظر في الالعاب. يتميز بتحديثات مستمرة لضمان الحماية القصوى.",
+      url: "https://salla.sa/t3nn",
       image: "/product-spoofer-perm.jpg",
       icon: <Cpu className="w-5 h-5" />,
-      tag: "╪º┘ä╪ú┘â╪½╪▒ ┘à╪¿┘è╪╣╪º┘ï",
-      details: "╪º┘ä┘à┘à┘è╪▓╪º╪¬\n\n[+] ┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ┘à╪░╪▒╪¿┘ê╪▒╪»╪º╪¬:\nMSI ┬╖ ASUS ┬╖ GIGABYTE ┬╖ ASROCK ┬╖ HP ┬╖ EVGA ┬╖ MICROSTAR ┬╖ AORUS ┬╖ COLORFUL ┬╖ LENOVO ┬╖ ACER ┬╖ DELL\n[+] ╪¿╪╣╪╢ ╪ú╪¼┘ç╪▓╪⌐ ASUS ┘é╪» ┘ä╪º ┘è╪╣┘à┘ä ╪╣┘ä┘è┘ç╪º\n[+] ┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ╪¡┘à╪º┘è╪º╪¬ ╪º┘ä╪ú┘ä╪╣╪º╪¿\n[+] ╪º┘ä╪ú┘ä╪╣╪º╪¿ ╪º┘ä┘à╪»╪╣┘ê┘à╪⌐:\nCall of Duty ┬╖ Rust ┬╖ VALORANT ┬╖ FiveM ┬╖ ┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ╪º┘ä╪╣╪º╪¿ ╪ú╪«╪▒┘ë\n[+] ╪º╪│╪¬╪╣┘à╪º┘ä ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ┘ü┘é╪╖ ┘ê┘é╪¬ ╪º┘ä┘ü┘â╪î ┘ê┘ä╪º ╪¬╪¡╪¬╪º╪¼ ╪º╪│╪¬╪╣┘à╪º┘ä┘ç ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë ┘ä┘ä╪ú╪¿╪»\n[+] ┘è╪¬┘à ╪¬╪│┘ä┘è┘à ╪º┘ä┘à┘å╪¬╪¼ ┘ü┘ê╪▒┘è╪º┘ï\n[+] 100% ┘à╪╢┘à┘ê┘å ┘ê┘à┘ê╪½┘ê┘é\n[+] ┘è╪¬┘à ╪¬╪│┘ä┘è┘à┘â ┘à┘ü╪¬╪º╪¡ ┘ü┘ê╪▒┘è ╪¿╪╣╪» ╪º┘ä╪┤╪▒╪º╪í\n\n╪Ñ╪░╪º ┘â┘å╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë ┘à╪│╪º╪╣╪»╪⌐ ┘à┘å ╪º┘ä╪»╪╣┘à ╪º┘ä┘ü┘å┘è ┘ê╪º┘ä╪¬╪¡┘â┘à ╪¿╪¼┘ç╪º╪▓┘â ┘ä╪¬┘å┘ü┘è╪░ ╪º┘ä╪«╪╖┘ê╪º╪¬╪î ┘è┘ê╪¼╪» ╪▒╪│┘ê┘à ┘é╪»╪▒┘ç╪º 35 ╪▒┘è╪º┘ä ┘à╪«╪╡╪╡╪⌐ ┘ä┘ä╪«╪»┘à╪⌐.\n\n┘à┘ä╪º╪¡╪╕╪º╪¬ ┘à┘ç┘à╪⌐ ┘é╪¿┘ä ╪º┘ä╪┤╪▒╪º╪í:\n[+] ┘ü┘è ╪¿╪╣╪╢ ╪º┘ä╪ú╪¼┘ç╪▓╪⌐ ┘é╪» ╪¬╪¡╪¬╪º╪¼ ╪Ñ┘ä┘ë ┘ü┘ê╪▒┘à╪º╪¬ ╪ú┘ê ╪¬╪║┘è┘è╪▒ ╪Ñ╪╡╪»╪º╪▒ ┘ê┘è┘å╪»┘ê╪▓\n[+] ╪º┘ä┘à┘å╪¬╪¼ ┘ä╪º ┘è┘Å╪│╪¬╪▒╪»╪î ╪┤╪║╪º┘ä 100%╪î ╪Ñ╪░╪º ┘ü┘è┘ç ╪«┘ä┘ä ╪╣┘å╪»┘â ┘å╪¡┘å ╪║┘è╪▒ ┘à╪│╪ñ┘ê┘ä┘è┘å\n[+] ╪¿┘à╪¼╪▒╪» ╪┤╪▒╪º╪ª┘â ┘ä┘ä┘à┘å╪¬╪¼: ╪│┘è╪¬┘à ╪Ñ╪▒╪│╪º┘ä ┘â┘ê╪» ╪º┘ä╪¬┘ü╪╣┘è┘ä ╪╣┘ä┘ë ╪º┘ä╪¿╪▒┘è╪» ╪º┘ä╪Ñ┘ä┘â╪¬╪▒┘ê┘å┘è ╪ú┘ê ╪▒┘é┘à ╪º┘ä╪¼┘ê╪º┘ä"
+      tag: "المنتج الأكثر مبيعاً",
+      details: "المميزات:\n\n[+] يخفي جميع هوياتك:\nMSI • ASUS • GIGABYTE • ASROCK • HP • EVGA • MICROSTAR • AORUS • COLORFUL • LENOVO • ACER • DELL\n[+] يخفي حظر الالعاب\n[+] الالعاب المدعومة:\nCall of Duty • Rust • VALORANT • FiveM • فورت نايت\n[+] يتميز بتحديثات فورية لجميع الالعاب و يتم تعويضك مجاناً\n[+] دعم فني على مدار 24/7\n[+] 100% امن ومضمون\n[+] دعم فني ممتاز في سيرفر الدسكورد"
     },
     {
       id: 2,
-      title: "┘ü┘â ╪¿╪º┘å╪» ┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬",
-      desc: "╪¬╪║┘è┘è╪▒ ┘à╪╣┘ä┘ê┘à╪º╪¬ ╪¼┘ç╪º╪▓┘â ┘ä╪Ñ┘ä╪║╪º╪í ╪º┘ä╪¡╪╕╪▒ ┘å┘ç╪º╪ª┘è╪º┘ï. ┘ü┘â ╪¿╪º┘å╪» ╪º┘ä╪¿╪╖┘ê┘ä╪º╪¬ ╪¿┘å╪│╪¿╪⌐ ┘å╪¼╪º╪¡ 100%. ╪¬┘å┘ü┘è╪░ ╪│╪▒┘è╪╣ ┘ê┘ü┘ê╪▒┘è.",
-      url: "https://salla.sa/t3nn/BpwOKQa",
-      image: "/product-fortnite-unban.jpg",
-      icon: <Gamepad2 className="w-5 h-5" />,
-      tag: "┘à╪╢┘à┘ê┘å",
-      details: "┘è┘é┘ê┘à ╪¿╪¬╪║┘è┘è╪▒ ┘à╪╣┘ä┘ê┘à╪º╪¬ ╪¼┘ç╪º╪▓┘â ╪Ñ┘ä┘ë ┘à╪╣┘ä┘ê┘à╪º╪¬ ╪¼╪»┘è╪»╪⌐ ┘ä╪Ñ┘ä╪║╪º╪í ╪º┘ä╪¡╪╕╪▒ ┘ü┘è ┘ä╪╣╪¿╪⌐ ┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬ ┘å┘ç╪º╪ª┘è╪º┘ï.\n\n╪º┘ä┘à┘à┘è╪▓╪º╪¬:\n- ┘ü┘â ╪¿╪º┘å╪» ╪º┘ä╪¿╪╖┘ê┘ä╪º╪¬\n- ┘å╪│╪¿╪⌐ ┘å╪¼╪º╪¡ 100%\n- ┘ü┘â ╪¿╪º┘å╪» ┘å┘ç╪º╪ª┘è ╪¿╪»┘ê┘å ╪▒╪¼┘ê╪╣\n- ╪¬┘å┘ü┘è╪░ ╪│╪▒┘è╪╣ ┘ê┘ü┘ê╪▒┘è\n- ╪«╪»┘à╪⌐ ┘à╪╢┘à┘ê┘å╪⌐ ╪¿╪º┘ä┘â╪º┘à┘ä\n\n╪»╪╣┘à ╪¼┘à┘è╪╣ ╪º┘ä┘ä┘ê╪¡╪º╪¬ ╪º┘ä╪ú┘à ╪¿╪»┘ê┘å ╪º╪│╪¬╪½┘å╪º╪í:\nASUS ┬╖ MSI ┬╖ GIGABYTE ┬╖ ASROCK ┬╖ HP ┬╖ EVGA ┬╖ MICROSTAR ┬╖ AORUS ┬╖ COLORFUL ┬╖ LENOVO ┬╖ ACER ┬╖ DELL\n[+] ┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ╪º┘ä┘à╪░╪▒╪¿┘ê╪▒╪»╪º╪¬\n[+] ╪¿╪╣╪╢ ╪ú╪¼┘ç╪▓╪⌐ ASUS ┘é╪» ┘ä╪º ┘è╪╣┘à┘ä ╪╣┘ä┘è┘ç╪º\n[+] ╪º╪│╪¬╪╣┘à╪º┘ä ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ┘ü┘é╪╖ ┘ê┘é╪¬ ╪º┘ä┘ü┘â╪î ┘ê┘ä╪º ╪¬╪¡╪¬╪º╪¼ ╪º╪│╪¬╪╣┘à╪º┘ä┘ç ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë ┘ä┘ä╪ú╪¿╪»\n\n┘à┘ä╪º╪¡╪╕╪º╪¬ ┘à┘ç┘à╪⌐ ┘é╪¿┘ä ╪º┘ä╪┤╪▒╪º╪í:\n[+] ┘ü┘è ╪¿╪╣╪╢ ╪º┘ä╪ú╪¼┘ç╪▓╪⌐ ┘é╪» ╪¬╪¡╪¬╪º╪¼ ╪Ñ┘ä┘ë ┘ü┘ê╪▒┘à╪º╪¬ ╪ú┘ê ╪¬╪║┘è┘è╪▒ ╪Ñ╪╡╪»╪º╪▒ ┘ê┘è┘å╪»┘ê╪▓\n[+] ╪º┘ä┘à┘å╪¬╪¼ ┘ä╪º ┘è┘Å╪│╪¬╪▒╪»╪î ╪┤╪║╪º┘ä 100%╪î ╪Ñ╪░╪º ┘ü┘è┘ç ╪«┘ä┘ä ╪╣┘å╪»┘â ┘å╪¡┘å ╪║┘è╪▒ ┘à╪│╪ñ┘ê┘ä┘è┘å\n[+] ┘à╪¿╪¼╪▒╪» ╪┤╪▒╪º╪ª┘â ┘ä┘ä┘à┘å╪¬╪¼: ╪│┘è╪¬┘à ╪Ñ╪▒╪│╪º┘ä ┘â┘ê╪» ╪º┘ä╪¬┘ü╪╣┘è┘ä ╪╣┘ä┘ë ╪º┘ä╪¿╪▒┘è╪» ╪º┘ä╪Ñ┘ä┘â╪¬╪▒┘ê┘å┘è ╪ú┘ê ╪▒┘é┘à ╪º┘ä╪¼┘ê╪º┘ä"
-    },
-    {
-      id: 3,
-      title: "╪│╪¿┘ê┘ü╪▒ ┘à╪»┘ë ╪º┘ä╪¡┘è╪º╪⌐ VIP",
-      desc: "┘à┘ü╪¬╪º╪¡ ╪«╪º╪╡ ┘ü┘è┘â ┘à╪»┘ë ╪º┘ä╪¡┘è╪º╪⌐. ┘â┘ä ┘à╪º ╪¬╪¿┘å╪»╪¬ ┘ü┘è ╪ú┘è ┘ä╪╣╪¿╪⌐ ╪¬┘ü┘â┘ç. ╪¿╪»┘ê┘å ┘à╪»╪⌐ ╪º┘å╪¬┘ç╪º╪í ┘ê╪¿╪»┘ê┘å ╪Ñ╪╣╪º╪»╪⌐ ╪┤╪▒╪º╪í.",
-      url: "https://salla.sa/t3nn/OyWpQyw",
-      image: "/product-spoofer-lifetime.jpg",
-      icon: <Shield className="w-5 h-5" />,
-      tag: "VIP",
-      details: "≡ƒÄ« VIP ╪│╪¿┘ê┘ü╪▒ ┘ä╪¼┘à┘è╪╣ ╪º┘ä╪ú┘ä╪╣╪º╪¿\n╪º╪¡╪╡┘ä ╪º┘ä╪ó┘å ╪╣┘ä┘ë ╪│╪¿┘ê┘ü╪▒ ╪¿┘è╪▓┘à (┘à╪»┘ë ╪º┘ä╪¡┘è╪º╪⌐) ┘à╪«╪╡╪╡ ┘ä┘ü┘â ╪º┘ä╪¿╪º┘å╪» ╪╣┘å ╪¼┘à┘è╪╣ ╪º┘ä╪ú┘ä╪╣╪º╪¿ ╪¿┘â┘ä ╪│┘ç┘ê┘ä╪⌐ ┘ê╪ú┘à╪º┘å.\n\n≡ƒÄ« ┘è╪»╪╣┘à ╪¼┘à┘è╪╣ ╪º┘ä╪ú┘ä╪╣╪º╪¿ ╪º┘ä╪┤┘ç┘è╪▒╪⌐:\n┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬\n┘ü╪º┘ä┘ê╪▒╪º┘å╪¬\n╪▒╪│╪¬\n╪»┘è╪» ╪¿╪º┘è ╪»╪º┘è ┘ä╪º┘è╪¬\n┘ü╪º┘è┘ü ╪Ñ┘à\n┘ê╪ú┘è ┘ä╪╣╪¿╪⌐ ╪ú╪«╪▒┘ë ┘ü┘è ╪¿╪º┘ä┘â\n\nΓ£à ┘à╪º╪░╪º ╪¬╪¡╪╡┘ä ╪╣┘å╪» ╪º┘ä╪┤╪▒╪º╪í╪ƒ\n≡ƒôª ╪▒┘é┘à ╪╖┘ä╪¿ ╪«╪º╪╡ ╪¿┘â ┘à╪»┘ë ╪º┘ä╪¡┘è╪º╪⌐\n╪¬╪│┘ä┘è┘à ┘ü┘ê╪▒┘è ┘ä╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿\n┘è┘à┘â┘å┘â ┘ü┘â ╪º┘ä╪¿╪º┘å╪» ┘ü┘è ╪ú┘è ┘ê┘é╪¬\n╪¿╪»┘ê┘å ┘à╪»╪⌐ ╪º┘å╪¬┘ç╪º╪í ┘ê╪¿╪»┘ê┘å ╪º┘ä╪¡╪º╪¼╪⌐ ┘ä╪Ñ╪╣╪º╪»╪⌐ ╪º┘ä╪┤╪▒╪º╪í\n\n≡ƒÆ¼ ╪ó┘ä┘è╪⌐ ╪º┘ä╪º╪│╪¬┘ä╪º┘à ┘ê╪¬╪¡┘â┘à ╪º┘ä╪»╪╣┘à ╪º┘ä┘ü┘å┘è ┘à╪¬┘ê┘ü╪▒╪⌐ 24/7\n╪┤╪▒╪¡ ┘â╪º┘à┘ä ┘ä┘ä╪«╪╖┘ê╪º╪¬╪î ╪¬╪¡┘â┘à ╪¿╪¼┘ç╪º╪▓┘â ┘à╪¼╪º┘å╪º┘ï ┘ä┘ü┘â ╪º┘ä╪¿╪º┘å╪».\n\nΓÖí ╪╢┘à╪º┘å ╪º┘ä╪«╪»┘à╪⌐ ┘à╪ñ╪½╪▒ 100%\nΓÜá∩╕Å ┘à┘ä╪º╪¡╪╕╪⌐: ╪º┘ä┘à┘å╪¬╪¼ ╪║┘è╪▒ ┘é╪º╪¿┘ä ┘ä┘ä╪º╪│╪¬╪▒╪¼╪º╪╣ ╪¿╪╣╪» ╪º┘ä╪┤╪▒╪º╪í"
-    },
-    {
-      id: 4,
-      title: "╪╖┘ä╪¿ ╪«╪º╪╡",
-      desc: "╪╖┘ä╪¿ ╪«╪º╪╡ ╪¬╪▒┘è╪»┘ç ╪ú┘å╪¬. ╪¬┘ê╪º╪╡┘ä ┘à╪╣┘å╪º ╪╣╪¿╪▒ ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» ╪ú┘ê ╪º┘ä┘à╪¬╪¼╪▒ ┘ê╪│┘å┘ä╪¿┘è ╪╖┘ä╪¿┘â.",
-      url: "https://salla.sa/t3nn/jgBZWje",
-      image: "/product-custom-order.jpg",
-      icon: <Wrench className="w-5 h-5" />,
-      tag: "┘à╪«╪╡╪╡",
-      details: "╪╖┘ä╪¿ ╪«╪º╪╡\n\n╪╖┘ä╪¿ ╪«╪º╪╡ ╪¬╪▒┘è╪»┘ç ╪ú┘å╪¬\n\n╪Ñ╪░╪º ┘â┘å╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë ┘à╪│╪º╪╣╪»╪⌐ ┘à┘å ╪º┘ä╪»╪╣┘à ╪º┘ä┘ü┘å┘è ┘ê╪º┘ä╪¬╪¡┘â┘à ╪¿╪¼┘ç╪º╪▓┘â ┘ä╪¬┘å┘ü┘è╪░ ╪º┘ä╪«╪╖┘ê╪º╪¬ ┘â╪º┘à┘ä╪⌐ ╪¿┘å┘ü╪│┘å╪º╪î ┘è╪▒╪¼┘ë ╪º┘ä╪¬┘ê╪¼┘ç ┘ç┘å╪º ┘ä╪»┘ü╪╣ ╪▒╪│┘ê┘à ╪º┘ä╪«╪»┘à╪⌐ 35 ╪▒┘è╪º┘ä.\n\n┘ä╪»┘è┘å╪º ╪»╪╣┘à ┘ü┘å┘è ╪¼╪º┘ç╪▓ ┘ä╪«╪»┘à╪¬┘â ┘ü┘è ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪»."
+      title: "فك باند فورت نايت هارد وير",
+      desc: "أقوى وأضمن طريقة لفك حظر الهاردوير في لعبة فورت نايت بشكل نهائي، يعمل مع جميع أنواع المذربورد.",
+      url: "https://salla.sa/t3nn",
+      image: "/product-fortnite-hack.jpg",
+      icon: <Cpu className="w-5 h-5" />,
+      tag: "اصدار حصري",
+      details: "المميزات:\n- فك باند نهائي للهاردوير\n- يدعم جميع الأجهزة والمذربورد\n- آمن جداً ومجرب بنسبة 100%\n- تفعيل سريع وفوري\n- دعم فني ومساعدة متكاملة"
     }
   ];
 
   return (
-    <section id="products" className="py-20 md:py-28 relative z-10">
+    <section id="products" className="py-20 md:py-32 relative z-10">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/5 to-transparent pointer-events-none" />
       <div className="container mx-auto px-4 relative z-20">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">┘à┘å╪¬╪¼╪º╪¬┘å╪º</h2>
-          <p className="text-zinc-400 text-lg">╪¬╪╡┘ü╪¡ ╪ú┘ü╪╢┘ä ┘à┘å╪¬╪¼╪º╪¬┘å╪º ╪º┘ä╪▒┘é┘à┘è╪⌐ ╪º┘ä┘à╪¬┘ê┘ü╪▒╪⌐ ┘ü┘è ╪º┘ä┘à╪¬╪¼╪▒</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/20 bg-blue-500/5 mb-6 backdrop-blur-sm">
+            <span className="text-blue-500/80 text-sm font-bold tracking-widest uppercase">CATALOGUE</span>
+          </div>
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-transparent bg-clip-text text-gradient-gold drop-shadow-lg">منتجاتنا الحصرية</h2>
+          <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto">تشكيلة مختارة من أفضل المنتجات الرقمية المصممة لتعطيك الأفضلية</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -999,37 +963,37 @@ function Products() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 }}
             >
-              <TiltCard href={product.url} target="_blank" rel="noopener noreferrer" className="glass-panel-hover glass-panel rounded-3xl overflow-hidden block transition-all duration-300 group">
-                <div className="aspect-video overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#06060c] via-[#06060c]/40 to-transparent z-10" />
+              <TiltCard href={product.url} target="_blank" rel="noopener noreferrer" className="glass-panel-hover glass-panel rounded-3xl overflow-hidden block transition-all duration-500 group">
+                <div className="aspect-[16/10] overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#030305] via-transparent to-transparent z-10" />
                   <img 
                     src={product.image} 
                     alt={product.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-70 group-hover:opacity-100"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-90"
                   />
-                  <div className="absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                  <div className="absolute top-5 right-5 z-20 bg-blue-500/20 backdrop-blur-md border border-blue-500/30 px-4 py-1.5 rounded-full text-xs font-bold text-blue-400 flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
                     {product.icon}
                     {product.tag}
                   </div>
                 </div>
-                <div className="p-8 relative z-20 -mt-16 bg-gradient-to-t from-[#0a1a5c]/40 to-transparent">
+                <div className="p-8 relative z-20 -mt-8 bg-gradient-to-t from-black to-transparent">
                   <h3 className="text-2xl font-bold mb-3 text-white group-hover:text-blue-400 transition-colors drop-shadow-md">{product.title}</h3>
                   <p className="text-zinc-400 mb-8 leading-relaxed line-clamp-2">{product.desc}</p>
                   <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }}
-                      className="text-sm font-bold text-blue-300 flex items-center justify-center gap-2 bg-blue-500/10 px-4 py-2.5 rounded-xl hover:bg-blue-500/20 border border-blue-500/20 transition-colors w-full sm:w-auto flex-1 cursor-pointer"
+                      className="text-sm font-bold text-blue-300 flex items-center justify-center gap-2 bg-blue-500/10 px-5 py-3 rounded-xl hover:bg-blue-500/20 border border-blue-500/30 transition-colors w-full sm:w-auto flex-1 cursor-pointer"
                     >
-                      ╪¬┘ü╪º╪╡┘è┘ä ╪º┘ä┘à┘å╪¬╪¼╪º╪¬
+                      تفاصيل المنتج
                     </button>
                     <a 
                       href={product.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-sm font-bold text-white flex flex-row-reverse items-center justify-center gap-2 bg-white/10 px-4 py-2.5 rounded-xl hover:bg-blue-500 hover:text-white transition-colors w-full sm:w-auto flex-1 z-30"
+                      className="text-sm font-bold text-white flex flex-row-reverse items-center justify-center gap-2 bg-gradient-gold px-5 py-3 rounded-xl hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all w-full sm:w-auto flex-1 z-30"
                     >
-                      ╪┤╪▒╪º╪í ╪º┘ä╪ó┘å <ExternalLink className="w-4 h-4" />
+                      شراء الآن <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
                 </div>
@@ -1052,7 +1016,7 @@ function Products() {
             rel="noopener noreferrer" 
             className="inline-flex items-center justify-center gap-2 px-8 py-4 glass-panel rounded-2xl hover:bg-white/10 transition-all text-white font-bold"
           >
-            ╪╣╪▒╪╢ ╪¼┘à┘è╪╣ ╪º┘ä┘à┘å╪¬╪¼╪º╪¬ <ExternalLink className="w-5 h-5" />
+            عرض جميع المنتجات <ExternalLink className="w-5 h-5" />
           </motion.a>
         </motion.div>
       </div>
@@ -1107,7 +1071,7 @@ function Products() {
                   rel="noopener noreferrer"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-4 rounded-xl hover:from-blue-500 hover:to-blue-400 transition-colors flex items-center justify-center gap-2 shadow-lg"
                 >
-                  ╪º┘å╪¬┘é┘ä ┘ä┘ä┘à╪¬╪¼╪▒ ┘ä╪┤╪▒╪º╪í ╪º┘ä┘à┘å╪¬╪¼ <ExternalLink className="w-5 h-5" />
+                  انتقل للمتجر لشراء المنتج <ExternalLink className="w-5 h-5" />
                 </a>
               </div>
             </motion.div>
@@ -1162,28 +1126,28 @@ function Reviews() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">╪ó╪▒╪º╪í ╪º┘ä╪╣┘à┘ä╪º╪í</h2>
-          <p className="text-zinc-400 text-lg">╪¬┘é┘è┘è┘à╪º╪¬ ╪╣┘à┘ä╪º╪ª┘å╪º ┘à┘å ┘à╪¬╪¼╪▒ ╪│┘ä╪⌐</p>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-md">آراء العملاء</h2>
+          <p className="text-zinc-400 text-lg">تقييمات عملائنا من متجر سلة</p>
         </motion.div>
 
         <TiltCard className="max-w-5xl mx-auto glass-panel glass-panel-hover rounded-[2rem] overflow-hidden relative group cursor-pointer" onClick={() => setIsModalOpen(true)}>
           <div className="absolute inset-0 z-0 flex rounded-[2rem] overflow-hidden opacity-30 group-hover:opacity-50 transition-opacity duration-500 blur-sm">
             <div className="grid grid-cols-3 gap-2 p-2 w-full h-full">
               {reviewImages.slice(0, 3).map((src, i) => (
-                <img key={i} src={src} className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all duration-500" alt="╪¬┘é┘è┘è┘à" />
+                <img key={i} src={src} className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all duration-500" alt="تقييم" />
               ))}
             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-[#06060c]/60 to-black/90 z-10" />
           
           <div className="relative z-20 flex flex-col items-center justify-center p-16 md:p-32 text-center h-[400px]">
-            <Star className="w-16 h-16 text-yellow-500 fill-yellow-500 mb-6 drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-            <h3 className="text-3xl md:text-5xl font-bold text-white mb-8 drop-shadow-lg">┘à╪ª╪º╪¬ ╪º┘ä╪¬┘é┘è┘è┘à╪º╪¬ ╪º┘ä╪Ñ┘è╪¼╪º╪¿┘è╪⌐</h3>
+            <Star className="w-16 h-16 text-blue-500 fill-blue-500 mb-6 drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
+            <h3 className="text-3xl md:text-5xl font-bold text-white mb-8 drop-shadow-lg">مئات التقييمات الإيجابية</h3>
             <button 
               onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
               className="px-10 py-5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xl rounded-2xl transition-all shadow-[0_10px_30px_rgba(37,99,235,0.4)] hover:shadow-[0_10px_40px_rgba(37,99,235,0.6)] hover:-translate-y-1 flex items-center gap-2 border-t border-blue-400/30"
             >
-              ╪╣╪▒╪╢ ╪º┘ä╪¬┘é┘è┘è┘à╪º╪¬
+              عرض التقييمات
             </button>
           </div>
         </TiltCard>
@@ -1213,8 +1177,8 @@ function Reviews() {
                   </button>
                   
                   <div className="flex flex-col items-center mb-10">
-                    <Star className="w-12 h-12 text-yellow-500 fill-yellow-500 mb-4 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]" />
-                    <h3 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md">╪¬┘é┘è┘è┘à╪º╪¬ ╪╣┘à┘ä╪º╪ª┘å╪º</h3>
+                    <Star className="w-12 h-12 text-blue-500 fill-blue-500 mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
+                    <h3 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md">تقييمات عملائنا</h3>
                   </div>
                   
                   <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
@@ -1229,10 +1193,10 @@ function Reviews() {
                       >
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 flex items-center justify-center">
                           <span className="opacity-0 group-hover:opacity-100 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg transition-transform transform scale-90 group-hover:scale-100">
-                            ╪¬┘â╪¿┘è╪▒
+                            تكبير
                           </span>
                         </div>
-                        <img src={src} alt={`╪¬┘é┘è┘è┘à ${idx + 1}`} className="w-full h-auto" />
+                        <img src={src} alt={`تقييم ${idx + 1}`} className="w-full h-auto" />
                       </motion.div>
                     ))}
                   </div>
@@ -1240,7 +1204,7 @@ function Reviews() {
                   <div className="mt-16 mb-8 text-center flex justify-center">
                     <div className="px-12 py-4 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm">
                       <p className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-                        ... ┘ê╪║┘è╪▒┘ç╪º ╪º┘ä┘â╪½┘è╪▒ ...
+                        ... وغيرها الكثير ...
                       </p>
                     </div>
                   </div>
@@ -1270,7 +1234,7 @@ function Reviews() {
                     transition={{ type: "spring", bounce: 0.4 }}
                     onClick={(e) => e.stopPropagation()}
                     src={selectedImage} 
-                    alt="╪╣╪▒╪╢ ┘à┘â╪¿╪▒" 
+                    alt="عرض مكبر" 
                     className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl relative z-50 cursor-zoom-out"
                   />
                 </motion.div>
@@ -1289,51 +1253,51 @@ function FAQ() {
 
   const faqs = [
     {
-      question: "┘ç┘ä ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ╪ú┘é╪»╪▒ ╪º╪│╪¬╪«╪»┘à┘ç ╪╖┘ê┘ä ╪º┘ä┘ê┘é╪¬╪ƒ",
-      answer: "┘å╪╣┘à╪î ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ╪│┘è╪▒╪¬╪¿╪╖ ╪¿╪¡╪│╪º╪¿┘â ╪¿╪┤┘â┘ä ╪»╪º╪ª┘à ┘ê┘ä╪º ┘è┘ê╪¼╪» ┘ä┘ç ┘à╪»╪⌐ ╪º┘å╪¬┘ç╪º╪í. ┘ê┘ä┘â┘å ╪º┘ä╪│╪¿┘ê┘ü╪▒ ┘è╪│╪¬╪«╪»┘à ┘ä┘ü┘â ╪º┘ä╪¡╪╕╪▒ ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐╪î ┘ê╪Ñ╪░╪º ╪ú╪▒╪»╪¬ ╪│╪¿┘ê┘ü╪▒ ╪»╪º╪ª┘à ╪º╪╖┘ä╪¿ ┘à┘å╪¬╪¼ (╪│╪¿┘ê┘ü╪▒ ┘à╪»┘ë ╪º┘ä╪¡┘è╪º╪⌐)."
+      question: "هل رقم الطلب أقدر استخدمه طول الوقت؟",
+      answer: "نعم، رقم الطلب سيرتبط بحسابك بشكل دائم ولا يوجد له مدة انتهاء. ولكن السبوفر يستخدم لفك الحظر مرة واحدة، وإذا أردت سبوفر دائم اطلب منتج (سبوفر مدى الحياة)."
     },
     {
-      question: "┘ç┘ä ╪ú╪│╪¬╪«╪»┘à┘ç ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ┘ê┘ä╪º ┘â┘ä ┘à╪º ╪┤╪║┘æ┘ä╪¬ ╪º┘ä┘Ç PC╪ƒ",
-      answer: "┘ü┘é╪╖ ╪¬╪│╪¬╪╣┘à┘ä┘ç ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ╪¬┘ü┘â ┘ü┘è┘ç╪º ╪¿╪º┘å╪»┘â ╪╣┘å ╪º┘ä┘ä╪╣╪¿╪⌐ ╪º┘ä┘à╪╖┘ä┘ê╪¿╪⌐╪î ╪½┘à ╪«┘ä╪º╪╡ ╪¬╪▒╪¬╪º╪¡! ┘à╪º ┘è╪¡╪¬╪º╪¼ ╪¬╪┤╪║┘æ┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒ ╪║┘è╪▒ ┘à╪▒╪⌐ ┘ê╪º╪¡╪»╪⌐ ┘ä┘ä╪ú╪¿╪»."
+      question: "هل أستخدمه مرة واحدة ولا كل ما شغّلت الـ PC؟",
+      answer: "فقط تستعمله مرة واحدة تفك فيها باندك عن اللعبة المطلوبة، ثم خلاص ترتاح! ما يحتاج تشغّل السبوفر غير مرة واحدة للأبد."
     },
     {
-      question: "┘ç┘ä ╪ú┘é╪»╪▒ ╪ú╪»╪«┘ä ╪¿╪¡╪│╪º╪¿┘è ╪º┘ä┘é╪»┘è┘à ┘ê┘ä╪º ┘ä╪º╪▓┘à ╪¡╪│╪º╪¿ ╪¼╪»┘è╪»╪ƒ",
-      answer: "┘ä╪º╪î ┘à╪º ╪¬┘é╪»╪▒ ╪¬╪»╪«┘ä ╪¿╪¡╪│╪º╪¿┘â ╪º┘ä┘é╪»┘è┘à ┘ä╪ú┘å ┘à╪▒╪¿┘ê╪╖ ┘ü┘è┘ç ╪º┘ä╪¿╪º┘å╪». ┘ä╪º╪▓┘à ╪¡╪│╪º╪¿ ╪¼╪»┘è╪» ┘å╪╕┘è┘ü ╪╣╪┤╪º┘å ┘è┘â┘ê┘å ┘à╪º ╪╣┘ä┘è┘ç ╪¿╪º┘å╪».\n\n╪Ñ┘ä╪º ╪Ñ╪░╪º ╪¡╪│╪º╪¿┘â ╪º┘ä┘é╪»┘è┘à ┘à┘ê ┘à╪¬╪¿┘å╪» ┘ê┘ä╪º ┘é╪» ╪»╪«┘ä╪¬ ┘ü┘è┘ç ╪ú╪¿╪»╪º┘ï ┘ä┘à╪º ┘â┘å╪¬ ┘à╪¬╪¿┘å╪»."
+      question: "هل أقدر أدخل بحسابي القديم ولا لازم حساب جديد؟",
+      answer: "لا، ما تقدر تدخل بحسابك القديم لأن مربوط فيه الباند. لازم حساب جديد نظيف عشان يكون ما عليه باند.\n\nإلا إذا حسابك القديم مو متبند ولا قد دخلت فيه أبداً لما كنت متبند."
     },
     {
-      question: "┘ç┘ä ┘è╪¡╪¬╪º╪¼ ┘ü┘ê╪▒┘à╪º╪¬╪ƒ",
-      answer: "┘ü┘è ╪º┘ä╪║╪º┘ä╪¿ ┘à╪º ┘è╪¡╪¬╪º╪¼ ╪ú╪¿╪»╪º┘ï! ┘ä┘â┘å ┘ä┘ê ╪╕┘ç╪▒╪¬ ╪╣┘å╪»┘â ┘à╪┤┘â┘ä╪⌐ ╪¬╪│╪¬┘ê╪¼╪¿ ╪º┘ä┘ü┘ê╪▒┘à╪º╪¬╪î ┘ê┘é╪¬┘ç╪º ╪▒╪º╪¡ ╪¬╪╣╪▒┘ü ┘ä╪ú┘å ╪¿╪╣╪╢ ╪º┘ä╪ú┘å╪╕┘à╪⌐ ╪¬┘â┘ê┘å ┘à╪╣╪╖┘ê╪¿╪⌐."
+      question: "هل يحتاج فورمات؟",
+      answer: "في الغالب ما يحتاج أبداً! لكن لو ظهرت عندك مشكلة تستوجب الفورمات، وقتها راح تعرف لأن بعض الأنظمة تكون معطوبة."
     },
     {
-      question: "┘ç┘ä ┘ä╪º╪▓┘à ╪ú╪╖┘ü┘è ╪º┘ä╪¡┘à╪º┘è╪⌐╪ƒ",
-      answer: "┘å╪╣┘à╪î ┘à┘ç┘à ╪¼╪»╪º┘ï! ┘ä╪º╪▓┘à ╪¬╪╖┘ü┘è ╪º┘ä╪¡┘à╪º┘è╪⌐ (Windows Defender) ╪╣╪┤╪º┘å ┘â┘ä ╪┤┘è ┘è┘à╪┤┘è ╪╡╪¡."
+      question: "هل لازم أطفي الحماية؟",
+      answer: "نعم، مهم جداً! لازم تطفي الحماية (Windows Defender) عشان كل شي يمشي صح."
     },
     {
-      question: "┘ç┘ä ┘è┘ü┘â ╪¿╪º┘å╪» ╪│┘å┘ç 365 ┘è┘ê┘à ┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬ ╪ƒ",
-      answer: "┘å╪╣┘à ┘è┘ü┘â┘ç ┘å┘ç╪º╪ª┘è + ┘è┘ü┘â ╪¿┘ê╪╖┘ê┘ä╪º╪¬"
+      question: "هل يفك باند سنه 365 يوم فورت نايت ؟",
+      answer: "نعم يفكه نهائي + يفك بوطولات"
     },
     {
-      question: "┘ç┘ä ┘è┘ü┘â ╪¿╪º┘å╪» ╪º┘ä┘ç╪º╪▒╪» ┘ê┘è╪▒ ╪ƒ",
-      answer: "┘å╪╣┘à ┘è┘é╪»╪▒ ┘è┘ü┘â ╪¿╪º┘å╪» ╪º┘ä┘ç╪º╪▒╪»┘ê┘è╪▒ ╪¿┘ä ┘â╪º┘à┘ä"
+      question: "هل يفك باند الهارد وير ؟",
+      answer: "نعم يقدر يفك باند الهاردوير بل كامل"
     },
     {
-      question: "┘à╪º╪╣╪▒┘ü╪¬ ┘â┘è┘ü ╪¬╪│╪¬╪«╪»┘à ╪º┘ä┘à┘å╪¬╪¼ ╪º┘ä╪º╪│╪¿┘ê┘ü╪▒ ╪ƒ",
-      answer: "╪º╪░╪º ┘à╪º╪╣╪▒┘ü╪¬ ╪¬╪│┘ê┘è┘ç ┘ü┘è ╪«╪»┘à┘ç ╪¿ 35 ╪▒┘è╪º┘ä ┘è╪¼┘è┘â ╪»╪╣┘à ┘è╪│┘ê┘è ┘ä┘â ╪«╪╖┘ê╪º╪¬ ┘ê┘â┘ä╪┤┘è ┘ê╪¿┘è┘â┘ê┘å ┘à╪╣┘â ╪º┘ê┘ä ╪¿╪º┘ê┘ä ┘ê╪¬┘é╪»╪▒ ╪¬╪│╪º┘ä ╪º┘è ╪│┘ê╪º┘ä ╪╣╪º╪»┘è"
+      question: "ماعرفت كيف تستخدم المنتج الاسبوفر ؟",
+      answer: "اذا ماعرفت تسويه في خدمه ب 35 ريال يجيك دعم يسوي لك خطوات وكلشي وبيكون معك اول باول وتقدر تسال اي سوال عادي"
     },
     {
-      question: "┘ç┘ä ╪º┘é╪»╪▒ ╪º┘ü╪▒┘à╪¬ ╪¿╪╣╪» ┘à╪º╪º╪│╪¬╪╣┘à┘ä ╪º┘ä╪º╪│╪¿┘ê┘ü╪▒ ┘ê╪º ┘è┘å┘ü┘â ╪¿╪º┘å╪»┘è ╪ƒ",
-      answer: "┘å╪╣┘à ╪¬┘é╪»╪▒ ┘ä┘ê ╪¬╪▒┘ü┘à╪¬ 100 ┘à╪▒┘ç ┘ê╪º ╪¬╪¿┘è╪╣ ╪º┘ä╪¼┘ç╪º╪▓ ┘à╪º┘è╪▒╪¼╪╣ ┘ä┘â ╪º┘ä╪¿╪º┘å╪» ╪º╪¿╪»╪º"
+      question: "هل اقدر افرمت بعد مااستعمل الاسبوفر وا ينفك باندي ؟",
+      answer: "نعم تقدر لو ترفمت 100 مره وا تبيع الجهاز مايرجع لك الباند ابدا"
     },
     {
-      question: "┘ç┘ä ┘ä┘à╪º ╪¬╪»╪«┘ä ┘é┘è┘à ┘ü┘è ┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬ ┘è╪╖┘ä╪╣┘â ┘à┘å ╪º┘ä┘é┘è┘à ┘ê╪º ╪¬╪╢┘ç╪▒ ╪▒╪│╪º┘ä┘ç ┘ä┘â ╪ƒ",
+      question: "هل لما تدخل قيم في فورت نايت يطلعك من القيم وا تضهر رساله لك ؟",
       answer: (
         <div className="flex flex-col gap-5 mt-3">
           <p className="leading-relaxed">
-            ┘à╪┤┘â┘ä╪¬┘â ╪¿╪º┘å╪» ┘ç╪º╪▒╪» ┘ê┘è╪▒ ┘ê╪º ╪º┘ä╪¡┘ä ╪ƒ ╪¬╪¬┘ê╪¼┘ç ╪º┘ä┘à╪¬╪¼╪▒ ┘ê╪¬╪º╪«╪░ ┘ä┘â (
-            <a href="https://salla.sa/t3nn/BpwOKQa" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 mx-1 transition-colors">┘à┘å╪¬╪¼ ┘ü┘â ╪¿╪º┘å╪» ┘ü┘ê╪▒╪¬ ┘å╪º┘è╪¬</a>
-            ) ┘ê╪¬╪¡╪╖ ╪▒┘é┘à ╪╖┘ä╪¿┘â ┘ü┘è ╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿╪º╪¬ ┘ü┘è ┘å┘ü╪│ ╪º┘ä┘à┘ê┘é╪╣ ┘ê╪º ╪¿┘è┘ê╪╡┘ä┘â ┘â┘ä ╪┤┘è ╪¬╪¡╪¬╪º╪¼┘ç
+            مشكلتك باند هارد وير وا الحل ؟ تتوجه المتجر وتاخذ لك (
+            <a href="https://salla.sa/t3nn/BpwOKQa" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 mx-1 transition-colors">منتج فك باند فورت نايت</a>
+            ) وتحط رقم طلبك في استلام الطلبات في نفس الموقع وا بيوصلك كل شي تحتاجه
           </p>
-          <img src="/hwid-message.png" alt="╪▒╪│╪º┘ä╪⌐ ╪¿╪º┘å╪» ┘ç╪º╪▒╪»┘ê┘è╪▒" className="max-w-[100%] md:max-w-[400px] w-auto h-auto rounded-xl border border-white/10 shadow-lg object-contain" />
+          <img src="/hwid-message.png" alt="رسالة باند هاردوير" className="max-w-[100%] md:max-w-[400px] w-auto h-auto rounded-xl border border-white/10 shadow-lg object-contain" />
         </div>
       )
     }
@@ -1351,8 +1315,8 @@ function FAQ() {
           <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 mb-2">
             <HelpCircle className="w-8 h-8 text-blue-400" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold drop-shadow-md">╪º┘ä╪ú╪│╪ª┘ä╪⌐ ╪º┘ä╪┤╪º╪ª╪╣╪⌐</h2>
-          <p className="text-zinc-400 text-lg">╪Ñ╪¼╪º╪¿╪º╪¬ ┘ä╪ú┘â╪½╪▒ ╪º┘ä╪ú╪│╪ª┘ä╪⌐ ╪º┘ä┘à╪¬┘â╪▒╪▒╪⌐</p>
+          <h2 className="text-4xl md:text-5xl font-bold drop-shadow-md">الأسئلة الشائعة</h2>
+          <p className="text-zinc-400 text-lg">إجابات لأكثر الأسئلة المتكررة</p>
         </motion.div>
 
         <div className="space-y-4">
@@ -1416,16 +1380,16 @@ function FAQ() {
 function Policies() {
   const policies = [
     {
-      title: "╪│┘è╪º╪│╪⌐ ╪º┘ä╪º╪│╪¬╪▒╪¼╪º╪╣",
-      content: "┘è╪¬┘à ╪º╪│╪¬╪▒╪¼╪º╪╣ ╪º┘ä┘à╪¿┘ä╪║ ┘ü┘é╪╖ ┘ü┘è ╪¡╪º┘ä ┘ê╪¼┘ê╪» ╪«╪╖╪ú ┘à┘å ╪º┘ä┘à╪│╪ñ┘ê┘ä ╪ú┘ê ╪º┘ä┘à┘å┘ü╪░ ┘ä┘ä╪╖┘ä╪¿. ╪║┘è╪▒ ╪░┘ä┘â ┘ä╪º ┘è╪¡┘é ┘ä┘ä╪╣┘à┘è┘ä ╪º┘ä┘à╪╖╪º┘ä╪¿╪⌐ ╪¿╪º┘ä╪º╪│╪¬╪▒╪¼╪º╪╣."
+      title: "سياسة الاسترجاع",
+      content: "يتم استرجاع المبلغ فقط في حال وجود خطأ من المسؤول أو المنفذ للطلب. غير ذلك لا يحق للعميل المطالبة بالاسترجاع."
     },
     {
-      title: "╪¿╪╣╪» ╪º┘ä╪┤╪▒╪º╪í",
-      content: "┘ä╪º ┘è┘à┘â┘å┘â ╪╖┘ä╪¿ ╪º╪│╪¬╪▒╪¼╪º╪╣ ╪º┘ä┘à╪¿┘ä╪║ ╪¿╪╣╪» ╪┤╪▒╪º╪í ╪º┘ä┘à┘å╪¬╪¼ ╪ú┘ê ╪º╪│╪¬┘ä╪º┘à┘ç ╪¿╪ú┘è ╪¡╪º┘ä ┘à┘å ╪º┘ä╪ú╪¡┘ê╪º┘ä╪î ┘è╪▒╪¼┘ë ╪º┘ä╪¬╪ú┘â╪» ┘é╪¿┘ä ╪Ñ╪¬┘à╪º┘à ╪╣┘à┘ä┘è╪⌐ ╪º┘ä╪»┘ü╪╣."
+      title: "بعد الشراء",
+      content: "لا يمكنك طلب استرجاع المبلغ بعد شراء المنتج أو استلامه بأي حال من الأحوال، يرجى التأكد قبل إتمام عملية الدفع."
     },
     {
-      title: "┘ü╪¬╪▒╪⌐ ╪º┘ä╪╢┘à╪º┘å",
-      content: "┘ä╪º ┘è┘à┘â┘å ╪╖┘ä╪¿ ╪¬╪╣┘ê┘è╪╢ ╪ú┘ê ╪º╪│╪¬╪▒╪¼╪º╪╣ ╪¿╪╣╪» ┘à╪▒┘ê╪▒ 3 ╪ú┘è╪º┘à ┘à┘å ╪º╪│╪¬╪«╪»╪º┘à ╪º┘ä┘à┘å╪¬╪¼. ┘å╪▒╪¼┘ê ┘ü╪¡╪╡ ╪º┘ä┘à┘å╪¬╪¼ ┘ü┘ê╪▒ ╪º╪│╪¬┘ä╪º┘à┘ç."
+      title: "فترة الضمان",
+      content: "لا يمكن طلب تعويض أو استرجاع بعد مرور 3 أيام من استخدام المنتج. نرجو فحص المنتج فور استلامه."
     }
   ];
 
@@ -1442,7 +1406,7 @@ function Policies() {
           <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 mb-2">
             <ShieldAlert className="w-8 h-8 text-blue-400" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold drop-shadow-md">╪º┘ä┘é┘ê╪º┘å┘è┘å ┘ê╪º┘ä╪┤╪▒┘ê╪╖</h2>
+          <h2 className="text-4xl md:text-5xl font-bold drop-shadow-md">القوانين والشروط</h2>
         </motion.div>
 
         <div className="space-y-6">
@@ -1473,7 +1437,7 @@ function Policies() {
           viewport={{ once: true }}
           className="mt-12 p-6 bg-red-500/5 border border-red-500/20 rounded-2xl text-red-400 text-center font-medium shadow-[0_0_30px_rgba(239,68,68,0.05)] backdrop-blur-sm"
         >
-          ╪┤╪▒╪º╪ª┘â ┘à┘å ╪º┘ä┘à╪¬╪¼╪▒ ┘è╪╣┘å┘è ┘à┘ê╪º┘ü┘é╪¬┘â ╪º┘ä╪¬╪º┘à╪⌐ ╪╣┘ä┘ë ╪¼┘à┘è╪╣ ╪º┘ä╪┤╪▒┘ê╪╖ ┘ê╪º┘ä┘é┘ê╪º┘å┘è┘å ╪º┘ä┘à╪░┘â┘ê╪▒╪⌐ ╪ú╪╣┘ä╪º┘ç.
+          شرائك من المتجر يعني موافقتك التامة على جميع الشروط والقوانين المذكورة أعلاه.
         </motion.div>
       </div>
     </section>
@@ -1487,23 +1451,23 @@ function Footer() {
         <motion.img 
           whileHover={{ scale: 1.1, rotate: 5, filter: "grayscale(0%) opacity(100%)" }}
           src={LOGO_URL} 
-          alt="╪¬╪╣┘å T3N" 
+          alt="تعن T3N" 
           className="w-16 h-16 object-contain mx-auto mb-6 opacity-40 grayscale transition-all duration-500 rounded-xl" 
         />
         <p className="text-zinc-500 text-sm mb-6 font-medium">
-          ╪¼┘à┘è╪╣ ╪º┘ä╪¡┘é┘ê┘é ┘à╪¡┘ü┘ê╪╕╪⌐ ┘ä┘à╪¬╪¼╪▒ ╪¬╪╣┘å T3N &copy; {new Date().getFullYear()}
+          جميع الحقوق محفوظة لمتجر تعن T3N &copy; {new Date().getFullYear()}
         </p>
         <div className="flex items-center justify-center gap-6 text-zinc-600">
-          <a href={STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">╪º┘ä┘à╪¬╪¼╪▒</a>
+          <a href={STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">المتجر</a>
           <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">╪»┘è╪│┘â┘ê╪▒╪»</a>
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">ديسكورد</a>
         </div>
       </div>
     </footer>
   );
 }
 
-function SpooferGuide({ onClose }: { onClose: () => void }) {
+function SuperstarGuide({ onClose }: { onClose: () => void }) {
   const [copiedCmd, setCopiedCmd] = useState(false);
   const winCommand = 'windowsdefender://threatsettings/';
 
@@ -1545,7 +1509,7 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg" />
-            <span className="font-bold text-xl text-white">╪┤╪▒╪¡ ╪º┘ä╪│╪¿┘ê┘ü╪▒ Spoofer</span>
+            <span className="font-bold text-xl text-white">شرح السبوفر Spoofer</span>
           </div>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -1559,15 +1523,39 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10">
+      <div className="container mx-auto px-4 py-16 max-w-[1500px] relative z-10 flex flex-col lg:flex-row justify-center gap-8 items-start">
+        
+        {/* RIGHT SIDEBAR (Sticky Download Box) */}
+        <div className="w-full lg:w-[300px] shrink-0 sticky top-28 order-1">
+          <div className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-blue-500/30 transition-colors">
+            <div className="flex items-center gap-4 mb-4 w-full">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
+                <FileArchive className="w-6 h-6 text-blue-400" />
+              </div>
+              <div className="text-right flex-1">
+                <h4 className="font-bold text-lg text-white">سبوفر تعن</h4>
+                <p className="text-xs text-zinc-400 mt-1">الملف الرئيسي للسبوفر</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => { const a=document.createElement('a'); a.href='/discord.gg_t3n.rar'; a.download='discord.gg_t3n.rar'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              <Download className="w-5 h-5" /> تحميل الملف
+            </button>
+          </div>
+        </div>
+
+        {/* LEFT MAIN CONTENT */}
+        <div className="flex-1 order-2 w-full max-w-4xl">
         
         {/* Title */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
           <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
             <Cpu className="w-10 h-10 text-blue-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">╪┤╪▒╪¡ ╪º╪│╪¬╪«╪»╪º┘à ╪º┘ä╪│╪¿┘ê┘ü╪▒</h1>
-          <p className="text-blue-200/60 text-lg max-w-2xl mx-auto">╪º╪¬╪¿╪╣ ╪º┘ä╪«╪╖┘ê╪º╪¬ ╪º┘ä╪¬╪º┘ä┘è╪⌐ ╪¿╪º┘ä╪¬╪▒╪¬┘è╪¿ ┘ä╪¬┘ü╪╣┘è┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒ ╪¿┘å╪¼╪º╪¡</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">شرح استخدام السبوفر</h1>
+          <p className="text-blue-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتفعيل السبوفر بنجاح</p>
         </motion.div>
 
         {/* ===== STEP 1: Disable Defender ===== */}
@@ -1578,8 +1566,8 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 <Shield className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-white">╪ú┘ê┘ä ╪┤┘è: ╪¬╪╖┘ü┘è ╪º┘ä╪¡┘à╪º┘è╪⌐ ╪¿╪┤┘â┘ä ┘â╪º┘à┘ä</h3>
-                <p className="text-blue-200/60 leading-relaxed text-lg">┘ê╪º┘ä┘è ┘à╪º ┘è╪╣╪▒┘ü╪î ╪¬╪╢╪║╪╖ <span className="text-white font-bold">Win+R</span> ┘ê╪¬╪¡╪╖ ┘ç╪░╪º ╪º┘ä╪ú┘à╪▒:</p>
+                <h3 className="text-xl font-bold mb-2 text-white">أول شي: تطفي الحماية بشكل كامل</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">والي ما يعرف، تضغط <span className="text-white font-bold">Win+R</span> وتحط هذا الأمر:</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-black/40 rounded-xl p-4 border border-blue-500/20 mb-4">
@@ -1590,12 +1578,12 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 onClick={copyCommand}
                 className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${copiedCmd ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white hover:bg-blue-400'}`}
               >
-                {copiedCmd ? <><CheckCircle2 className="w-4 h-4" /> ╪¬┘à ╪º┘ä┘å╪│╪«</> : <><ExternalLink className="w-4 h-4" /> ┘å╪│╪«</>}
+                {copiedCmd ? <><CheckCircle2 className="w-4 h-4" /> تم النسخ</> : <><ExternalLink className="w-4 h-4" /> نسخ</>}
               </motion.button>
             </div>
             
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
-              <p className="text-red-400 font-bold text-lg">ΓÜá∩╕Å ┘ê╪¬╪╖┘ü┘è ╪¼┘à┘è╪╣ ╪º┘ä╪«┘è╪º╪▒╪º╪¬ ╪¡┘é╪¬ ╪º┘ä╪¡┘à╪º┘è╪⌐ ╪º┘ä┘ä┘è ╪╕╪º┘ç╪▒╪⌐ ┘ä┘â ╪¿╪º┘ä┘â╪º┘à┘ä!</p>
+              <p className="text-red-400 font-bold text-lg">⚠️ وتطفي جميع الخيارات حقت الحماية اللي ظاهرة لك بالكامل!</p>
             </motion.div>
           </div>
         </motion.div>
@@ -1604,22 +1592,22 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="mb-8">
           <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
             <div className="flex gap-5 items-start mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center shrink-0 border border-yellow-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
                 <FileArchive className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-white">╪½┘à ╪¬╪▒┘ê╪¡ ┘ä┘à┘ä┘ü discord.gg t3n</h3>
-                <p className="text-blue-200/60 leading-relaxed text-lg">╪¬╪»╪«┘ä ╪╣┘ä┘ë ┘à╪¼┘ä╪» <span className="text-white font-bold">┘â┘ä┘è┘å</span> ╪½┘à ╪¬╪┤╪║┘ä ┘à┘ä┘ü <span className="text-yellow-400 font-bold">UpdatedApple.exe</span> ΓÇö ┘à┘ç┘à ╪¬╪│┘ê┘è┘ç ┘é╪¿┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒!</p>
+                <h3 className="text-xl font-bold mb-2 text-white">ثم تروح لملف discord.gg t3n</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تدخل على مجلد <span className="text-white font-bold">كلين</span> ثم تشغل ملف <span className="text-blue-400 font-bold">UpdatedApple.exe</span> — مهم تسويه قبل السبوفر!</p>
               </div>
             </div>
             
             <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span className="text-blue-400">≡ƒæç</span> ╪┤╪▒╪¡ UpdatedApple ╪╖╪▒┘è┘é╪⌐ ╪º╪│╪¬╪╣┘à╪º┘ä
+              <span className="text-blue-400">👇</span> شرح UpdatedApple طريقة استعمال
             </h4>
             <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
                 <source src="/video-updatedapple.mp4" type="video/mp4" />
-                ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+                متصفحك لا يدعم تشغيل الفيديو
               </video>
             </div>
           </div>
@@ -1633,18 +1621,18 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 <Cpu className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-white">╪¿╪╣╪» ┘à╪º ╪¬╪│┘ê┘è UpdatedApple.exe ┘ê╪Ñ╪╣╪º╪»╪⌐ ╪¬╪┤╪║┘è┘ä ┘ä┘ä╪¼┘ç╪º╪▓</h3>
-                <p className="text-blue-200/60 leading-relaxed text-lg">╪¬┘â┘à┘ä ╪┤╪▒╪¡ ╪º┘ä╪│╪¿┘ê┘ü╪▒ ≡ƒæç</p>
+                <h3 className="text-xl font-bold mb-2 text-white">بعد ما تسوي UpdatedApple.exe وإعادة تشغيل للجهاز</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg">تكمل شرح السبوفر 👇</p>
               </div>
             </div>
             
             <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span className="text-blue-400">≡ƒæç</span> ╪┤╪▒╪¡ ╪º┘ä╪│╪¿┘ê┘ü╪▒
+              <span className="text-blue-400">👇</span> شرح السبوفر
             </h4>
             <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
                 <source src="/video-spoofer.mp4" type="video/mp4" />
-                ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+                متصفحك لا يدعم تشغيل الفيديو
               </video>
             </div>
           </div>
@@ -1658,26 +1646,26 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 <Gamepad2 className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold mb-2 text-white">╪¿╪╣╪» ┘à╪º ╪¬╪│┘ê┘è ╪º┘ä╪│╪¿┘ê┘ü╪▒ ┘ê╪Ñ╪╣╪º╪»╪⌐ ╪¬╪┤╪║┘è┘ä ┘ä┘ä╪¼┘ç╪º╪▓</h3>
-                <p className="text-blue-200/60 leading-relaxed text-lg mb-4">╪¬╪«╪┤ ╪¿╪¡╪│╪º╪¿ ╪¼╪»┘è╪» ╪¿╪ú┘è ┘ä╪╣╪¿╪⌐ ╪¬╪¿┘è┘ç╪º ┘ê┘à╪¿╪▒┘ê┘â ╪╣┘ä┘è┘â ╪¿╪º┘å╪»┘â ╪º┘å┘ü┘â! ≡ƒÄë</p>
+                <h3 className="text-xl font-bold mb-2 text-white">بعد ما تسوي السبوفر وإعادة تشغيل للجهاز</h3>
+                <p className="text-blue-200/60 leading-relaxed text-lg mb-4">تخش بحساب جديد بأي لعبة تبيها ومبروك عليك باندك انفك! 🎉</p>
                 
                 <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/30 mb-6 flex items-start gap-3">
                   <ShieldAlert className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
                   <p className="text-red-200 text-sm md:text-base font-bold leading-relaxed">
-                    ┘à┘ç┘à ╪¼╪»╪º┘ï: ┘ä╪º╪▓┘à ╪¬╪│┘ê┘è ┘ê╪¬╪«╪┤ ╪¿╪¡╪│╪º╪¿ ╪¼╪»┘è╪» ╪¬┘à╪º┘à╪º┘ï ╪╣╪┤╪º┘å ┘à╪º ┘è╪▒╪¼╪╣ ┘ä┘â ╪º┘ä╪¿╪º┘å╪»! ┘ä┘ê ╪»╪«┘ä╪¬ ╪¿╪¡╪│╪º╪¿┘â ╪º┘ä┘é╪»┘è┘à ╪º┘ä┘à╪¬╪¿┘å╪» ╪▒╪º╪¡ ╪¬┘å╪¡╪╕╪▒ ┘à┘å ╪¼╪»┘è╪» ┘ê╪╣╪┤╪º┘å ╪¬╪¬╪ú┘â╪» ╪Ñ┘å┘ç ╪▒╪º╪¡ ╪º┘ä╪¿╪º┘å╪».
+                    مهم جداً: لازم تسوي وتخش بحساب جديد تماماً عشان ما يرجع لك الباند! لو دخلت بحسابك القديم المتبند راح تنحظر من جديد وعشان تتأكد إنه راح الباند.
                   </p>
                 </div>
 
                 <div className="bg-black/30 p-5 md:p-6 rounded-2xl border border-blue-500/10">
                   <p className="text-zinc-200 leading-relaxed mb-3 font-medium">
-                    ┘ê┘ç╪░╪º <a href="https://tmailor.com/ar/" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition-all">┘à┘ê┘é╪╣ ╪º┘è┘à┘è┘ä ┘à┘ç┘à┘ä</a> ╪¬┘é╪»╪▒ ╪¬╪│┘ê┘è ┘ü┘è┘ç ╪¡╪│╪º╪¿ ╪╣┘ä┘ë ╪º┘ä╪│╪▒┘è╪╣.
+                    وهذا <a href="https://tmailor.com/ar/" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition-all">موقع ايميل مهمل</a> تقدر تسوي فيه حساب على السريع.
                   </p>
                   <p className="text-zinc-400 leading-relaxed">
-                    ┘ê┘ä┘ê ┘à╪º ╪▓╪¿╪╖ ╪»┘ê╪▒ ┘ä┘â ╪º┘è┘à┘è┘ä ┘à╪╣╪¬┘à╪» ╪│┘ê╪º{' '}
+                    ولو ما زبط دور لك ايميل معتمد سوا{' '}
                     <a href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition-all">gmail</a>{' '}
-                    ╪ú┘ê{' '}
+                    أو{' '}
                     <a href="https://account.proton.me/mail" target="_blank" rel="noopener noreferrer" className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition-all">Proton Mail</a>{' '}
-                    ╪ú┘ê ╪ú┘è ╪º┘è┘à┘è┘ä ╪¼╪º┘ç╪▓ ╪╣┘å╪»┘â.
+                    أو أي ايميل جاهز عندك.
                   </p>
                 </div>
               </div>
@@ -1695,9 +1683,9 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 <AlertCircle className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2 text-red-500">╪¬┘å╪¿┘è┘ç ┘ä┘ä┘è ┘à╪º ╪╢╪¿╪╖ ┘à╪╣┘ç ΓÜá∩╕Å</h3>
+                <h3 className="text-xl font-bold mb-2 text-red-500">تنبيه للي ما ضبط معه ⚠️</h3>
                 <p className="text-red-200/80 leading-relaxed text-lg">
-                  ┘ê╪º┘ä┘è ┘à╪º ┘è╪╢╪¿╪╖ ┘à╪╣┘ç ╪ú┘ê ╪▒╪¼╪╣ ┘ä┘ç ╪º┘ä╪¿╪º┘å╪»╪î ┘è┘ü╪▒┘à╪¬ ╪º┘ä╪¼┘ç╪º╪▓ PC ╪¿┘ü┘ä╪º╪┤╪⌐ USB.
+                  والي ما يضبط معه أو رجع له الباند، يفرمت الجهاز PC بفلاشة USB.
                 </p>
               </div>
             </div>
@@ -1708,8 +1696,8 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                   <MonitorPlay className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-sm text-red-300/60 mb-1">╪┤╪▒╪¡ ┘è┘ê╪¬┘è┘ê╪¿</div>
-                  <div className="text-lg">┘ü┘ê╪▒┘à╪º╪¬ ┘ê┘è┘å╪»┘ê╪▓ <span className="text-blue-400">11</span></div>
+                  <div className="text-sm text-red-300/60 mb-1">شرح يوتيوب</div>
+                  <div className="text-lg">فورمات ويندوز <span className="text-blue-400">11</span></div>
                 </div>
               </a>
               <a href="https://youtu.be/WaFxvUmsNWs?si=EORZDATVTJYPor_X" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#0a1a5c]/40 p-5 rounded-xl border border-blue-500/20 hover:border-red-500/50 hover:bg-red-500/10 transition-all font-bold text-white group">
@@ -1717,21 +1705,21 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                   <MonitorPlay className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-sm text-red-300/60 mb-1">╪┤╪▒╪¡ ┘è┘ê╪¬┘è┘ê╪¿</div>
-                  <div className="text-lg">┘ü┘ê╪▒┘à╪º╪¬ ┘ê┘è┘å╪»┘ê╪▓ <span className="text-blue-400">10</span></div>
+                  <div className="text-sm text-red-300/60 mb-1">شرح يوتيوب</div>
+                  <div className="text-lg">فورمات ويندوز <span className="text-blue-400">10</span></div>
                 </div>
               </a>
             </div>
 
             <p className="text-white font-bold mt-6 text-center text-lg bg-red-500/20 p-4 rounded-xl border border-red-500/30 shadow-inner">
-              ┘ê╪¿╪╣╪» ╪º┘ä┘ü┘ê╪▒┘à╪º╪¬ ╪╣┘è╪» ╪«╪╖┘ê╪º╪¬ ╪º┘ä╪┤╪▒╪¡ ┘â╪º┘à┘ä╪⌐╪î ┘ê╪«╪┤ ╪¿╪¡╪│╪º╪¿ ╪¼╪»┘è╪»╪î ┘ê╪¿┘è┘å┘ü┘â ╪º┘ä╪¿╪º┘å╪» ╪╣┘å┘â! ≡ƒÆ»
+              وبعد الفورمات عيد خطوات الشرح كاملة، وخش بحساب جديد، وبينفك الباند عنك! 💯
             </p>
           </div>
         </motion.div>
 
         {/* ===== Reviews Section ===== */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mb-6">
-          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-yellow-500/20 shadow-[0_0_25px_rgba(234,179,8,0.1)] text-center">
+          <div className="rounded-2xl p-6 md:p-8 bg-[#0a1a5c]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)] text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               {[...Array(5)].map((_, i) => (
                 <motion.div
@@ -1744,19 +1732,19 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
                 >
                   <img
                     src={LOGO_URL}
-                    alt="Γÿà"
+                    alt="★"
                     className="w-full h-full object-cover"
                     style={{ clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' }}
                   />
                 </motion.div>
               ))}
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">╪┤┘è ╪ú╪«┘è╪▒╪î ┘ä╪º ╪¬╪¡╪▒┘à┘å╪º ┘à┘å ╪¬┘é┘è┘è┘à┘â!</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">شي أخير، لا تحرمنا من تقييمك!</h3>
             <p className="text-blue-200/60 text-lg mb-2">
-              ┘ü┘è ╪▒┘ê┘à ╪º┘ä╪»╪│┘â┘ê╪▒╪»{' '}
-              <a href="https://discord.com/channels/1396959491786018826/1397221014215331891" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 transition-colors">╪º┘ä╪¬┘é┘è┘è┘à╪º╪¬</a>
-              {' '}┘ê┘ü┘è{' '}
-              <a href="https://salla.sa/t3nn/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 transition-colors">┘à╪¬╪¼╪▒ ╪¬╪╣┘å</a>
+              في روم الدسكورد{' '}
+              <a href="https://discord.com/channels/1396959491786018826/1397221014215331891" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 transition-colors">التقييمات</a>
+              {' '}وفي{' '}
+              <a href="https://salla.sa/t3nn/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 transition-colors">متجر تعن</a>
             </p>
           </div>
         </motion.div>
@@ -1765,7 +1753,7 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85 }}>
           <div className="rounded-2xl p-5 bg-blue-500/5 border border-blue-500/20 text-center">
             <p className="text-blue-300/70 text-sm leading-relaxed">
-              ╪Ñ╪░╪º ┘à╪º ╪╣┘å╪»┘â ╪º┘ä╪▒╪¬╪¿╪⌐ ╪╣╪┤╪º┘å ╪¬┘é┘è┘æ┘à ┘ü┘è ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪»╪î ╪▒┘ê╪¡ ╪╣┘å╪» <span className="text-white font-bold">╪º╪│╪¬┘ä╪º┘à ╪º┘ä╪╖┘ä╪¿╪º╪¬</span> ┘ê╪¡╪╖ ╪▒┘é┘à ╪╖┘ä╪¿┘â ┘ê╪¿┘è╪╖┘ä╪╣ ┘ä┘â ╪«┘è╪º╪▒ <span className="text-white font-bold">╪▒╪¿╪╖ ╪º┘ä╪¡╪│╪º╪¿ ┘ê╪Ñ╪│╪¬┘ä╪º┘à ╪º┘ä╪▒╪¬╪¿╪⌐</span>
+              إذا ما عندك الرتبة عشان تقيّم في الديسكورد، روح عند <span className="text-white font-bold">استلام الطلبات</span> وحط رقم طلبك وبيطلع لك خيار <span className="text-white font-bold">ربط الحساب وإستلام الرتبة</span>
             </p>
           </div>
         </motion.div>
@@ -1778,9 +1766,15 @@ function SpooferGuide({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="px-8 py-3 bg-white/10 text-white rounded-xl border border-white/10 hover:bg-white/20 transition-all font-bold"
           >
-            ╪º┘ä╪▒╪¼┘ê╪╣ ┘ä┘ä╪╡┘ü╪¡╪⌐ ╪º┘ä╪▒╪ª┘è╪│┘è╪⌐
+            الرجوع للصفحة الرئيسية
           </motion.button>
         </div>
+        
+        </div> {/* End of Main Content Left Side */}
+
+        {/* INVISIBLE LEFT SPACER TO CENTER THE MAIN CONTENT */}
+        <div className="hidden lg:block w-[300px] shrink-0 order-3 pointer-events-none"></div>
+
       </div>
     </motion.div>,
     document.body
@@ -1811,7 +1805,7 @@ function SiteGuide({ onClose }: { onClose: () => void }) {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg shadow-lg" />
-            <span className="font-bold text-xl text-white drop-shadow-md">╪┤╪▒╪¡ ╪¿┘ê╪º╪¿╪⌐ ╪¬╪╣┘å</span>
+            <span className="font-bold text-xl text-white drop-shadow-md">شرح بوابة تعن</span>
           </div>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -1827,8 +1821,8 @@ function SiteGuide({ onClose }: { onClose: () => void }) {
       {/* Content */}
       <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10 w-full">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-xl">┘ü┘è╪»┘è┘ê ╪┤╪▒╪¡ ╪º┘ä┘à┘ê┘é╪╣</h1>
-          <p className="text-zinc-200 text-lg max-w-2xl mx-auto drop-shadow-md">╪º┘ä╪ó┘å ┘è┘à┘â┘å┘â ┘à╪┤╪º┘ç╪»╪⌐ ╪╖╪▒┘è┘é╪⌐ ╪º╪│╪¬╪«╪»╪º┘à ┘à┘à┘è╪▓╪º╪¬ ╪º┘ä╪¿┘ê╪º╪¿╪⌐ ┘ê╪▒╪¿╪╖ ╪¡╪│╪º╪¿┘â ╪«╪╖┘ê╪⌐ ╪¿╪«╪╖┘ê╪⌐</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-xl">فيديو شرح الموقع</h1>
+          <p className="text-zinc-200 text-lg max-w-2xl mx-auto drop-shadow-md">الآن يمكنك مشاهدة طريقة استخدام مميزات البوابة وربط حسابك خطوة بخطوة</p>
         </motion.div>
 
         <motion.div 
@@ -1839,7 +1833,7 @@ function SiteGuide({ onClose }: { onClose: () => void }) {
         >
           <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} poster="/site-guide-poster.jpg" className="w-full h-auto max-h-[70vh] aspect-[16/9] object-contain" autoPlay playsInline>
             <source src="/site-guide-vid.mp4" type="video/mp4" />
-            ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+            متصفحك لا يدعم تشغيل الفيديو
           </video>
         </motion.div>
 
@@ -1853,7 +1847,7 @@ function SiteGuide({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="px-10 py-4 bg-white/10 text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all font-bold backdrop-blur-lg shadow-xl"
           >
-            ╪º┘ä╪▒╪¼┘ê╪╣ ┘ä┘ä╪╡┘ü╪¡╪⌐ ╪º┘ä╪▒╪ª┘è╪│┘è╪⌐
+            الرجوع للصفحة الرئيسية
           </button>
         </motion.div>
       </div>
@@ -1919,7 +1913,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
-            <span className="font-bold text-xl text-white drop-shadow-md">╪¡┘ä ┘à╪┤╪º┘â┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒</span>
+            <span className="font-bold text-xl text-white drop-shadow-md">حل مشاكل السبوفر</span>
           </div>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -1938,9 +1932,9 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
           <div className="w-24 h-24 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
             <Wrench className="w-12 h-12 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-xl">╪┤╪▒┘ê╪¡╪º╪¬ ╪¡┘ä ╪º┘ä┘à╪┤╪º┘â┘ä</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-xl">شروحات حل المشاكل</h1>
           <p className="text-red-200/80 text-xl font-bold max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-            ┘ç┘å╪º ╪¬╪¼╪» ╪¼┘à┘è╪╣ ╪º┘ä╪¡┘ä┘ê┘ä ┘ê╪º┘ä┘ü┘è╪»┘è┘ê┘ç╪º╪¬ ┘ä╪¡┘ä ╪ú┘è ┘à╪┤┘â┘ä╪⌐ ┘é╪» ╪¬┘ê╪º╪¼┘ç┘â ╪ú╪½┘å╪º╪í ╪¬╪╖╪¿┘è┘é ╪º┘ä╪│╪¿┘ê┘ü╪▒
+            هنا تجد جميع الحلول والفيديوهات لحل أي مشكلة قد تواجهك أثناء تطبيق السبوفر
           </p>
         </motion.div>
 
@@ -1951,21 +1945,21 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             
             <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">1</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">╪¡┘ä ┘à╪┤┘â┘ä╪⌐ ╪«╪╖╪ú ╪º┘ä┘ê┘é╪¬</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white">حل مشكلة خطأ الوقت</h3>
             </div>
             
             <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">
-              ┘ç┘ä ╪¬╪╕┘ç╪▒ ┘ä┘â ╪▒╪│╪º┘ä╪⌐ ╪«╪╖╪ú ╪º┘ä┘ê┘é╪¬ ╪º┘ä┘à┘ê╪╢╪¡╪⌐ ╪¿╪º┘ä╪╡┘ê╪▒╪⌐╪ƒ
+              هل تظهر لك رسالة خطأ الوقت الموضحة بالصورة؟
             </p>
             
             <div 
               className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group"
               onClick={() => setSelectedImage('/error-time.png')}
             >
-              <img src="/error-time.png" alt="╪╡┘ê╪▒╪⌐ ╪«╪╖╪ú ╪º┘ä┘ê┘é╪¬" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300" />
+              <img src="/error-time.png" alt="صورة خطأ الوقت" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="bg-black/80 text-white px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 font-bold text-sm">
-                  <Maximize2 className="w-4 h-4" /> ╪º┘å┘é╪▒ ┘ä╪¬┘â╪¿┘è╪▒ ╪º┘ä╪╡┘ê╪▒╪⌐
+                  <Maximize2 className="w-4 h-4" /> انقر لتكبير الصورة
                 </span>
               </div>
             </div>
@@ -1973,7 +1967,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
               <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
               <span className="text-red-400 font-bold flex items-center gap-2 text-xl">
-                <CheckCircle2 className="w-7 h-7" /> ╪Ñ┘ä┘è┘â ╪º┘ä╪¡┘ä ╪¿╪º┘ä┘ü┘è╪»┘è┘ê ≡ƒæç
+                <CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇
               </span>
               <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
             </div>
@@ -1981,7 +1975,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black backdrop-blur-sm">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
                 <source src="/video-solution-time.mp4" type="video/mp4" />
-                ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+                متصفحك لا يدعم تشغيل الفيديو
               </video>
             </div>
 
@@ -1992,21 +1986,21 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             
             <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">2</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">╪Ñ┘è╪¿┘â ┘é┘è┘à╪▓ ┘ä╪º ┘è╪╣┘à┘ä ╪ú┘ê ┘ä╪º ┘è╪¡┘à┘ä╪ƒ</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white">إيبك قيمز لا يعمل أو لا يحمل؟</h3>
             </div>
             
             <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">
-              ┘ç┘ä ╪¬┘ê╪º╪¼┘ç ┘à╪┤┘â┘ä╪⌐ ┘ü┘è ╪¬╪┤╪║┘è┘ä ╪Ñ┘è╪¿┘â ┘é┘è┘à╪▓ ╪ú┘ê ╪╣╪»┘à ┘é╪»╪▒╪¬╪⌐ ╪╣┘ä┘ë ╪º┘ä╪¬╪¡┘à┘è┘ä ╪¿╪╣╪» ╪¬╪╖╪¿┘è┘é ╪º┘ä╪┤╪▒╪¡╪ƒ
+              هل تواجه مشكلة في تشغيل إيبك قيمز أو عدم قدرتة على التحميل بعد تطبيق الشرح؟
             </p>
             
             <div 
               className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group"
               onClick={() => setSelectedImage('/error-epic.png')}
             >
-              <img src="/error-epic.png" alt="╪╡┘ê╪▒╪⌐ ┘à╪┤┘â┘ä╪⌐ ╪Ñ┘è╪¿┘â ┘é┘è┘à╪▓" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-black/50" />
+              <img src="/error-epic.png" alt="صورة مشكلة إيبك قيمز" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-black/50" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="bg-black/80 text-white px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 font-bold text-sm">
-                  <Maximize2 className="w-4 h-4" /> ╪º┘å┘é╪▒ ┘ä╪¬┘â╪¿┘è╪▒ ╪º┘ä╪╡┘ê╪▒╪⌐
+                  <Maximize2 className="w-4 h-4" /> انقر لتكبير الصورة
                 </span>
               </div>
             </div>
@@ -2014,7 +2008,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
               <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
               <span className="text-red-400 font-bold flex items-center gap-2 text-xl">
-                <CheckCircle2 className="w-7 h-7" /> ╪Ñ┘ä┘è┘â ╪º┘ä╪¡┘ä ╪¿╪º┘ä┘ü┘è╪»┘è┘ê ≡ƒæç
+                <CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇
               </span>
               <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
             </div>
@@ -2022,7 +2016,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black backdrop-blur-sm">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
                 <source src="/video-solution-epic.mp4" type="video/mp4" />
-                ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+                متصفحك لا يدعم تشغيل الفيديو
               </video>
             </div>
 
@@ -2033,21 +2027,21 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             
             <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">3</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">╪«╪╖╪ú ┘ü┘è ╪º┘ä╪┤╪¿┘â╪⌐ ╪ú┘ê ┘â┘ä╪º┘à ╪ú╪▓╪▒┘é╪ƒ</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white">خطأ في الشبكة أو كلام أزرق؟</h3>
             </div>
             
             <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">
-              ┘ç┘ä ╪╣┘å╪» ╪¬╪┤╪║┘è┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒ ┘è╪╖┘ü┘ë ┘ü╪¼╪ú╪⌐ ╪ú┘ê ┘è╪╕┘ç╪▒ ┘ä┘â ╪«╪╖╪ú ╪¿╪º┘ä╪┤╪¿┘â╪⌐ ┘ê ╪▒╪│╪º┘ä╪⌐ ╪¿╪º┘ä┘ä┘ê┘å ╪º┘ä╪ú╪▓╪▒┘é ╪º┘ä┘à┘ê╪╢╪¡╪⌐╪ƒ
+              هل عند تشغيل السبوفر يطفى فجأة أو يظهر لك خطأ بالشبكة و رسالة باللون الأزرق الموضحة؟
             </p>
             
             <div 
               className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group"
               onClick={() => setSelectedImage('/error-network.png')}
             >
-              <img src="/error-network.png" alt="╪╡┘ê╪▒╪⌐ ╪«╪╖╪ú ╪º┘ä╪┤╪¿┘â╪⌐" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-black/50" />
+              <img src="/error-network.png" alt="صورة خطأ الشبكة" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-black/50" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="bg-black/80 text-white px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 font-bold text-sm">
-                  <Maximize2 className="w-4 h-4" /> ╪º┘å┘é╪▒ ┘ä╪¬┘â╪¿┘è╪▒ ╪º┘ä╪╡┘ê╪▒╪⌐
+                  <Maximize2 className="w-4 h-4" /> انقر لتكبير الصورة
                 </span>
               </div>
             </div>
@@ -2055,7 +2049,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
               <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
               <span className="text-red-400 font-bold flex items-center gap-2 text-xl">
-                <CheckCircle2 className="w-7 h-7" /> ╪Ñ┘ä┘è┘â ╪º┘ä╪¡┘ä ╪¿╪º┘ä┘ü┘è╪»┘è┘ê ≡ƒæç
+                <CheckCircle2 className="w-7 h-7" /> إليك الحل بالفيديو 👇
               </span>
               <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
             </div>
@@ -2063,7 +2057,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-4xl rounded-3xl overflow-hidden border-2 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)] bg-black backdrop-blur-sm">
               <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full aspect-video outline-none" preload="metadata">
                 <source src="/video-solution-network.mp4" type="video/mp4" />
-                ┘à╪¬╪╡┘ü╪¡┘â ┘ä╪º ┘è╪»╪╣┘à ╪¬╪┤╪║┘è┘ä ╪º┘ä┘ü┘è╪»┘è┘ê
+                متصفحك لا يدعم تشغيل الفيديو
               </video>
             </div>
 
@@ -2075,12 +2069,12 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                 </div>
                 <div>
                   <h4 className="text-xl md:text-2xl font-bold text-white mb-3 flex items-center gap-2 flex-wrap">
-                    <span>╪▒╪º╪¿╪╖ ╪¬╪¡┘à┘è┘ä ╪¿╪▒┘å╪º┘à╪¼</span>
+                    <span>رابط تحميل برنامج</span>
                     <img src="/warp-icon.png" alt="WARP" className="h-6 md:h-7 w-auto object-contain" style={{ transform: "translateY(1px)" }} />
                     <span>WARP</span>
                   </h4>
                   <p className="text-blue-200/80 leading-relaxed max-w-lg">
-                    ╪¡┘à┘ä┘ç ┘à┘å ┘ç┘å╪º╪î ┘ê╪¿╪╣╪» ╪º┘ä╪¬╪½╪¿┘è╪¬ ┘â┘à┘ä ╪º┘ä╪┤╪▒╪¡ ┘ü┘è ╪º┘ä┘ü┘è╪»┘è┘ê ┘ä╪¡┘ä ╪º┘ä┘à╪┤┘â┘ä╪⌐ ╪¿╪º┘ä┘â╪º┘à┘ä.
+                    حمله من هنا، وبعد التثبيت كمل الشرح في الفيديو لحل المشكلة بالكامل.
                   </p>
                 </div>
               </div>
@@ -2090,19 +2084,19 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                 rel="noopener noreferrer" 
                 className="w-full md:w-auto bg-[#F38020] hover:bg-[#F38020]/80 text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] shadow-lg shrink-0"
               >
-                ╪¬╪¡┘à┘è┘ä ╪º┘ä╪¿╪▒┘å╪º┘à╪¼ ╪º┘ä╪ó┘å <Download className="w-5 h-5" />
+                تحميل البرنامج الآن <Download className="w-5 h-5" />
               </a>
             </div>
 
             {/* USB Format Warning */}
             <div className="w-full max-w-4xl mt-8 bg-red-950/40 border border-red-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-[0_0_20px_rgba(239,68,68,0.1)]">
               <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="w-8 h-8 text-yellow-500 shrink-0" />
-                <h4 className="text-2xl font-bold text-red-400">╪¬┘å╪¿┘è┘ç ┘ç╪º┘à ╪¼╪»╪º┘ï! ΓÜá∩╕Å</h4>
+                <AlertTriangle className="w-8 h-8 text-red-500 shrink-0" />
+                <h4 className="text-2xl font-bold text-red-400">تنبيه هام جداً! ⚠️</h4>
               </div>
               
               <p className="text-zinc-200 text-lg md:text-xl font-medium mb-8 leading-relaxed text-right border-r-4 border-red-500 pr-4">
-                ┘ä┘ä┘è ┘à╪º ╪▓╪¿╪╖ ┘à╪╣┘ç ╪º┘ä╪╖╪▒┘è┘é╪⌐ ╪º┘ä┘ä┘è ┘ü┘è ╪º┘ä┘ü┘è╪»┘è┘ê ┘ê╪º┘ä┘à╪┤┘â┘ä╪⌐ ┘å┘ü╪│┘ç╪º ┘ä┘ä╪¡┘è┘å ┘à┘ê╪¼┘ê╪»╪⌐╪¢ ╪º┘ä╪¡┘ä ╪º┘ä┘ê╪¡┘è╪» ╪Ñ┘å┘â <span className="text-red-400 font-bold">╪¬┘ü╪▒┘à╪¬ ╪¿┘ü┘ä╪º╪┤╪⌐ USB</span> ╪½┘à ╪¬╪▒╪¼╪╣ ╪¿╪╣╪» ╪º┘ä┘ü┘ê╪▒┘à╪º╪¬ ┘ê╪¿┘è╪┤╪¬╪║┘ä ┘à╪╣┘â ╪º┘ä╪¿╪▒┘å╪º┘à╪¼ ╪╖╪¿┘è╪╣┘è.
+                للي ما زبط معه الطريقة اللي في الفيديو والمشكلة نفسها للحين موجودة؛ الحل الوحيد إنك <span className="text-red-400 font-bold">تفرمت بفلاشة USB</span> ثم ترجع بعد الفورمات وبيشتغل معك البرنامج طبيعي.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2111,8 +2105,8 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                     <Youtube className="w-7 h-7 text-red-500" />
                   </div>
                   <div>
-                    <h5 className="font-bold text-white text-lg mb-1">╪┤╪▒╪¡ ┘ü┘ê╪▒┘à╪º╪¬ Windows 11</h5>
-                    <span className="text-sm text-blue-400 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> ╪º┘å┘é╪▒ ┘ä┘ä┘à╪┤╪º┘ç╪»╪⌐ ╪╣┘ä┘ë ┘è┘ê╪¬┘è┘ê╪¿</span>
+                    <h5 className="font-bold text-white text-lg mb-1">شرح فورمات Windows 11</h5>
+                    <span className="text-sm text-blue-400 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> انقر للمشاهدة على يوتيوب</span>
                   </div>
                 </a>
 
@@ -2121,8 +2115,8 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                     <Youtube className="w-7 h-7 text-red-500" />
                   </div>
                   <div>
-                    <h5 className="font-bold text-white text-lg mb-1">╪┤╪▒╪¡ ┘ü┘ê╪▒┘à╪º╪¬ Windows 10</h5>
-                    <span className="text-sm text-blue-400 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> ╪º┘å┘é╪▒ ┘ä┘ä┘à╪┤╪º┘ç╪»╪⌐ ╪╣┘ä┘ë ┘è┘ê╪¬┘è┘ê╪¿</span>
+                    <h5 className="font-bold text-white text-lg mb-1">شرح فورمات Windows 10</h5>
+                    <span className="text-sm text-blue-400 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> انقر للمشاهدة على يوتيوب</span>
                   </div>
                 </a>
               </div>
@@ -2135,21 +2129,21 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             
             <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">4</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">╪«╪╖╪ú ╪¿╪│╪¿╪¿ ╪¡┘à╪º┘è╪⌐ ╪º┘ä┘ê┘è┘å╪»┘ê╪▓╪ƒ</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white">خطأ بسبب حماية الويندوز؟</h3>
             </div>
             
             <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">
-              ┘ä┘à╪º ╪¬╪┤╪║┘ä ┘à┘ä┘ü ╪º┘ä╪│╪¿┘ê┘ü╪▒ ╪ú┘ê UpdatedApple ┘ê┘è╪╖┘ä╪╣ ┘ä┘â ╪▒╪│╪º┘ä╪⌐ ╪º┘ä╪«╪╖╪ú ┘ç╪░┘è╪ƒ
+              لما تشغل ملف السبوفر أو UpdatedApple ويطلع لك رسالة الخطأ هذي؟
             </p>
             
             <div 
               className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group"
               onClick={() => setSelectedImage('/error-antivirus.png')}
             >
-              <img src="/error-antivirus.png" alt="╪╡┘ê╪▒╪⌐ ╪«╪╖╪ú ╪º┘ä╪¡┘à╪º┘è╪⌐" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-white" />
+              <img src="/error-antivirus.png" alt="صورة خطأ الحماية" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-white" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="bg-black/80 text-white px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 font-bold text-sm">
-                  <Maximize2 className="w-4 h-4" /> ╪º┘å┘é╪▒ ┘ä╪¬┘â╪¿┘è╪▒ ╪º┘ä╪╡┘ê╪▒╪⌐
+                  <Maximize2 className="w-4 h-4" /> انقر لتكبير الصورة
                 </span>
               </div>
             </div>
@@ -2157,15 +2151,15 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
               <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
               <span className="text-red-400 font-bold flex items-center gap-2 text-xl">
-                <CheckCircle2 className="w-7 h-7" /> ╪º┘ä╪¡┘ä ╪¿╪«╪╖┘ê╪º╪¬ ╪│╪▒┘è╪╣╪⌐ ≡ƒæç
+                <CheckCircle2 className="w-7 h-7" /> الحل بخطوات سريعة 👇
               </span>
               <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
             </div>
 
             <div className="w-full max-w-4xl bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-[0_0_30px_rgba(59,130,246,0.1)]">
               <ol className="list-decimal list-inside text-zinc-200 text-lg md:text-xl font-medium leading-loose space-y-5 text-right">
-                <li>╪º┘ä╪¡┘ä ╪Ñ┘å┘â ╪¬╪▒╪¼╪╣ ┘ê╪¬╪¬╪ú┘â╪» ╪Ñ┘å┘â ┘à╪╖┘ü┘è ╪º┘ä╪¡┘à╪º┘è╪⌐.</li>
-                <li>╪¬╪╢╪║╪╖ ╪▓╪▒ <kbd className="bg-black/50 text-white px-3 py-1 rounded-lg border border-white/20 font-sans mx-1">Win + R</kbd> ┘ê╪¬╪¡╪╖ ╪º┘ä╪ú┘à╪▒ ┘ç╪░╪º ┘ü┘è ╪º┘ä┘à╪▒╪¿╪╣: <br/>
+                <li>الحل إنك ترجع وتتأكد إنك مطفي الحماية.</li>
+                <li>تضغط زر <kbd className="bg-black/50 text-white px-3 py-1 rounded-lg border border-white/20 font-sans mx-1">Win + R</kbd> وتحط الأمر هذا في المربع: <br/>
                   <div className="bg-black/70 p-4 mt-3 mb-2 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-blue-500/30 shadow-inner">
                     <div className="text-blue-400 font-sans text-[1.1rem] md:text-xl select-all overflow-x-auto text-left" dir="ltr">
                       windowsdefender://threatsettings/
@@ -2173,8 +2167,8 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                     <CopyButton text="windowsdefender://threatsettings/" />
                   </div>
                 </li>
-                <li>╪º┘ä╪ó┘å ┘é┘à ╪¿╪Ñ┘è┘é╪º┘ü ╪º┘ä╪¡┘à╪º┘è╪⌐ ╪¿╪º┘ä┘â╪º┘à┘ä╪î ╪½┘à ╪º╪▒╪¼╪╣ ┘ê┘ü┘â ╪╢╪║╪╖ ╪º┘ä┘à┘ä┘ü ┘à┘å ╪¼╪»┘è╪».</li>
-                <li>╪¿┘à╪¼╪▒╪» ┘ü┘â ╪º┘ä╪╢╪║╪╖╪î ╪┤╪║┘ä ╪º┘ä┘à┘ä┘ü ╪º┘ä┘ä┘è ╪¬╪¿┘è┘ç ┘ê╪▒╪º╪¡ ┘è╪┤╪¬╪║┘ä ┘à╪╣┘â ╪¿╪»┘ê┘å ╪ú┘è ┘à╪┤╪º┘â┘ä! ≡ƒÆ»</li>
+                <li>الآن قم بإيقاف الحماية بالكامل، ثم ارجع وفك ضغط الملف من جديد.</li>
+                <li>بمجرد فك الضغط، شغل الملف اللي تبيه وراح يشتغل معك بدون أي مشاكل! 💯</li>
               </ol>
             </div>
         </motion.div>
@@ -2184,21 +2178,21 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             
             <div className="flex gap-4 items-center mb-8 bg-red-500/10 px-6 py-3 rounded-2xl border border-red-500/20">
               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white font-bold text-lg">5</span>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">┘à╪┤┘â┘ä╪⌐ ╪¬╪╣╪▒┘è┘ü╪º╪¬ ╪º┘ä┘å╪╕╪º┘à (DLL) ╪º┘ä┘å╪º┘é╪╡╪⌐╪ƒ</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white">مشكلة تعريفات النظام (DLL) الناقصة؟</h3>
             </div>
             
             <p className="text-zinc-300 text-xl font-medium mb-6 leading-relaxed text-center">
-              ┘ç┘ä ╪¬╪╕┘ç╪▒ ┘ä┘â ╪▒╪│╪º┘ä╪⌐ ╪º┘ä╪«╪╖╪ú ┘ç╪░┘è ┘ä┘à╪º ╪¬╪┤╪║┘ä ╪º┘ä╪│╪¿┘ê┘ü╪▒ ╪ú┘ê UpdatedApple╪ƒ
+              هل تظهر لك رسالة الخطأ هذي لما تشغل السبوفر أو UpdatedApple؟
             </p>
             
             <div 
               className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg mb-8 max-w-2xl w-full cursor-zoom-in relative group"
               onClick={() => setSelectedImage('/error-dll.png')}
             >
-              <img src="/error-dll.png" alt="╪╡┘ê╪▒╪⌐ ╪«╪╖╪ú ┘à┘ä┘ü╪º╪¬ ╪º┘ä┘å╪╕╪º┘à" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-white/5" />
+              <img src="/error-dll.png" alt="صورة خطأ ملفات النظام" className="w-full h-auto object-cover opacity-90 group-hover:scale-[1.02] transition-transform duration-300 bg-white/5" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="bg-black/80 text-white px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 font-bold text-sm">
-                  <Maximize2 className="w-4 h-4" /> ╪º┘å┘é╪▒ ┘ä╪¬┘â╪¿┘è╪▒ ╪º┘ä╪╡┘ê╪▒╪⌐
+                  <Maximize2 className="w-4 h-4" /> انقر لتكبير الصورة
                 </span>
               </div>
             </div>
@@ -2206,14 +2200,14 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             <div className="w-full max-w-3xl flex items-center gap-4 mb-8 opacity-90">
               <span className="h-[2px] flex-1 bg-gradient-to-l from-red-500 to-transparent"></span>
               <span className="text-red-400 font-bold flex items-center gap-2 text-xl">
-                <CheckCircle2 className="w-7 h-7" /> ╪▒┘ê╪º╪¿╪╖ ╪º┘ä╪¬╪¡┘à┘è┘ä ┘ä┘ä╪Ñ╪╡┘ä╪º╪¡ ≡ƒæç
+                <CheckCircle2 className="w-7 h-7" /> روابط التحميل للإصلاح 👇
               </span>
               <span className="h-[2px] flex-1 bg-gradient-to-r from-red-500 to-transparent"></span>
             </div>
 
             <div className="w-full max-w-4xl bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-[0_0_30px_rgba(59,130,246,0.1)]">
               <p className="text-zinc-200 text-lg md:text-xl font-medium leading-relaxed text-center md:text-right mb-6">
-                ┘ç╪░┘è ╪º┘ä┘à╪┤┘â┘ä╪⌐ ╪¿╪│╪¿╪¿ ╪ú┘å ╪¬╪╣╪▒┘è┘ü╪º╪¬ ┘ê┘à┘â┘ê┘å╪º╪¬ ╪º┘ä┘å╪╕╪º┘à ╪¿╪¼┘ç╪º╪▓┘â ┘å╪º┘é╪╡╪⌐. ╪º┘ä╪¡┘ä ╪│┘ç┘ä╪î ╪¡┘à┘ä ╪º┘ä┘à┘ä┘ü┘è┘å ┘ç╪░┘è ┘ê╪½╪¿╪¬┘ç╪º:
+                هذي المشكلة بسبب أن تعريفات ومكونات النظام بجهازك ناقصة. الحل سهل، حمل الملفين هذي وثبتها:
               </p>
 
               <div className="flex flex-col gap-4 mb-8">
@@ -2222,10 +2216,10 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                     <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" className="w-8 h-8 object-contain" />
                     <div>
                       <h4 className="font-bold text-white text-lg group-hover:text-blue-400 transition-colors">Microsoft Visual C++ Redistributable</h4>
-                      <p className="text-zinc-500 text-sm mt-1">╪ú╪¡╪»╪½ ╪Ñ╪╡╪»╪º╪▒ ╪╢╪▒┘ê╪▒┘è ┘ä┘ä┘å╪╕╪º┘à</p>
+                      <p className="text-zinc-500 text-sm mt-1">أحدث إصدار ضروري للنظام</p>
                     </div>
                   </div>
-                  <span className="text-blue-400 bg-blue-500/10 font-bold px-4 py-2 flex-shrink-0 rounded-lg text-sm flex items-center justify-center gap-2 w-full md:w-auto border border-blue-500/20"><Download className="w-4 h-4" /> ╪¬╪¡┘à┘è┘ä ╪º┘ä╪ó┘å</span>
+                  <span className="text-blue-400 bg-blue-500/10 font-bold px-4 py-2 flex-shrink-0 rounded-lg text-sm flex items-center justify-center gap-2 w-full md:w-auto border border-blue-500/20"><Download className="w-4 h-4" /> تحميل الآن</span>
                 </a>
 
                 <a href="https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-web-installer" target="_blank" rel="noopener noreferrer" className="bg-[#121212] hover:bg-black border border-white/10 hover:border-purple-500/40 p-5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:scale-[1.02] shadow-md group">
@@ -2238,15 +2232,15 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
                       <p className="text-zinc-500 text-sm mt-1">Windows-only version</p>
                     </div>
                   </div>
-                  <span className="text-purple-400 bg-purple-500/10 font-bold flex-shrink-0 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full md:w-auto border border-purple-500/20"><Download className="w-4 h-4" /> ╪¬╪¡┘à┘è┘ä ╪º┘ä╪ó┘å</span>
+                  <span className="text-purple-400 bg-purple-500/10 font-bold flex-shrink-0 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 w-full md:w-auto border border-purple-500/20"><Download className="w-4 h-4" /> تحميل الآن</span>
                 </a>
               </div>
 
               <div className="border-t-2 border-red-500/30 pt-6 mt-4 flex items-start gap-4">
                 <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
                 <p className="text-white text-lg leading-relaxed">
-                  <span className="font-bold text-green-400">┘ê╪ú╪«┘è╪▒╪º┘ï: </span> 
-                  ╪¿╪╣╪» ╪º┘ä╪¬╪¡┘à┘è┘ä ┘ê╪º┘ä╪¬╪½╪¿┘è╪¬╪î ╪º╪▒╪¼╪╣ ╪┤╪║┘ä ┘à┘ä┘ü ╪º┘ä╪│╪¿┘ê┘ü╪▒ ╪ú┘ê UpdatedApple ╪¡╪│╪¿ ╪º┘ä╪¿╪▒┘å╪º┘à╪¼ ╪º┘ä┘ä┘è ╪¬╪¿┘è ╪¬╪│╪¬╪╣┘à┘ä┘ç ┘ê╪¿┘è╪┤╪¬╪║┘ä ┘à╪╣┘â ╪¿╪»┘ê┘å ┘à╪┤╪º┘â┘ä! ≡ƒÆ»
+                  <span className="font-bold text-green-400">وأخيراً: </span> 
+                  بعد التحميل والتثبيت، ارجع شغل ملف السبوفر أو UpdatedApple حسب البرنامج اللي تبي تستعمله وبيشتغل معك بدون مشاكل! 💯
                 </p>
               </div>
             </div>
@@ -2259,10 +2253,10 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-16 text-center w-full max-w-2xl bg-blue-500/10 backdrop-blur-md p-8 rounded-3xl border border-blue-500/30">
           <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center justify-center gap-2">
             <MessageCircle className="w-6 h-6" />
-            ┘à╪º ╪▓┘ä╪¬ ╪¬┘ê╪º╪¼┘ç ┘à╪┤┘â┘ä╪⌐╪ƒ
+            ما زلت تواجه مشكلة؟
           </h3>
           <p className="text-zinc-300 leading-relaxed text-lg mb-6">
-            ╪¬┘ê╪¼┘ç ╪Ñ┘ä┘ë ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» ┘ê╪º┘ü╪¬╪¡ ╪¬╪░┘â╪▒╪⌐ ╪»╪╣┘à ┘ü┘å┘è ┘ê╪│┘è┘é┘ê┘à ╪º┘ä┘ü╪▒┘è┘é ╪¿╪¬┘é╪»┘è┘à ╪º┘ä┘à╪│╪º╪╣╪»╪⌐ ╪º┘ä┘â╪º┘à┘ä╪⌐.
+            توجه إلى الديسكورد وافتح تذكرة دعم فني وسيقوم الفريق بتقديم المساعدة الكاملة.
           </p>
           <a 
             href={DISCORD_URL} 
@@ -2270,7 +2264,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
             rel="noopener noreferrer" 
             className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors inline-flex"
           >
-            ╪º┘ä╪º┘å╪¬┘é╪º┘ä ╪Ñ┘ä┘ë ╪│┘è╪▒┘ü╪▒ ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» <ExternalLink className="w-5 h-5" />
+            الانتقال إلى سيرفر الديسكورد <ExternalLink className="w-5 h-5" />
           </a>
         </motion.div>
       </div>
@@ -2297,7 +2291,7 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               src={selectedImage}
-              alt="╪╡┘ê╪▒╪⌐ ┘à┘â╪¿╪▒╪⌐"
+              alt="صورة مكبرة"
               className="max-w-full max-h-full object-contain rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] border border-white/5"
             />
           </motion.div>
@@ -2309,343 +2303,390 @@ function TroubleshootGuide({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ≡ƒöæ Key Management Panel - Only accessible by admin
+// 🔑 Key Management Panel - Only accessible by admin
 function KeyManagement({ onClose }: { onClose: () => void }) {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [keys, setKeys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [logs, setLogs] = useState<any[]>([]);
-
-  // Search states
+  
+  // Create Form State
+  const [createCount, setCreateCount] = useState(1);
+  const [createProductType, setCreateProductType] = useState('fortnite');
+  const [isCustomProduct, setIsCustomProduct] = useState(false);
+  
+  // Search State
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResult, setSearchResult] = useState<any>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  
+  // Filter State
+  const [filterProduct, setFilterProduct] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const loadOrders = async () => {
+  const loadKeys = async () => {
     setLoading(true);
     try {
-      const data = await getAllOrders();
-      setOrders(data);
+      const data = await getAllKeys();
+      setKeys(data);
     } catch (e) {
-      console.error('Failed to load orders:', e);
+      console.error('Failed to load keys', e);
     }
-        const fetchedLogs = await getAuditLogs();
-    setLogs(fetchedLogs);
     setLoading(false);
   };
 
-  useEffect(() => { loadOrders(); }, []);
+  useEffect(() => { loadKeys(); }, []);
 
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadOrders();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const uniqueProducts = Array.from(new Set(keys.map(k => k.productType || 'unknown')));
 
-  const handleDelete = async (orderId: string) => {
-    if (!confirm(`┘ç┘ä ╪ú┘å╪¬ ┘à╪¬╪ú┘â╪» ┘à┘å ╪¡╪░┘ü ╪º┘ä╪╖┘ä╪¿ ${orderId}╪ƒ`)) return;
-    setActionLoading(orderId);
-    await deleteOrder(orderId);
-    await loadOrders();
-    setActionLoading(null);
-  };
-
-  const handleBan = async (orderId: string) => {
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ╪¡╪╕╪▒ ╪º┘ä╪╖┘ä╪¿ ${orderId}╪ƒ`)) return;
-    setActionLoading(orderId);
-    await banOrder(orderId);
-    await loadOrders();
-    setActionLoading(null);
-  };
-
-  const handleUnban = async (orderId: string) => {
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ┘ü┘â ╪¡╪╕╪▒ ╪º┘ä╪╖┘ä╪¿ ${orderId}╪ƒ`)) return;
-    setActionLoading(orderId);
-    await unbanOrder(orderId);
-    await loadOrders();
-    setActionLoading(null);
-  };
-
-  const handleFreeze = async (orderId: string) => {
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ╪¬╪¼┘à┘è╪» ╪º┘ä╪╖┘ä╪¿ ${orderId}╪ƒ`)) return;
-    setActionLoading(orderId);
-    await freezeOrder(orderId);
-    await loadOrders();
-    setActionLoading(null);
-  };
-
-  const handleUnfreeze = async (orderId: string) => {
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ╪Ñ┘ä╪║╪º╪í ╪¬╪¼┘à┘è╪» ╪º┘ä╪╖┘ä╪¿ ${orderId}╪ƒ`)) return;
-    setActionLoading(orderId);
-    await unfreezeOrder(orderId);
-    await loadOrders();
-    setActionLoading(null);
-  };
-
-  const handleCopyOrder = (orderId: string) => {
-    navigator.clipboard.writeText(orderId);
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResult(null);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const res = await checkOrderStatus(searchQuery.trim());
-      if (res.status === 'unused') {
-        setSearchResult('unused');
-      } else {
-        setSearchResult(res);
-      }
-    } catch (err: any) {
-      setSearchResult({ error: err.message || '╪«╪╖╪ú ┘ü┘è ╪¼┘ä╪¿ ╪º┘ä╪¿┘è╪º┘å╪º╪¬' });
-    }
-    setIsSearching(false);
-  };
-
-  const getOrderStatus = (k: any) => {
-    if (k.status === 'banned') return { text: '┘à╪¡╪╕┘ê╪▒', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: '≡ƒÜ½' };
-    if (k.status === 'frozen') return { text: '┘à┘Å╪¼┘à┘æ╪»', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30', icon: 'Γ¥ä∩╕Å' };
-    if (k.status === 'active') return { text: '┘å╪┤╪╖', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'Γ£à' };
-    return { text: '╪║┘è╪▒ ┘à╪╣╪▒┘ê┘ü', color: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30', icon: 'Γ¥ô' };
-  };
-
-  const formatDuration = (dateString: string) => {
-    const actDate = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - actDate.getTime();
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createProductType.trim()) return alert('الرجاء تحديد نوع المنتج');
+    if (createCount < 1 || createCount > 100) return alert('العدد يجب أن يكون بين 1 و 100');
     
-    if (diffMs < 0) return '╪º┘ä╪ó┘å';
-    
-    const minutes = Math.floor(diffMs / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-
-    if (years > 0) return `┘à┘å╪░ ${years} ${years === 1 ? '╪│┘å╪⌐' : '╪│┘å┘ê╪º╪¬'}`;
-    if (months > 0) return `┘à┘å╪░ ${months} ${months === 1 ? '╪┤┘ç╪▒' : '╪ú╪┤┘ç╪▒'}`;
-    if (days > 0) return `┘à┘å╪░ ${days} ${days === 1 ? '┘è┘ê┘à' : '╪ú┘è╪º┘à'}`;
-    if (hours > 0) return `┘à┘å╪░ ${hours} ${hours === 1 ? '╪│╪º╪╣╪⌐' : '╪│╪º╪╣╪º╪¬'}`;
-    if (minutes > 0) return `┘à┘å╪░ ${minutes} ${minutes === 1 ? '╪»┘é┘è┘é╪⌐' : '╪»┘é╪º╪ª┘é'}`;
-    return '┘à┘å╪░ ┘ä╪¡╪╕╪º╪¬';
+    setActionLoading('create');
+    await createKeys(createCount, createProductType.trim());
+    await loadKeys();
+    setCreateCount(1);
+    setActionLoading(null);
   };
+
+  const handleBan = async (keyId: string) => {
+    if (!confirm('هل أنت متأكد من حظر هذا المفتاح؟')) return;
+    setActionLoading(keyId);
+    await banKey(keyId);
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const handleUnban = async (keyId: string) => {
+    if (!confirm('هل أنت متأكد من فك الحظر عن هذا المفتاح؟')) return;
+    setActionLoading(keyId);
+    await unbanKey(keyId);
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const handleFreeze = async (keyId: string) => {
+    if (!confirm('هل أنت متأكد من تجميد هذا المفتاح؟')) return;
+    setActionLoading(keyId);
+    await freezeKey(keyId);
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const handleUnfreeze = async (keyId: string) => {
+    if (!confirm('هل أنت متأكد من إلغاء تجميد هذا المفتاح؟')) return;
+    setActionLoading(keyId);
+    await unfreezeKey(keyId);
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const handleDelete = async (keyId: string) => {
+    if (!confirm('حذف نهائي! هل أنت متأكد؟')) return;
+    setActionLoading(keyId);
+    await deleteKey(keyId);
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const handleWipeAll = async () => {
+    if (!confirm('تحذير خطير: سيتم حذف جميع المفاتيح وتصفير بيانات المستخدمين المتعلقة بها. هل أنت متأكد تماماً؟')) return;
+    const promptCheck = prompt('لتأكيد المسح، اكتب: مسح جميع البيانات');
+    if (promptCheck !== 'مسح جميع البيانات') return alert('تم إلغاء العملية.');
+    
+    setActionLoading('wipe');
+    await deleteAllKeys();
+    await loadKeys();
+    setActionLoading(null);
+  };
+
+  const getProductColor = (product: string) => {
+    const p = (product || '').toLowerCase();
+    if (p.includes('fortnite')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+    if (p.includes('spoofer')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+    if (p.includes('superstar')) return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+    return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'; // Default custom product color
+  };
+
+  const getStatusDisplay = (status: string) => {
+    switch(status) {
+      case 'active': return { text: 'مفعل', icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      case 'unused': return { text: 'غير مستخدم', icon: <Key className="w-3.5 h-3.5" />, color: 'bg-zinc-500/10 text-zinc-300 border-zinc-500/20' };
+      case 'frozen': return { text: 'مجمد', icon: <Snowflake className="w-3.5 h-3.5" />, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' };
+      case 'banned': return { text: 'محظور', icon: <Ban className="w-3.5 h-3.5" />, color: 'bg-red-500/10 text-red-400 border-red-500/20' };
+      default: return { text: 'مجهول', icon: <HelpCircle className="w-3.5 h-3.5" />, color: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' };
+    }
+  };
+
+  // Stats logic
+  const totalKeys = keys.length;
+  const unusedKeys = keys.filter(k => k.status === 'unused').length;
+  const activeKeys = keys.filter(k => k.status === 'active').length;
+  const fortniteKeysCount = keys.filter(k => (k.productType || '').toLowerCase().includes('fortnite')).length;
+
+  const filteredKeys = keys.filter(k => {
+    if (filterProduct !== 'all' && k.productType !== filterProduct) return false;
+    if (filterStatus !== 'all' && k.status !== filterStatus) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchId = k.id.toLowerCase().includes(q);
+      const matchName = (k.usedByName || '').toLowerCase().includes(q);
+      const matchEmail = (k.usedByEmail || '').toLowerCase().includes(q);
+      if (!matchId && !matchName && !matchEmail) return false;
+    }
+    return true;
+  });
 
   return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[99998] bg-black/90 backdrop-blur-xl overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
     >
-      <div className="min-h-screen p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-                <Hash className="w-6 h-6 text-white" />
+      <div className="bg-[#09090b] w-full max-w-[1400px] h-[90vh] rounded-3xl border border-white/5 shadow-2xl flex flex-col overflow-hidden" dir="rtl">
+        
+        {/* Header */}
+        <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#09090b]/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+              <Key className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-extrabold text-white">إدارة المفاتيح</h2>
+              <p className="text-zinc-500 text-sm mt-1">التحكم الكامل بالتراخيص والمنتجات</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={handleWipeAll} disabled={actionLoading === 'wipe'} className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-bold text-sm">
+              <Trash2 className="w-4 h-4" /> مسح جميع البيانات
+              {actionLoading === 'wipe' && <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />}
+            </button>
+            <button onClick={loadKeys} className="p-2.5 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition-all">
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button onClick={onClose} className="p-2.5 bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+          {/* Main List Content (Center/Left Area) */}
+          <div className="flex-1 flex flex-col min-w-0 border-l border-white/5">
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-6 shrink-0 border-b border-white/5">
+              <div className="bg-[#111113] rounded-2xl p-5 border border-white/5">
+                <div className="text-zinc-500 text-xs font-bold mb-2">إجمالي المفاتيح</div>
+                <div className="text-3xl font-extrabold text-white">{totalKeys}</div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">╪Ñ╪»╪º╪▒╪⌐ ╪º┘ä╪╖┘ä╪¿╪º╪¬</h1>
-                <p className="text-zinc-400 text-sm">╪╣╪▒╪╢ ┘ê╪Ñ╪»╪º╪▒╪⌐ ╪ú╪▒┘é╪º┘à ╪º┘ä╪╖┘ä╪¿╪º╪¬ ╪º┘ä┘à╪▒╪¬╪¿╪╖╪⌐</p>
+              <div className="bg-[#111113] rounded-2xl p-5 border border-white/5">
+                <div className="text-zinc-500 text-xs font-bold mb-2">الغير مستخدمة</div>
+                <div className="text-3xl font-extrabold text-zinc-300">{unusedKeys}</div>
+              </div>
+              <div className="bg-emerald-500/5 rounded-2xl p-5 border border-emerald-500/10">
+                <div className="text-emerald-500/80 text-xs font-bold mb-2">المفعلة بنجاح</div>
+                <div className="text-3xl font-extrabold text-emerald-400">{activeKeys}</div>
+              </div>
+              <div className="bg-purple-500/5 rounded-2xl p-5 border border-purple-500/10">
+                <div className="text-purple-500/80 text-xs font-bold mb-2">تراخيص فورت نايت</div>
+                <div className="text-3xl font-extrabold text-purple-400">{fortniteKeysCount}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={loadOrders} className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all text-white">
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose} className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all text-white">
-                <X className="w-5 h-5" />
-              </motion.button>
+
+            {/* Filters Row */}
+            <div className="px-6 py-4 border-b border-white/5 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 w-full sm:w-auto custom-scrollbar">
+                <div className="text-xs font-bold text-zinc-600 ml-2">المنتج:</div>
+                <button onClick={() => setFilterProduct('all')} className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${filterProduct === 'all' ? 'bg-white text-black border-white' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}>
+                  الكل
+                </button>
+                {uniqueProducts.map(p => (
+                  <button key={p} onClick={() => setFilterProduct(p)} className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${filterProduct === p ? 'bg-white text-black border-white' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 w-full sm:w-auto custom-scrollbar">
+                <div className="text-xs font-bold text-zinc-600 ml-2">الحالة:</div>
+                {['all', 'active', 'unused', 'frozen', 'banned'].map(st => (
+                  <button key={st} onClick={() => setFilterStatus(st)} className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${filterStatus === st ? 'bg-white text-black border-white' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}>
+                    {st === 'all' ? 'الكل' : st === 'active' ? 'مفعل' : st === 'unused' ? 'غير مستخدم' : st === 'frozen' ? 'مجمد' : 'محظور'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Discord/Key Search Bar */}
+            <div className="px-6 py-4 border-b border-white/5 bg-[#09090b]/30">
+              <div className="relative">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="ابحث عن طريق الديسكورد، الايميل، أو المفتاح..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#111113] border border-white/10 rounded-xl pl-4 pr-11 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                />
+              </div>
+            </div>
+
+            {/* Keys List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar relative">
+              {loading && <div className="absolute inset-0 bg-[#09090b]/50 backdrop-blur-sm z-10 flex items-center justify-center"><div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" /></div>}
+              
+              {filteredKeys.length === 0 && !loading && (
+                <div className="h-full flex flex-col items-center justify-center text-zinc-600">
+                  <Search className="w-12 h-12 mb-4 opacity-50" />
+                  <p className="text-lg font-bold">لا يوجد مفاتيح مطابقة</p>
+                </div>
+              )}
+
+              {filteredKeys.map((k) => {
+                const st = getStatusDisplay(k.status);
+                const pColor = getProductColor(k.productType);
+                
+                return (
+                  <motion.div key={k.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111113] border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-colors flex flex-col xl:flex-row xl:items-center justify-between gap-4 group">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-3 mb-2.5">
+                        <span className="font-mono font-bold text-white tracking-widest text-lg">{k.id}</span>
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${pColor}`}>{k.productType || 'superstar'}</span>
+                        <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border ${st.color}`}>
+                          {st.icon} {st.text}
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+                        {k.status === 'active' ? (
+                          <>
+                            <div className="flex items-center gap-1.5 text-zinc-400">
+                              <Users className="w-4 h-4 text-zinc-600" />
+                              <span className="font-bold">{k.usedByName || k.usedByEmail || 'مستخدم ديسكورد'}</span>
+                            </div>
+                            {k.activatedAt && (
+                              <div className="flex items-center gap-1.5 text-zinc-500 font-mono">
+                                <Clock className="w-3.5 h-3.5 text-zinc-600" />
+                                {new Date(k.activatedAt).toLocaleString('en-US', { hour12: true, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-zinc-600 font-bold">
+                            <Clock className="w-4 h-4" />
+                            لم يُستخدم بعد
+                          </div>
+                        )}
+                        <div className="text-[10px] text-zinc-700 font-mono mt-0.5">
+                           أنشئ في: {new Date(k.createdAt).toLocaleDateString('en-GB')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 bg-[#09090b] p-1.5 rounded-xl border border-white/5">
+                      {k.status !== 'banned' && k.status !== 'frozen' && (
+                        <button onClick={() => handleBan(k.id)} disabled={actionLoading === k.id} className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="حظر">
+                          <Ban className="w-4 h-4" />
+                        </button>
+                      )}
+                      {k.status === 'banned' && (
+                        <button onClick={() => handleUnban(k.id)} disabled={actionLoading === k.id} className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="فك الحظر">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {k.status !== 'frozen' && k.status !== 'banned' && (
+                        <button onClick={() => handleFreeze(k.id)} disabled={actionLoading === k.id} className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors" title="تجميد">
+                          <Snowflake className="w-4 h-4" />
+                        </button>
+                      )}
+                      {k.status === 'frozen' && (
+                        <button onClick={() => handleUnfreeze(k.id)} disabled={actionLoading === k.id} className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="إلغاء التجميد">
+                          <Play className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      <button onClick={() => handleDelete(k.id)} disabled={actionLoading === k.id} className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition-colors" title="حذف">
+                        {actionLoading === k.id ? <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
-            {/* RIGHT SIDE: Search & Verification Box */}
-            <div className="lg:col-span-1 order-1 lg:order-1 sticky top-8">
-              <div className="bg-[#0a0a0f]/80 backdrop-blur-md rounded-3xl p-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-                  <Search className="w-5 h-5 text-blue-400" />
-                  ╪º┘ä╪¬╪¡┘é┘é ┘à┘å ╪¡╪º┘ä╪⌐ ╪º┘ä╪╖┘ä╪¿
-                </h3>
-                
-                <div className="relative mb-6">
-                  <input 
-                    type="text"
-                    placeholder="╪ú╪»╪«┘ä ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿ ┘ä┘ä╪¿╪¡╪½..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 pr-12 text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all text-left"
-                    dir="ltr"
-                  />
-                  <div className="absolute top-1/2 -translate-y-1/2 right-4 text-zinc-500">
-                    <Hash className="w-5 h-5" />
-                  </div>
+          {/* Right Sidebar Panels */}
+          <div className="w-full lg:w-[350px] shrink-0 p-6 space-y-6 overflow-y-auto custom-scrollbar bg-[#09090b]">
+            {/* Panel A: Create Keys */}
+            <div className="bg-[#111113] border border-white/5 p-5 rounded-2xl">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-emerald-500" />
                 </div>
-                
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2"
-                >
-                  {isSearching ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : '╪¿╪¡╪½ ┘ê╪º╪│╪¬╪╣┘ä╪º┘à'}
-                </button>
-
-                {searchResult && (
-                  <div className="mt-6 border-t border-white/10 pt-6">
-                    {searchResult === 'unused' ? (
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 text-center">
-                        <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-                        <h4 className="text-xl font-bold text-emerald-400 mb-2">╪▒┘é┘à ╪╖┘ä╪¿ ┘à┘à╪¬╪º╪▓!</h4>
-                        <p className="text-zinc-300">┘ç╪░╪º ╪º┘ä╪▒┘é┘à <span className="font-bold text-white">╪║┘è╪▒ ┘à╪│╪¬╪«╪»┘à ╪¿╪╣╪»</span> ┘ê╪¼╪º┘ç╪▓ ┘ä┘ä╪º╪│╪¬╪«╪»╪º┘à ┘à┘å ┘é┘É╪¿┘ä ╪ú┘è ╪╣┘à┘è┘ä.</p>
-                      </div>
-                    ) : searchResult.error ? (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
-                        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-                        <h4 className="text-xl font-bold text-red-400 mb-2">╪«╪╖╪ú!</h4>
-                        <p className="text-zinc-300">{searchResult.error}</p>
-                      </div>
-                    ) : (
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-bold text-lg text-white">┘à╪╣┘ä┘ê┘à╪º╪¬ ╪º┘ä╪╖┘ä╪¿</h4>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${getOrderStatus(searchResult).color}`}>
-                            {getOrderStatus(searchResult).icon} {getOrderStatus(searchResult).text}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                            <p className="text-xs text-zinc-500 mb-1">╪¬┘à ╪º┘ä╪¬┘ü╪╣┘è┘ä ╪¿┘ê╪º╪│╪╖╪⌐:</p>
-                            <p className="text-sm font-bold text-white break-all flex items-center gap-2"><Mail className="w-4 h-4 text-blue-400"/> {searchResult.usedByEmail || '╪║┘è╪▒ ┘à╪╣╪▒┘ê┘ü'}</p>
-                          </div>
-                          
-                          {searchResult.activatedAt && (
-                            <>
-                              <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                                <p className="text-xs text-zinc-500 mb-1">╪¬╪º╪▒┘è╪« ┘ê┘ê┘é╪¬ ╪º┘ä╪¬┘ü╪╣┘è┘ä (╪º┘ä┘à┘è┘ä╪º╪»┘è):</p>
-                                <p className="text-sm font-bold text-white flex items-center gap-2"><Clock className="w-4 h-4 text-amber-400"/> {new Date(searchResult.activatedAt).toLocaleString('en-US', { timeZone: 'Asia/Riyadh', hour12: true })}</p>
-                              </div>
-                              <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                                <p className="text-xs text-zinc-500 mb-1">┘à╪»╪⌐ ╪º┘ä╪º╪│╪¬╪«╪»╪º┘à (┘à┘å╪░ ╪º┘ä╪¬┘ü╪╣┘è┘ä):</p>
-                                <p className="text-sm font-bold text-emerald-400 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500"/> {formatDuration(searchResult.activatedAt)}</p>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <h3 className="font-bold text-white">إنشاء مفاتيح</h3>
               </div>
-            </div>
-
-            {/* LEFT SIDE: List of Orders */}
-            <div className="lg:col-span-2 order-2 lg:order-2">
-              {/* Stats Summary */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-                  <p className="text-zinc-400 text-xs mb-1">╪º┘ä┘â┘ä</p>
-                  <p className="text-xl font-bold text-white">{orders.length}</p>
-                </div>
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
-                  <p className="text-zinc-400 text-xs mb-1">┘å╪┤╪╖</p>
-                  <p className="text-xl font-bold text-emerald-400">{orders.filter(k => k.status === 'active').length}</p>
-                </div>
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
-                  <p className="text-zinc-400 text-xs mb-1">┘à╪¡╪╕┘ê╪▒</p>
-                  <p className="text-xl font-bold text-red-400">{orders.filter(k => k.status === 'banned').length}</p>
-                </div>
-                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-3 text-center">
-                  <p className="text-zinc-400 text-xs mb-1">┘à┘Å╪¼┘à┘æ╪»</p>
-                  <p className="text-xl font-bold text-cyan-400">{orders.filter(k => k.status === 'frozen').length}</p>
-                </div>
-              </div>
-
-              {/* Orders List */}
-              {loading ? (
-                <div className="flex items-center justify-center h-40">
-                  <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {orders.map((k) => {
-                    const st = getOrderStatus(k);
-                    return (
-                      <motion.div
-                        key={k.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/[0.07] transition-all"
-                      >
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                          {/* Order Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                              <button onClick={() => handleCopyOrder(k.id)} className="text-white font-mono font-bold text-lg tracking-wider hover:text-amber-400 transition-colors cursor-pointer" title="┘å╪│╪« ╪▒┘é┘à ╪º┘ä╪╖┘ä╪¿">
-                                {k.id}
-                              </button>
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${st.color}`}>
-                                {st.icon} {st.text}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
-                              {k.usedByEmail && (
-                                <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {k.usedByEmail}</span>
-                              )}
-                              {k.activatedAt && (
-                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ┘ü┘Å╪╣┘æ┘ä: {new Date(k.activatedAt).toLocaleString('ar-SA')}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            {k.status !== 'banned' && k.status !== 'frozen' && (
-                              <button onClick={() => handleBan(k.id)} disabled={actionLoading === k.id} className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all" title="╪¡╪╕╪▒ ╪º┘ä╪╖┘ä╪¿">
-                                <Ban className="w-4 h-4" />
-                              </button>
-                            )}
-                            {k.status === 'banned' && (
-                              <button onClick={() => handleUnban(k.id)} disabled={actionLoading === k.id} className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all" title="┘ü┘â ╪º┘ä╪¡╪╕╪▒">
-                                <CheckCircle2 className="w-4 h-4" />
-                              </button>
-                            )}
-                            {k.status !== 'frozen' && k.status !== 'banned' && (
-                              <button onClick={() => handleFreeze(k.id)} disabled={actionLoading === k.id} className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all" title="╪¬╪¼┘à┘è╪» ┘à╪ñ┘é╪¬">
-                                <Snowflake className="w-4 h-4" />
-                              </button>
-                            )}
-                            {k.status === 'frozen' && (
-                              <button onClick={() => handleUnfreeze(k.id)} disabled={actionLoading === k.id} className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all" title="╪Ñ┘ä╪║╪º╪í ╪º┘ä╪¬╪¼┘à┘è╪»">
-                                <Play className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button onClick={() => handleDelete(k.id)} disabled={actionLoading === k.id} className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-all" title="╪¡╪░┘ü ┘å┘ç╪º╪ª┘è">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            {actionLoading === k.id && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                  {orders.length === 0 && (
-                    <div className="text-center py-16 text-zinc-500">
-                      <Hash className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p className="text-lg">┘ä╪º ┘è┘ê╪¼╪» ╪╖┘ä╪¿╪º╪¬ ╪¿╪╣╪»</p>
-                      <p className="text-sm mt-1">╪│┘è╪╕┘ç╪▒ ┘ç┘å╪º ╪ú┘è ╪▒┘é┘à ╪╖┘ä╪¿ ┘è╪¬┘à ╪¬┘ü╪╣┘è┘ä┘ç ┘à┘å ╪º┘ä╪▓╪¿╪º╪ª┘å</p>
+              
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 mb-2">نوع المنتج</label>
+                  {!isCustomProduct ? (
+                     <div className="flex gap-2">
+                       <select value={createProductType} onChange={e => setCreateProductType(e.target.value)} className="flex-1 bg-[#09090b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50">
+                         <option value="fortnite">فورت نايت (Fortnite)</option>
+                         <option value="spoofer">سبوفر (Spoofer)</option>
+                         <option value="superstar">سوبر ستار (Superstar)</option>
+                         {uniqueProducts.filter(p => !['fortnite', 'spoofer', 'superstar'].includes(p)).map(p => (
+                           <option key={p} value={p}>{p}</option>
+                         ))}
+                       </select>
+                       <button type="button" onClick={() => { setIsCustomProduct(true); setCreateProductType(''); }} className="px-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-xs font-bold text-zinc-400">جديد</button>
+                     </div>
+                  ) : (
+                    <div className="flex gap-2">
+                       <input type="text" value={createProductType} onChange={e => setCreateProductType(e.target.value)} placeholder="اسم المنتج الجديد..." className="flex-1 bg-[#09090b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50" />
+                       <button type="button" onClick={() => { setIsCustomProduct(false); setCreateProductType('fortnite'); }} className="px-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-xs font-bold text-zinc-400">إلغاء</button>
                     </div>
                   )}
                 </div>
-              )}
+                
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 mb-2">العدد (1-100)</label>
+                  <input type="number" min="1" max="100" value={createCount} onChange={(e) => setCreateCount(parseInt(e.target.value) || 1)} className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50" />
+                </div>
+                
+                <button type="submit" disabled={actionLoading === 'create'} className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2">
+                  {actionLoading === 'create' ? <div className="w-5 h-5 border-2 border-emerald-950/30 border-t-emerald-950 rounded-full animate-spin" /> : 'إنشاء ' + createCount + ' مفتاح'}
+                </button>
+              </form>
+            </div>
+
+            {/* Panel B: Verify Key */}
+            <div className="bg-[#111113] border border-white/5 p-5 rounded-2xl">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Search className="w-4 h-4 text-blue-500" />
+                </div>
+                <h3 className="font-bold text-white">التحقق من مفتاح</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <input 
+                  type="text" 
+                  placeholder="T3N-XXXXXX-XXXXXX" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 text-sm text-center font-mono font-bold text-white focus:outline-none focus:border-blue-500/50 uppercase" 
+                  dir="ltr"
+                />
+                
+                <button onClick={() => {}} className="w-full bg-blue-500 hover:bg-blue-400 text-blue-950 font-extrabold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                  <Search className="w-4 h-4" /> بحث واستعلام
+                </button>
+                <p className="text-[10px] text-zinc-500 text-center leading-relaxed">
+                  سيتم تصفية القائمة الرئيسية لعرض المفتاح المطابق مباشرة
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -2654,14 +2695,11 @@ function KeyManagement({ onClose }: { onClose: () => void }) {
     document.body
   );
 }
-
-// ≡ƒöÆ Admin Dashboard Component - Only accessible by admin
 function AdminDashboard({ onClose }: { onClose: () => void }) {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'orders' | 'banned' | 'admins' | 'logins'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'keys' | 'banned' | 'admins' | 'logins'>('users');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [logs, setLogs] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
 
   const loadStats = async () => {
@@ -2672,17 +2710,15 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
     } catch (e) {
       console.error('Failed to load admin stats:', e);
     }
-        const fetchedLogs = await getAuditLogs();
-    setLogs(fetchedLogs);
     setLoading(false);
   };
 
   useEffect(() => { loadStats(); }, []);
 
   const handleBan = async (uid: string, email: string) => {
-    const reason = prompt('╪│╪¿╪¿ ╪º┘ä╪¡╪╕╪▒:');
+    const reason = prompt('سبب الحظر:');
     if (!reason) return;
-    if (!confirm(`┘ç┘ä ╪ú┘å╪¬ ┘à╪¬╪ú┘â╪» ┘à┘å ╪¡╪╕╪▒ ${email}╪ƒ`)) return;
+    if (!confirm(`هل أنت متأكد من حظر ${email}؟`)) return;
     setActionLoading(uid);
     await banUser(uid, email, reason);
     await loadStats();
@@ -2690,7 +2726,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   };
 
   const handleUnban = async (uid: string) => {
-    if (!confirm('┘ç┘ä ╪¬╪▒┘è╪» ┘ü┘â ╪º┘ä╪¡╪╕╪▒ ╪╣┘å ┘ç╪░╪º ╪º┘ä┘à╪│╪¬╪«╪»┘à╪ƒ')) return;
+    if (!confirm('هل تريد فك الحظر عن هذا المستخدم؟')) return;
     setActionLoading(uid);
     await unbanUser(uid);
     await loadStats();
@@ -2698,7 +2734,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   };
 
   const handleRemoveVIP = async (uid: string) => {
-    if (!confirm('┘ç┘ä ╪¬╪▒┘è╪» ╪Ñ╪▓╪º┘ä╪⌐ VIP ┘à┘å ┘ç╪░╪º ╪º┘ä┘à╪│╪¬╪«╪»┘à╪ƒ')) return;
+    if (!confirm('هل تريد إزالة VIP من هذا المستخدم؟')) return;
     setActionLoading(uid);
     await removeVIP(uid);
     await loadStats();
@@ -2706,7 +2742,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   };
 
   const handleDelete = async (uid: string, orderId?: string) => {
-    if (!confirm('ΓÜá∩╕Å ┘ç┘ä ╪ú┘å╪¬ ┘à╪¬╪ú┘â╪» ┘à┘å ╪¡╪░┘ü ┘ç╪░╪º ╪º┘ä┘à╪│╪¬╪«╪»┘à ┘å┘ç╪º╪ª┘è╪º┘ï╪ƒ ┘ä╪º ┘è┘à┘â┘å ╪º┘ä╪¬╪▒╪º╪¼╪╣!')) return;
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم نهائياً؟ لا يمكن التراجع!')) return;
     setActionLoading(uid);
     await deleteUserData(uid);
     await loadStats();
@@ -2714,15 +2750,15 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   };
 
   const handleAddAdmin = async () => {
-    if (!newAdminEmail.includes('@')) { alert('╪ú╪»╪«┘ä ╪Ñ┘è┘à┘è┘ä ╪╡╪¡┘è╪¡'); return; }
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ╪Ñ╪╢╪º┘ü╪⌐ ${newAdminEmail} ┘â┘à╪┤╪▒┘ü╪ƒ`)) return;
+    if (!newAdminEmail.includes('@')) { alert('أدخل إيميل صحيح'); return; }
+    if (!confirm(`هل تريد إضافة ${newAdminEmail} كمشرف؟`)) return;
     await addAdminUser(newAdminEmail);
     setNewAdminEmail('');
     await loadStats();
   };
 
   const handleRemoveAdmin = async (email: string) => {
-    if (!confirm(`┘ç┘ä ╪¬╪▒┘è╪» ╪Ñ╪▓╪º┘ä╪⌐ ${email} ┘à┘å ╪º┘ä┘à╪┤╪▒┘ü┘è┘å╪ƒ`)) return;
+    if (!confirm(`هل تريد إزالة ${email} من المشرفين؟`)) return;
     await removeAdminUser(email);
     await loadStats();
   };
@@ -2743,8 +2779,8 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <LayoutDashboard className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">┘ä┘ê╪¡╪⌐ ╪º┘ä╪¬╪¡┘â┘à</h1>
-                <p className="text-zinc-400 text-sm">╪Ñ╪»╪º╪▒╪⌐ ┘à╪¬╪¼╪▒ ╪¬╪╣┘å T3N</p>
+                <h1 className="text-2xl font-bold text-white">لوحة التحكم</h1>
+                <p className="text-zinc-400 text-sm">إدارة متجر تعن T3N</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -2768,13 +2804,13 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-gradient-to-br from-blue-600/20 to-blue-800/10 border border-blue-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="w-5 h-5 text-blue-400" />
-                    <span className="text-zinc-400 text-xs">╪º┘ä┘à╪│╪¬╪«╪»┘à┘è┘å</span>
+                    <span className="text-zinc-400 text-xs">المستخدمين</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-gradient-to-br from-yellow-600/20 to-amber-800/10 border border-yellow-500/20 rounded-2xl p-5">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-gradient-to-br from-yellow-600/20 to-amber-800/10 border border-blue-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <Star className="w-5 h-5 text-yellow-400" />
+                    <Star className="w-5 h-5 text-blue-400" />
                     <span className="text-zinc-400 text-xs">VIP</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.vipUsers}</p>
@@ -2782,21 +2818,21 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-gradient-to-br from-emerald-600/20 to-green-800/10 border border-emerald-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Key className="w-5 h-5 text-emerald-400" />
-                    <span className="text-zinc-400 text-xs">╪º┘ä┘à┘ü╪º╪¬┘è╪¡</span>
+                    <span className="text-zinc-400 text-xs">المفاتيح</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.totalKeys}</p>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-gradient-to-br from-red-600/20 to-red-800/10 border border-red-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <ShieldOff className="w-5 h-5 text-red-400" />
-                    <span className="text-zinc-400 text-xs">┘à╪¡╪╕┘ê╪▒┘è┘å</span>
+                    <span className="text-zinc-400 text-xs">محظورين</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.bannedCount}</p>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-gradient-to-br from-cyan-600/20 to-teal-800/10 border border-cyan-500/20 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <MonitorPlay className="w-5 h-5 text-cyan-400" />
-                    <span className="text-zinc-400 text-xs">╪▓┘è╪º╪▒╪º╪¬ ╪º┘ä┘à┘ê┘é╪╣</span>
+                    <span className="text-zinc-400 text-xs">زيارات الموقع</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.totalVisits?.toLocaleString() || 0}</p>
                 </motion.div>
@@ -2804,66 +2840,35 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
 
               {/* Tabs */}
               <div className="flex flex-wrap gap-2 mb-6">
-                                <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'logs' ? 'bg-amber-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><Activity className="w-4 h-4" /> لوقات الموقع ({logs?.length || 0})</span>
-                </button>
                 <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><Users className="w-4 h-4" /> ╪ú╪╡╪¡╪º╪¿ ╪º┘ä┘à┘ü╪º╪¬┘è╪¡ ({stats.users.filter((u:any) => u.verifiedKey).length})</span>
+                  <span className="flex items-center gap-2"><Users className="w-4 h-4" /> أصحاب المفاتيح ({stats.users.filter((u:any) => u.verifiedKey).length})</span>
                 </button>
                 <button onClick={() => setActiveTab('logins')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'logins' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><LogIn className="w-4 h-4" /> ╪¬╪│╪¼┘è┘ä ╪º┘ä╪»╪«┘ê┘ä ({stats.users.length})</span>
+                  <span className="flex items-center gap-2"><LogIn className="w-4 h-4" /> تسجيل الدخول ({stats.users.length})</span>
                 </button>
-                <button onClick={() => setActiveTab('orders')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'orders' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><Hash className="w-4 h-4" /> ╪º┘ä╪╖┘ä╪¿╪º╪¬ ({stats.totalOrders})</span>
+                <button onClick={() => setActiveTab('keys')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'keys' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
+                  <span className="flex items-center gap-2"><Key className="w-4 h-4" /> المفاتيح ({stats.totalKeys})</span>
                 </button>
-                <button onClick={() => setActiveTab('banned')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'banned' ? 'bg-red-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><ShieldOff className="w-4 h-4" /> ╪º┘ä┘à╪¡╪╕┘ê╪▒┘è┘å ({stats.bannedCount})</span>
+                <button onClick={() => setActiveTab('banned')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'banned' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
+                  <span className="flex items-center gap-2"><ShieldOff className="w-4 h-4" /> المحظورين ({stats.bannedCount})</span>
                 </button>
                 <button onClick={() => setActiveTab('admins')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'admins' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-zinc-400 hover:bg-white/10 border border-white/10'}`}>
-                  <span className="flex items-center gap-2"><Crown className="w-4 h-4" /> ╪º┘ä┘à╪┤╪▒┘ü┘è┘å ({stats.admins?.length || 0})</span>
+                  <span className="flex items-center gap-2"><Crown className="w-4 h-4" /> المشرفين ({stats.admins?.length || 0})</span>
                 </button>
               </div>
 
-                            {/* Audit Logs Tab */}
-              {activeTab === 'logs' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                  <div className="max-h-[60vh] overflow-y-auto p-4 flex flex-col gap-2">
-                    {logs.map((log: any, i: number) => (
-                      <div key={log.id || i} className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xs font-bold shrink-0">
-                            #{logs.length - i}
-                          </span>
-                          <div className="text-right">
-                            <p className="text-white text-sm font-bold">{log.action}</p>
-                            <p className="text-zinc-400 text-xs">{log.details}</p>
-                          </div>
-                        </div>
-                        <div className="text-left text-xs">
-                          <span className="text-blue-400 font-mono block">{log.email || 'زائر'}</span>
-                          <span className="text-zinc-500">{log.timestamp ? new Date(log.timestamp).toLocaleString('ar-SA') : ''}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {logs.length === 0 && (
-                      <div className="p-8 text-center text-zinc-500">لا توجد لوقات مسجلة بعد</div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-{/* Users Tab (Only with keys) */}
+              {/* Users Tab (Only with keys) */}
               {activeTab === 'users' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-right">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5">
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪Ñ┘è┘à┘è┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä┘à┘ü╪¬╪º╪¡</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪¡╪º┘ä╪⌐</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪¬╪º╪▒┘è╪«</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪Ñ╪¼╪▒╪º╪í╪º╪¬</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">المفتاح</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الحالة</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">التاريخ</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2872,7 +2877,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
-                                <span className="text-white text-sm truncate max-w-[200px]">{u.email || '╪║┘è╪▒ ┘à╪╣╪▒┘ê┘ü'}</span>
+                                <span className="text-white text-sm truncate max-w-[200px]">{u.email || 'غير معروف'}</span>
                               </div>
                             </td>
                             <td className="px-4 py-3">
@@ -2880,11 +2885,11 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             </td>
                             <td className="px-4 py-3">
                               {u.banned ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">≡ƒÜ½ ┘à╪¡╪╕┘ê╪▒</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">🚫 محظور</span>
                               ) : u.isVIP ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"><Star className="w-3 h-3" /> VIP</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30"><Star className="w-3 h-3" /> VIP</span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">╪╣╪º╪»┘è</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">عادي</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -2893,20 +2898,20 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1">
                                 {u.isVIP && !u.banned && (
-                                  <button onClick={() => handleRemoveVIP(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all text-xs" title="╪Ñ╪▓╪º┘ä╪⌐ VIP">
+                                  <button onClick={() => handleRemoveVIP(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all text-xs" title="إزالة VIP">
                                     <UserX className="w-4 h-4" />
                                   </button>
                                 )}
                                 {!u.banned ? (
-                                  <button onClick={() => handleBan(u.id, u.email)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs" title="╪¡╪╕╪▒">
+                                  <button onClick={() => handleBan(u.id, u.email)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs" title="حظر">
                                     <ShieldOff className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <button onClick={() => handleUnban(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all text-xs" title="┘ü┘â ╪º┘ä╪¡╪╕╪▒">
+                                  <button onClick={() => handleUnban(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all text-xs" title="فك الحظر">
                                     <CheckCircle2 className="w-4 h-4" />
                                   </button>
                                 )}
-                                <button onClick={() => handleDelete(u.id, u.verifiedOrder)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-all text-xs" title="╪¡╪░┘ü ┘å┘ç╪º╪ª┘è">
+                                <button onClick={() => handleDelete(u.id, u.verifiedOrder)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-all text-xs" title="حذف نهائي">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                                 {actionLoading === u.id && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
@@ -2915,7 +2920,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                           </tr>
                         ))}
                         {stats.users.filter((u:any) => u.verifiedKey).length === 0 && (
-                          <tr><td colSpan={5} className="px-4 py-8 text-center text-zinc-500">┘ä╪º ┘è┘ê╪¼╪» ┘à╪│╪¬╪«╪»┘à┘è┘å ╪¿╪╣╪»</td></tr>
+                          <tr><td colSpan={5} className="px-4 py-8 text-center text-zinc-500">لا يوجد مستخدمين بعد</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -2930,12 +2935,12 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     <table className="w-full text-right">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5">
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪Ñ┘è┘à┘è┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪»┘ê┘ä╪⌐</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪¡╪º┘ä╪⌐</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪ó╪«╪▒ ╪»╪«┘ê┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪¬╪º╪▒┘è╪« ╪º┘ä╪¬╪│╪¼┘è┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪Ñ╪¼╪▒╪º╪í╪º╪¬</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الدولة</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الحالة</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">آخر دخول</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">تاريخ التسجيل</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2944,7 +2949,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
-                                <span className="text-white text-sm truncate max-w-[200px]">{u.email || '╪║┘è╪▒ ┘à╪╣╪▒┘ê┘ü'}</span>
+                                <span className="text-white text-sm truncate max-w-[200px]">{u.email || 'غير معروف'}</span>
                               </div>
                             </td>
                             <td className="px-4 py-3">
@@ -2955,14 +2960,14 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                                   {u.city && <span className="text-zinc-500 text-xs">({u.city})</span>}
                                 </span>
                               ) : (
-                                <span className="text-zinc-600 text-xs">ΓÇö</span>
+                                <span className="text-zinc-600 text-xs">—</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
                               {u.verifiedOrder ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"><Check className="w-3 h-3"/> ╪ú╪╢╪º┘ü ╪▒┘é┘à ╪╖┘ä╪¿</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"><Check className="w-3 h-3"/> أضاف رقم طلب</span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-zinc-500/20 text-zinc-400 border border-zinc-500/30"><Clock className="w-3 h-3"/> ┘à╪│╪¼┘ä ┘ü┘é╪╖</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-zinc-500/20 text-zinc-400 border border-zinc-500/30"><Clock className="w-3 h-3"/> مسجل فقط</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -2974,15 +2979,15 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1">
                                 {!u.banned ? (
-                                  <button onClick={() => handleBan(u.id, u.email)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs" title="╪¡╪╕╪▒">
+                                  <button onClick={() => handleBan(u.id, u.email)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs" title="حظر">
                                     <ShieldOff className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <button onClick={() => handleUnban(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all text-xs" title="┘ü┘â ╪º┘ä╪¡╪╕╪▒">
+                                  <button onClick={() => handleUnban(u.id)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all text-xs" title="فك الحظر">
                                     <CheckCircle2 className="w-4 h-4" />
                                   </button>
                                 )}
-                                <button onClick={() => handleDelete(u.id, u.verifiedOrder)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-all text-xs" title="╪¡╪░┘ü ┘å┘ç╪º╪ª┘è">
+                                <button onClick={() => handleDelete(u.id, u.verifiedOrder)} disabled={actionLoading === u.id} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-all text-xs" title="حذف نهائي">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                                 {actionLoading === u.id && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
@@ -2991,7 +2996,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                           </tr>
                         ))}
                         {stats.users.length === 0 && (
-                          <tr><td colSpan={5} className="px-4 py-8 text-center text-zinc-500">┘ä╪º ┘è┘ê╪¼╪» ╪¬╪│╪¼┘è┘ä╪º╪¬ ╪¿╪╣╪»</td></tr>
+                          <tr><td colSpan={5} className="px-4 py-8 text-center text-zinc-500">لا يوجد تسجيلات بعد</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -3000,40 +3005,43 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
               )}
 
 
-              {/* Orders Tab */}
-              {activeTab === 'orders' && (
+              {/* Keys Tab */}
+              {activeTab === 'keys' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   {/* Stats Row */}
                   <div className="grid grid-cols-4 gap-3 mb-6">
                     <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center">
-                      <span className="text-zinc-400 text-xs mb-1 font-bold">╪º┘ä┘â┘ä</span>
-                      <span className="text-white font-bold">{stats.orders.length}</span>
+                      <span className="text-zinc-400 text-xs mb-1 font-bold">الكل</span>
+                      <span className="text-white font-bold">{stats.keys.length}</span>
                     </div>
                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex flex-col items-center">
-                      <span className="text-emerald-400 text-xs mb-1 font-bold">┘å╪┤╪╖</span>
-                      <span className="text-emerald-400 font-bold">{stats.orders.filter((o:any)=>!o.status || o.status==='active').length}</span>
+                      <span className="text-emerald-400 text-xs mb-1 font-bold">نشط</span>
+                      <span className="text-emerald-400 font-bold">{stats.usedKeys}</span>
                     </div>
                     <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4 flex flex-col items-center">
-                      <span className="text-red-400 text-xs mb-1 font-bold">┘à╪¡╪╕┘ê╪▒</span>
-                      <span className="text-red-400 font-bold">{stats.orders.filter((o:any)=>o.status==='banned').length}</span>
+                      <span className="text-red-400 text-xs mb-1 font-bold">محظور</span>
+                      <span className="text-red-400 font-bold">{stats.bannedKeys}</span>
                     </div>
                     <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-4 flex flex-col items-center">
-                      <span className="text-cyan-400 text-xs mb-1 font-bold">┘à╪¼┘à╪»</span>
-                      <span className="text-cyan-400 font-bold">{stats.orders.filter((o:any)=>o.status==='frozen').length}</span>
+                      <span className="text-cyan-400 text-xs mb-1 font-bold">مجمد</span>
+                      <span className="text-cyan-400 font-bold">{stats.frozenKeys}</span>
                     </div>
                   </div>
 
-                  {/* Orders List */}
+                  {/* Keys List */}
                   <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
-                    {stats.orders.map((k: any, i: number) => {
-                      let statusText = '┘å╪┤╪╖';
-                      let badgeColors = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                    {stats.keys.map((k: any, i: number) => {
+                      let statusText = 'غير مستخدم';
+                      let badgeColors = 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
                       
-                      if (k.status === 'banned') {
-                        statusText = '┘à╪¡╪╕┘ê╪▒';
+                      if (k.status === 'active') {
+                        statusText = 'نشط';
+                        badgeColors = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                      } else if (k.status === 'banned') {
+                        statusText = 'محظور';
                         badgeColors = 'bg-red-500/20 text-red-500 border-red-500/30';
                       } else if (k.status === 'frozen') {
-                        statusText = '┘à╪¼┘à╪»';
+                        statusText = 'مجمد';
                         badgeColors = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
                       }
 
@@ -3041,30 +3049,37 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         <div key={k.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between hover:bg-white/[0.07] transition-all group">
                           {/* Left Actions */}
                           <div className="flex items-center gap-2">
-                            <button onClick={() => handleDelete(k.usedByUid, k.id)} className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-all opacity-70 group-hover:opacity-100" title="╪¡╪░┘ü">
+                            <button onClick={() => handleDelete(k.usedByUid, k.id)} className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-all opacity-70 group-hover:opacity-100" title="حذف">
                               <Trash2 className="w-4 h-4" />
                             </button>
-                            <button className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/20 transition-all opacity-70 group-hover:opacity-100" title="╪¬╪¼┘à┘è╪»">
-                              <Snowflake className="w-4 h-4" />
-                            </button>
-                            <button className="w-8 h-8 rounded-lg bg-red-500/5 border border-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all opacity-70 group-hover:opacity-100" title="╪¡╪╕╪▒">
-                              <Ban className="w-4 h-4" />
-                            </button>
+                            {k.status !== 'frozen' && k.status !== 'banned' && (
+                              <button className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/20 transition-all opacity-70 group-hover:opacity-100" title="تجميد">
+                                <Snowflake className="w-4 h-4" />
+                              </button>
+                            )}
+                            {k.status !== 'banned' && k.status !== 'frozen' && (
+                              <button className="w-8 h-8 rounded-lg bg-red-500/5 border border-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all opacity-70 group-hover:opacity-100" title="حظر">
+                                <Ban className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
 
                           {/* Right Info */}
                           <div className="text-right">
                             <div className="flex items-center justify-end gap-3 mb-2">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${badgeColors} flex items-center gap-1`}>
-                                {statusText === '┘å╪┤╪╖' && <Check className="w-3 h-3" />}
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold border ${k.productType === 'spoofer' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-purple-500/20 text-purple-400 border-purple-500/30'} flex items-center gap-1`}>
+                                {k.productType === 'spoofer' ? '🛡️ سبوفر' : '🎮 فورت نايت'}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold border ${badgeColors} flex items-center gap-1`}>
+                                {statusText === 'نشط' && <Check className="w-3 h-3" />}
                                 {statusText}
                               </span>
-                              <span className="text-white font-bold text-lg tracking-wider">{k.id}</span>
+                              <span className="text-white font-bold text-lg tracking-wider font-mono">{k.id}</span>
                             </div>
                             <div className="flex items-center justify-end gap-4 text-xs text-zinc-500">
                               {k.activatedAt && (
                                 <span className="flex items-center gap-1" dir="ltr">
-                                  {new Date(k.activatedAt).toLocaleString('ar-SA')} <Clock className="w-3 h-3" /> ┘ü┘Å╪╣┘ä:
+                                  {new Date(k.activatedAt).toLocaleString('ar-SA')} <Clock className="w-3 h-3" /> فُعل:
                                 </span>
                               )}
                               {k.usedByEmail && (
@@ -3077,8 +3092,8 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         </div>
                       )
                     })}
-                    {stats.orders.length === 0 && (
-                      <div className="p-8 text-center text-zinc-500 bg-white/5 rounded-xl">┘ä╪º ┘è┘ê╪¼╪» ╪ú╪▒┘é╪º┘à ╪╖┘ä╪¿╪º╪¬ ┘à╪▒╪¬╪¿╪╖╪⌐ ╪¡╪º┘ä┘è╪º┘ï</div>
+                    {stats.keys.length === 0 && (
+                      <div className="p-8 text-center text-zinc-500 bg-white/5 rounded-xl">لا توجد مفاتيح حالياً</div>
                     )}
                   </div>
                 </motion.div>
@@ -3091,10 +3106,10 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     <table className="w-full text-right">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5">
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪Ñ┘è┘à┘è┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪│╪¿╪¿ ╪º┘ä╪¡╪╕╪▒</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪¬╪º╪▒┘è╪« ╪º┘ä╪¡╪╕╪▒</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪Ñ╪¼╪▒╪º╪í╪º╪¬</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">سبب الحظر</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">تاريخ الحظر</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3105,13 +3120,13 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             <td className="px-4 py-3"><span className="text-zinc-400 text-xs">{b.bannedAt ? new Date(b.bannedAt).toLocaleString('ar-SA') : '-'}</span></td>
                             <td className="px-4 py-3">
                               <button onClick={() => handleUnban(b.id)} className="px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all text-xs font-bold flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> ┘ü┘â ╪º┘ä╪¡╪╕╪▒
+                                <CheckCircle2 className="w-3 h-3" /> فك الحظر
                               </button>
                             </td>
                           </tr>
                         ))}
                         {stats.banned.length === 0 && (
-                          <tr><td colSpan={4} className="px-4 py-8 text-center text-zinc-500">┘ä╪º ┘è┘ê╪¼╪» ┘à╪¡╪╕┘ê╪▒┘è┘å ≡ƒÄë</td></tr>
+                          <tr><td colSpan={4} className="px-4 py-8 text-center text-zinc-500">لا يوجد محظورين 🎉</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -3124,17 +3139,17 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   {/* Add Admin */}
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4">
-                    <h3 className="text-white font-bold mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-purple-400" /> ╪Ñ╪╢╪º┘ü╪⌐ ┘à╪┤╪▒┘ü ╪¼╪»┘è╪»</h3>
+                    <h3 className="text-white font-bold mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-purple-400" /> إضافة مشرف جديد</h3>
                     <div className="flex gap-3">
                       <input
                         type="email"
                         value={newAdminEmail}
                         onChange={(e) => setNewAdminEmail(e.target.value)}
-                        placeholder="╪ú╪»╪«┘ä ╪Ñ┘è┘à┘è┘ä ╪º┘ä┘à╪┤╪▒┘ü ╪º┘ä╪¼╪»┘è╪»..."
+                        placeholder="أدخل إيميل المشرف الجديد..."
                         className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 text-sm"
                       />
                       <button onClick={handleAddAdmin} className="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-500 transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)]">
-                        ╪Ñ╪╢╪º┘ü╪⌐
+                        إضافة
                       </button>
                     </div>
                   </div>
@@ -3144,9 +3159,9 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     <table className="w-full text-right">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5">
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪Ñ┘è┘à┘è┘ä</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪º┘ä╪»┘ê╪▒</th>
-                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">╪Ñ╪¼╪▒╪º╪í╪º╪¬</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الإيميل</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">الدور</th>
+                          <th className="px-4 py-3 text-zinc-400 text-xs font-bold">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3154,17 +3169,17 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                           <tr key={a.email} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                             <td className="px-4 py-3"><span className="text-white text-sm">{a.email}</span></td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${a.role === '┘à╪º┘ä┘â' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${a.role === 'مالك' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
                                 <Crown className="w-3 h-3" /> {a.role}
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              {a.role !== '┘à╪º┘ä┘â' && (
+                              {a.role !== 'مالك' && (
                                 <button onClick={() => handleRemoveAdmin(a.email)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs font-bold flex items-center gap-1">
-                                  <Trash2 className="w-3 h-3" /> ╪Ñ╪▓╪º┘ä╪⌐
+                                  <Trash2 className="w-3 h-3" /> إزالة
                                 </button>
                               )}
-                              {a.role === '┘à╪º┘ä┘â' && <span className="text-zinc-600 text-xs">┘ä╪º ┘è┘à┘â┘å ╪Ñ╪▓╪º┘ä╪¬┘ç</span>}
+                              {a.role === 'مالك' && <span className="text-zinc-600 text-xs">لا يمكن إزالته</span>}
                             </td>
                           </tr>
                         ))}
@@ -3175,7 +3190,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
               )}
             </>
           ) : (
-            <div className="text-center text-red-400 py-12">┘ü╪┤┘ä ╪¬╪¡┘à┘è┘ä ╪º┘ä╪¿┘è╪º┘å╪º╪¬</div>
+            <div className="text-center text-red-400 py-12">فشل تحميل البيانات</div>
           )}
         </div>
       </div>
@@ -3184,17 +3199,194 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   );
 }
 
+function FortniteHackGuide({ onClose }: { onClose: () => void }) {
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] overflow-y-auto"
+      style={{ background: 'radial-gradient(ellipse at center, #0a1930 0%, #030814 50%, #000000 100%)' }}
+    >
+      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'url(/bg-fortnite-new.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', filter: 'blur(10px) brightness(0.5)' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.15) 0%, transparent 70%)' }} />
+
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-[#030814]/80 border-b border-blue-500/20">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="T3N" className="w-10 h-10 object-contain rounded-lg" />
+            <span className="font-bold text-xl text-white">شرح استخدام هاك فورت نايت</span>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/10">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 max-w-4xl relative z-10">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+          <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+            <Gamepad2 className="w-10 h-10 text-blue-400" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200">شرح استخدام هاك فورت نايت</h1>
+          <p className="text-blue-200/60 text-lg max-w-2xl mx-auto">اتبع الخطوات التالية بالترتيب لتشغيل الهاك بنجاح</p>
+        </motion.div>
+
+        <div className="flex flex-col gap-12">
+          {/* Section 1: Main Hack */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <div className="rounded-2xl p-6 md:p-8 bg-[#0a1930]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)] mb-6">
+              <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-blue-400">1️⃣</span> شرح هاك فورت
+              </h4>
+              <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] mb-6">
+                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                  <source src="/video-fortnite-main.mp4" type="video/mp4" />
+                  متصفحك لا يدعم تشغيل الفيديو
+                </video>
+              </div>
+              <div className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-blue-500/30 transition-colors mt-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <FileArchive className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="text-right flex-1">
+                    <h4 className="font-bold text-lg text-white">ملف هاك فورت نايت</h4>
+                    <p className="text-xs text-zinc-400 mt-1">الملف الرئيسي للهاك</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { const a=document.createElement('a'); a.href='/External_T3N.rar'; a.download='External_T3N.rar'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
+                  className="w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Download className="w-5 h-5" /> تحميل الملف
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Section 2: Mouse Driver */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="rounded-2xl p-6 md:p-8 bg-[#0a1930]/60 backdrop-blur-lg border border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]">
+              <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-blue-400">2️⃣</span> شرح تركيب تعريفات الهاك
+              </h4>
+              <div className="rounded-xl overflow-hidden border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] mb-6">
+                <video controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} className="w-full" preload="metadata">
+                  <source src="/video-fortnite-driver.mp4" type="video/mp4" />
+                  متصفحك لا يدعم تشغيل الفيديو
+                </video>
+              </div>
+              <div className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center shadow-lg hover:border-blue-500/30 transition-colors mt-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <FileArchive className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="text-right flex-1">
+                    <h4 className="font-bold text-lg text-white">Mouse Driver</h4>
+                    <p className="text-xs text-zinc-400 mt-1">هو عباره عن ملف تعريفات هاك فورت نايت مهم تحميله عشان الهاك يعملل بدون مشاكل</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { const a=document.createElement('a'); a.href='/mouse-driver.rar'; a.download='Mouse Driver.rar'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
+                  className="w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Download className="w-5 h-5" /> تحميل الملف
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>,
+    document.body
+  );
+}
+
+function MaintenanceScreen({ onAdminLogin }: { onAdminLogin?: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[9999] bg-[#09090b] text-white flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-blue-900/10 mix-blend-screen" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
+      
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 max-w-2xl flex flex-col items-center glass-panel p-12 rounded-[3rem] border border-white/5 shadow-2xl"
+      >
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          className="w-32 h-32 mb-8 relative flex items-center justify-center bg-orange-500/10 rounded-full border border-orange-500/20 shadow-[0_0_50px_rgba(249,115,22,0.2)]"
+        >
+          <div className="absolute inset-0 bg-orange-500/20 rounded-full animate-ping opacity-50"></div>
+          <Wrench className="w-16 h-16 text-orange-400 relative z-10" />
+        </motion.div>
+        
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-br from-white via-orange-200 to-orange-500 drop-shadow-md">
+          الموقع تحت التحديث والصيانة
+        </h1>
+        
+        <p className="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-lg">
+          نعمل حالياً على تطوير وترقية <span className="text-white font-bold">متجر تعن</span> لتقديم تجربة أفضل وأكثر أماناً لكم. سنعود للعمل في أقرب وقت ممكن.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <motion.a 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            href={DISCORD_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-[0_10px_25px_rgba(88,101,242,0.4)]"
+          >
+            <MessageCircle className="w-6 h-6" />
+            تواصل معنا عبر الديسكورد
+          </motion.a>
+          
+          {onAdminLogin && (
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onAdminLogin}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg border border-white/10"
+            >
+              <Shield className="w-6 h-6 text-orange-400" />
+              دخول الإدارة
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [isVerifiedCustomer, setIsVerifiedCustomer] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isVerifiedCustomer, setIsVerifiedCustomer] = useState(true);
+  const [activatedProducts, setActivatedProducts] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [showSpooferGuide, setShowSpooferGuide] = useState(false);
+  const [showSuperstarGuide, setShowSuperstarGuide] = useState(false);
+  const [showFortniteGuide, setShowFortniteGuide] = useState(false);
+  const [showFortniteHackGuide, setShowFortniteHackGuide] = useState(false);
   const [showSiteGuide, setShowSiteGuide] = useState(false);
   const [showTroubleshoot, setShowTroubleshoot] = useState(false);
+  const [isMaintenance, setIsMaintenance] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showKeyManager, setShowKeyManager] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(() => localStorage.getItem('t3n_admin_unlocked') === 'true');
   const [isBanned, setIsBanned] = useState(false);
   const [banReason, setBanReason] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
@@ -3202,7 +3394,9 @@ export default function App() {
     return saved ? saved === 'dark' : true;
   });
 
-  const [appLoading, setAppLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'profile'>('overview');
+  const [showActivationModal, setShowActivationModal] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -3223,7 +3417,15 @@ export default function App() {
         }
       }
     });
-    return () => unsub();
+
+    const unsubMaintenance = listenToMaintenanceMode((mode) => {
+      setIsMaintenance(mode);
+    });
+
+    return () => {
+      unsub();
+      unsubMaintenance();
+    };
   }, []);
 
   const handleReadNotifications = () => {
@@ -3241,7 +3443,7 @@ export default function App() {
     // Initial loading screen timeout
     const timer = setTimeout(() => setAppLoading(false), 2000);
 
-    // ≡ƒôê Track site visit
+    // 📈 Track site visit
     trackSiteVisit();
 
     return () => {
@@ -3264,17 +3466,19 @@ export default function App() {
     }
   }, [toast]);
 
-  // Parse Discord OAuth hash manually so it doesn't get lost
+  // Parse Custom Token returned from Discord API Backend
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes("access_token")) {
-      const params = new URLSearchParams(hash.substring(1));
-      const tokenSrc = params.get('access_token');
-      if (tokenSrc) {
-        localStorage.setItem('discord_token_pending', tokenSrc);
-        // Clean the URL hash immediately
+    const params = new URLSearchParams(window.location.search);
+    const customToken = params.get('token');
+    if (customToken) {
+      setAuthLoading(true);
+      signInWithCustomToken(auth, customToken).then(() => {
         window.history.replaceState(null, '', window.location.pathname);
-      }
+      }).catch(err => {
+        console.error("Custom token login error:", err);
+      }).finally(() => {
+        setAuthLoading(false);
+      });
     }
   }, []);
 
@@ -3284,7 +3488,7 @@ export default function App() {
     const localBan = localStorage.getItem('t3n_device_banned');
     if (localBan) {
       setIsBanned(true);
-      setBanReason(localStorage.getItem('t3n_ban_reason') || '╪¬┘à ╪¡╪╕╪▒ ╪¼┘ç╪º╪▓┘â ┘ä╪º┘å╪¬┘ç╪º┘â ╪┤╪▒┘ê╪╖ ╪º┘ä╪º╪│╪¬╪«╪»╪º┘à.');
+      setBanReason(localStorage.getItem('t3n_ban_reason') || 'تم حظر جهازك لانتهاك شروط الاستخدام.');
       setAuthLoading(false);
     }
 
@@ -3311,11 +3515,21 @@ export default function App() {
           setBanReason(null);
         }
 
-        const isVIP = await checkUserVIP(currentUser.uid);
-        setIsVerifiedCustomer(isVIP);
+        const vipResult = await checkUserVIP(currentUser.uid);
+        setIsVerifiedCustomer(vipResult.isVIP);
 
-        const isAdm = await checkIsAdmin(currentUser.email);
-        setIsAdminUser(isAdm);
+        if (vipResult.isVIP) {
+          if (vipResult.products && Array.isArray(vipResult.products)) {
+            setActivatedProducts(vipResult.products);
+          }
+        }
+
+        const ADMIN_DISCORD_IDS = ['1320194211978543114', '1315014140804206636'];
+        const isAdm = (await checkIsAdmin(currentUser.email)) || ADMIN_DISCORD_IDS.includes(currentUser.uid);
+        if (isAdm) {
+          setIsAdminUser(true);
+          localStorage.setItem('t3n_admin_unlocked', 'true');
+        }
 
         // Process pending Discord OAuth token
         const pendingToken = localStorage.getItem('discord_token_pending');
@@ -3334,7 +3548,7 @@ export default function App() {
               
               if (!discordRes.ok) {
                 console.error('Discord API error:', discordRes.status);
-                setToast({ type: 'error', message: '╪¬┘ê┘â┘å ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» ┘à┘å╪¬┘ç┘è╪î ┘è╪▒╪¼┘ë ╪Ñ╪╣╪º╪»╪⌐ ╪▒╪¿╪╖ ╪º┘ä╪¡╪│╪º╪¿' });
+                setToast({ type: 'error', message: 'توكن الديسكورد منتهي، يرجى إعادة ربط الحساب' });
                 localStorage.removeItem('discord_token_pending');
               } else {
                 const discordUser = await discordRes.json();
@@ -3351,28 +3565,28 @@ export default function App() {
                   if (backendRes.ok) {
                     const result = await backendRes.json();
                     if (result.success) {
-                      setToast({ type: 'success', message: '╪¬┘à ╪▒╪¿╪╖ ╪¡╪│╪º╪¿┘â ╪¿╪º┘ä╪»┘è╪│┘â┘ê╪▒╪» ┘ê╪Ñ╪╣╪╖╪º╪ª┘â ╪▒╪¬╪¿╪⌐ Customer ╪¿┘å╪¼╪º╪¡! ≡ƒÄë' });
+                      setToast({ type: 'success', message: 'تم ربط حسابك بالديسكورد وإعطائك رتبة Customer بنجاح! 🎉' });
                     } else {
-                      setToast({ type: 'error', message: '╪¡╪»╪½ ╪«╪╖╪ú ╪ú╪½┘å╪º╪í ╪Ñ╪╣╪╖╪º╪ª┘â ╪º┘ä╪▒╪¬╪¿╪⌐╪î ┘é╪» ╪¬┘â┘ê┘å ┘à┘ê╪¼┘ê╪»╪⌐ ┘à╪│╪¿┘é╪º┘ï' });
+                      setToast({ type: 'error', message: 'حدث خطأ أثناء إعطائك الرتبة، قد تكون موجودة مسبقاً' });
                     }
                   } else {
                     const errData = await backendRes.json().catch(() => ({}));
                     console.error('Backend error:', backendRes.status, errData);
                     if (backendRes.status === 429) {
-                      setToast({ type: 'error', message: errData.error || '╪╖┘ä╪¿╪º╪¬ ┘â╪½┘è╪▒╪⌐╪î ┘è╪▒╪¼┘ë ╪º┘ä┘à╪¡╪º┘ê┘ä╪⌐ ╪¿╪╣╪» 30 ╪½╪º┘å┘è╪⌐' });
+                      setToast({ type: 'error', message: errData.error || 'طلبات كثيرة، يرجى المحاولة بعد 30 ثانية' });
                     } else {
-                      setToast({ type: 'error', message: errData.error || '┘ü╪┤┘ä ┘ü┘è ╪º┘ä╪º╪¬╪╡╪º┘ä ╪¿╪│┘è╪▒┘ü╪▒ ╪º┘ä╪▒╪¬╪¿. ┘è╪▒╪¼┘ë ╪º┘ä┘à╪¡╪º┘ê┘ä╪⌐ ┘ä╪º╪¡┘é╪º┘ï' });
+                      setToast({ type: 'error', message: errData.error || 'فشل في الاتصال بسيرفر الرتب. يرجى المحاولة لاحقاً' });
                     }
                   }
                 } else {
                   console.error('Invalid Discord user data');
-                  setToast({ type: 'error', message: '┘ü╪┤┘ä ┘ü┘è ╪¼┘ä╪¿ ╪¿┘è╪º┘å╪º╪¬ ╪¡╪│╪º╪¿ ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪»' });
+                  setToast({ type: 'error', message: 'فشل في جلب بيانات حساب الديسكورد' });
                 }
                 localStorage.removeItem('discord_token_pending');
               }
             } catch (e) {
               console.error('Error assigning rank:', e);
-              setToast({ type: 'error', message: '┘ü╪┤┘ä ╪▒╪¿╪╖ ╪º┘ä╪»┘è╪│┘â┘ê╪▒╪»╪î ┘è╪▒╪¼┘ë ╪º┘ä┘à╪¡╪º┘ê┘ä╪⌐ ┘ä╪º╪¡┘é╪º┘ï' });
+              setToast({ type: 'error', message: 'فشل ربط الديسكورد، يرجى المحاولة لاحقاً' });
               localStorage.removeItem('discord_token_pending');
             }
           }
@@ -3391,62 +3605,39 @@ export default function App() {
       <div className="min-h-screen bg-[#06060c] flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl backdrop-blur-md">
           <ShieldOff className="w-20 h-20 text-red-500 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
-          <h1 className="text-3xl font-extrabold text-white mb-3">╪¬┘à ╪¡╪╕╪▒ ╪¡╪│╪º╪¿┘â</h1>
+          <h1 className="text-3xl font-extrabold text-white mb-3">تم حظر حسابك</h1>
           <p className="text-zinc-300 text-lg mb-8 leading-relaxed">
-            {banReason || '┘ä┘é╪» ╪¬┘à ╪¡╪╕╪▒┘â ┘à┘å ╪º╪│╪¬╪«╪»╪º┘à ╪«╪»┘à╪º╪¬ ╪º┘ä┘à┘ê┘é╪╣ ┘ä┘à╪«╪º┘ä┘ü╪¬┘â ╪º┘ä╪┤╪▒┘ê╪╖ ┘ê╪º┘ä┘é┘ê╪º┘å┘è┘å.'}
+            {banReason || 'لقد تم حظرك من استخدام خدمات الموقع لمخالفتك الشروط والقوانين.'}
           </p>
           <div className="w-full py-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 font-bold shadow-lg flex items-center justify-center gap-2">
-            ╪¬┘à ╪¬┘é┘è┘è╪» ╪º┘ä┘ê╪╡┘ê┘ä ┘å┘ç╪º╪ª┘è╪º┘ï
+            تم تقييد الوصول نهائياً
           </div>
         </motion.div>
       </div>
     );
   }
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-[#06060c] text-zinc-200 font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* ≡ƒÜÇ Initial Loading Screen */}
-      <AnimatePresence>
-        {appLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[999999] bg-[#06060c] flex flex-col items-center justify-center"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="relative w-32 h-32 mb-8"
-            >
-              <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full animate-pulse" />
-              <img src={LOGO_URL} alt="T3N Logo" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(59,130,246,0.6)]" />
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-col items-center gap-4"
-            >
-              <h2 className="text-3xl font-extrabold text-white tracking-widest drop-shadow-lg">T3N STORE</h2>
-              <div className="flex gap-2 mt-2">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
-                    className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  // Show Maintenance Screen if active and user is not admin
+  if (isMaintenance && !isAdminUser && !authLoading) {
+    return (
+      <MaintenanceScreen 
+        onAdminLogin={() => {
+          const code = prompt("أدخل رمز الإدارة لفتح الموقع:");
+          if (code === "MAXbdr1420@@!!##") {
+            localStorage.setItem("t3n_admin_unlocked", "true");
+            setIsAdminUser(true);
+            setToast({ type: 'success', message: 'تم تفعيل وضع الإدارة بنجاح!' });
+          } else if (code) {
+            alert("الرمز غير صحيح!");
+          }
+        }} 
+      />
+    );
+  }
 
+  return (
+    <div dir="ltr" className="min-h-screen bg-[#060606] text-zinc-200 font-sans selection:bg-blue-500/30 flex overflow-hidden">
+      
       {/* Professional Toast Notification */}
       {toast && createPortal(
         <AnimatePresence>
@@ -3457,11 +3648,20 @@ export default function App() {
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
             className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-md"
           >
-            <div className={`rounded-2xl p-5 shadow-2xl border backdrop-blur-xl flex items-center gap-4 ${
+            <div className={`rounded-2xl p-5 shadow-2xl border backdrop-blur-xl flex items-center justify-end gap-4 ${
               toast.type === 'success' 
                 ? 'bg-emerald-950/80 border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]' 
                 : 'bg-red-950/80 border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)]'
             }`}>
+              <button onClick={() => setToast(null)} className="text-zinc-500 hover:text-white transition-colors shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex-1 text-right">
+                <p className={`font-bold text-sm mb-0.5 ${toast.type === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
+                  {toast.type === 'success' ? 'تمت العملية بنجاح' : 'حدث خطأ'}
+                </p>
+                <p className="text-zinc-300 text-sm">{toast.message}</p>
+              </div>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                 toast.type === 'success' ? 'bg-emerald-500/20' : 'bg-red-500/20'
               }`}>
@@ -3470,184 +3670,411 @@ export default function App() {
                   : <AlertCircle className="w-6 h-6 text-red-400" />
                 }
               </div>
-              <div className="flex-1">
-                <p className={`font-bold text-sm mb-0.5 ${toast.type === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
-                  {toast.type === 'success' ? '╪¬┘à╪¬ ╪º┘ä╪╣┘à┘ä┘è╪⌐ ╪¿┘å╪¼╪º╪¡' : '╪¡╪»╪½ ╪«╪╖╪ú'}
-                </p>
-                <p className="text-zinc-300 text-sm">{toast.message}</p>
-              </div>
-              <button onClick={() => setToast(null)} className="text-zinc-500 hover:text-white transition-colors shrink-0">
-                <X className="w-5 h-5" />
-              </button>
             </div>
           </motion.div>
         </AnimatePresence>,
         document.body
       )}
 
-      {/* Scroll to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
+      {/* Sidebar Component */}
+      <aside className="w-[280px] bg-[#060606] border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 z-40 relative">
+        <div className="p-8 flex items-center">
+          <div className="flex items-center gap-4">
+            <img src={LOGO_URL} alt="T3N Logo" className="w-10 h-10 object-contain rounded-xl opacity-80" />
+            <span className="font-extrabold text-2xl tracking-widest text-white drop-shadow-md">T3N</span>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-6 px-4 custom-scrollbar">
+          {/* Section 1: General */}
+          <div>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">عام</h3>
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <LayoutDashboard className="w-5 h-5 ml-1" />
+              <span className="font-semibold text-sm">نظرة عامة</span>
+            </button>
+          </div>
+
+          {/* Section 2: License */}
+          <div>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الترخيص</h3>
+            <button 
+              onClick={() => setActiveTab('products')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <Package className="w-5 h-5 ml-1" />
+              <span className="font-semibold text-sm">منتجاتي</span>
+            </button>
+          </div>
+
+          {/* Section 3: Account */}
+          <div>
+            <h3 className="text-[10px] font-bold text-zinc-600 mb-2 px-4 text-right">الحساب</h3>
+            <button 
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-[#18181b] text-white border border-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <UserX className="w-5 h-5 ml-1" />
+              <span className="font-semibold text-sm">الملف الشخصي</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-white/5 mt-auto">
+          {user ? (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-transparent hover:bg-white/5 transition-colors cursor-pointer">
+              <button onClick={logout} className="text-zinc-600 hover:text-red-400 transition-colors flex items-center gap-2 text-xs font-bold" title="تسجيل خروج">
+                <LogOut className="w-4 h-4" /> تسجيل خروج
+              </button>
+              <div className="flex items-center gap-3">
+                 <div className="flex flex-col text-right">
+                   <span className="font-bold text-sm text-white truncate max-w-[80px]">{user.displayName || 'User'}</span>
+                   <span className="text-[10px] text-zinc-500">Discord</span>
+                 </div>
+                 <img src={user.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-10 h-10 rounded-full border border-white/10 grayscale hover:grayscale-0 transition-all" />
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowLoginModal(true)} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] transition-colors font-bold text-white shadow-lg text-sm">
+               <LogIn className="w-4 h-4" /> تسجيل الدخول
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative">
+        <div className="p-8 md:p-10 max-w-[1600px] mx-auto w-full min-h-full">
+          
+          {activeTab === 'overview' && (
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-end mb-6">
+                 <h1 className="text-2xl font-extrabold text-white">نظرة عامة</h1>
+               </div>
+               
+               <div className="flex flex-col xl:flex-row gap-6 items-start justify-end">
+                 
+                 {/* Quick Actions Sidebar (Left visually in LTR flex) */}
+                 <div className="w-full xl:w-[320px] shrink-0">
+                   <div className="glass-panel rounded-2xl p-6">
+                     <h3 className="text-[11px] font-bold text-zinc-500 mb-6 text-right">إجراءات سريعة</h3>
+                     <div className="space-y-2">
+                       <button onClick={() => setActiveTab('products')} className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Package className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">منتجاتي</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">عرض المفاتيح والتحميلات</div>
+                           </div>
+                         </div>
+                       </button>
+                       
+                       <button onClick={() => setShowActivationModal(true)}e="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <Key className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">تفعيل مفتاح</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">تفعيل ترخيص جديد</div>
+                           </div>
+                         </div>
+                       </button>
+                       
+                       <a href={DISCORD_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <MessageCircle className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">الانضمام للديسكورد</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">الدعم والمنتجات</div>
+                           </div>
+                         </div>
+                       </a>
+                       
+                       <a href={STORE_URL} target="_blank" className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group">
+                         <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                         <div className="flex items-center justify-end gap-4">
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                             <ShoppingBag className="w-4 h-4 text-zinc-400" />
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-white text-sm">المتجر</div>
+                             <div className="text-[10px] text-zinc-500 mt-1">شراء ترخيص جديد</div>
+                           </div>
+                         </div>
+                       </a>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Main Overview Area (Right visually in LTR flex) */}
+                 <div className="flex-1 space-y-6 w-full">
+                   {/* Welcome Banner */}
+                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-end gap-4">
+                     <div className="text-right">
+                       <h2 className="text-2xl font-bold mb-1 text-white">مرحباً بعودتك، {user?.displayName || 'المستخدم'}!</h2>
+                       <p className="text-zinc-500 text-sm">لديك <span className="text-white">{activatedProducts.length}</span> منتج مفعل في حسابك.</p>
+                     </div>
+                     <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} alt="avatar" className="w-14 h-14 rounded-full grayscale" />
+                   </div>
+
+                   {/* Stats Grid */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" dir="rtl">
+                      {/* Products Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Package className="w-4 h-4 text-zinc-400" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-extrabold text-white">{activatedProducts.length}</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">المنتجات المفعلة</div>
+                        </div>
+                      </div>
+                      
+                      {/* Status Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Shield className="w-4 h-4 text-zinc-400" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-extrabold text-white">نشط</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">حالة الحساب</div>
+                        </div>
+                      </div>
+                      
+                      {/* Member Since Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <Clock className="w-4 h-4 text-zinc-400" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-extrabold text-zinc-500">—</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">العضوية منذ</div>
+                        </div>
+                      </div>
+                      
+                      {/* Forum Posts Stat */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between h-[130px]">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
+                          <MessageCircle className="w-4 h-4 text-zinc-400" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-extrabold text-white">0</div>
+                          <div className="text-xs font-semibold text-zinc-500 mt-1">مشاركات المنتدى</div>
+                        </div>
+                      </div>
+                   </div>
+                 </div>
+
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'products' && (
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+              <div className="flex justify-between items-center mb-6">
+                <button  onClick={() => setShowActivationModal(true)} className="flex items-center gap-2 bg-transparent hover:bg-white/5 text-white px-5 py-2.5 rounded-xl transition-all border border-white/10 text-sm font-bold">
+                  <Key className="w-4 h-4" /> تفعيل مفتاح
+                </button>
+                <h1 className="text-2xl font-extrabold text-white">منتجاتي</h1>
+              </div>
+
+              {activatedProducts.length === 0 ? (
+                <div className="glass-panel p-16 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <Package className="w-16 h-16 text-zinc-600 mb-6" />
+                  <h3 className="text-xl font-bold text-white mb-2">لا يوجد منتجات مفعلة</h3>
+                  <p className="text-zinc-500 mb-8 max-w-md text-sm">قم بشراء ترخيص من المتجر ثم فعل المفتاح هنا للوصول إلى التحميلات.</p>
+                  <a href="https://salla.sa/t3nn" target="_blank" className="bg-white hover:bg-zinc-200 text-black font-bold py-2.5 px-8 rounded-xl transition-all text-sm">شراء من المتجر</a>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-6 justify-end">
+                  {activatedProducts.includes('fortnite') && (
+                    <div className="w-[340px] glass-panel rounded-2xl overflow-hidden group">
+                      <div className="relative h-44 overflow-hidden">
+                        <img src="/fortnite-bg.jpg" alt="Fortnite" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-[#111111]/40 to-transparent" />
+                        <div className="absolute bottom-4 right-5 left-5">
+                           <div className="flex items-center justify-between">
+                             <img src="/logo.png" alt="T3N" className="w-8 h-8 opacity-50" />
+                             <div className="text-right">
+                               <h3 className="text-sm font-bold text-white mb-1">فك باند فورت نايت هارد وير</h3>
+                               <span className="text-emerald-500 text-[10px] font-bold flex items-center justify-end gap-1"><CheckCircle2 className="w-3 h-3" /> مفعل</span>
+                             </div>
+                           </div>
+                        </div>
+                      </div>
+                      <div className="p-4 grid grid-cols-2 gap-2">
+                        <button onClick={() => {}} className="col-span-2 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Download className="w-4 h-4" /> تحميل الملف
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Video className="w-4 h-4" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Tool className="w-4 h-4" /> حل المشاكل
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activatedProducts.includes('spoofer') && (
+                    <div className="w-[340px] glass-panel rounded-2xl overflow-hidden group">
+                      <div className="relative h-44 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=2000&auto=format&fit=crop" alt="Spoofer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-[#111111]/40 to-transparent" />
+                        <div className="absolute bottom-4 right-5 left-5">
+                           <div className="flex items-center justify-between">
+                             <span className="text-sm font-black text-white/50 tracking-widest">T3N</span>
+                             <div className="text-right">
+                               <h3 className="text-sm font-bold text-white mb-1">سبوفر تعن فك باند نهائي</h3>
+                               <span className="text-emerald-500 text-[10px] font-bold flex items-center justify-end gap-1"><CheckCircle2 className="w-3 h-3" /> مفعل</span>
+                             </div>
+                           </div>
+                        </div>
+                      </div>
+                      <div className="p-4 grid grid-cols-2 gap-2">
+                        <button onClick={() => {}} className="col-span-2 bg-white text-black hover:bg-zinc-200 font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Download className="w-4 h-4" /> تحميل الملف
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Video className="w-4 h-4" /> الشروحات
+                        </button>
+                        <button onClick={() => {}} className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs">
+                          <Tool className="w-4 h-4" /> حل المشاكل
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+               <div className="flex justify-end mb-6">
+                 <h1 className="text-2xl font-extrabold text-white">الملف الشخصي</h1>
+               </div>
+
+               <div className="glass-panel p-8 rounded-2xl max-w-2xl ml-auto mr-0">
+                 <div className="flex items-center justify-end gap-4 mb-8 pb-8 border-b border-white/5">
+                   <div className="text-right">
+                     <h2 className="text-lg font-bold text-white">{user?.displayName || 'koz'}</h2>
+                     <p className="text-zinc-500 text-xs mt-0.5">مشعل</p>
+                   </div>
+                   <img src={user?.photoURL || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-14 h-14 rounded-full border border-white/10 grayscale" alt="Avatar" />
+                 </div>
+
+                 <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); setToast({type: 'success', message: 'تم حفظ الملف الشخصي بنجاح!'}); }}>
+                   <div className="text-right">
+                     <label className="block text-[11px] font-bold text-zinc-500 mb-2">اسم العرض</label>
+                     <input type="text" defaultValue={user?.displayName || 'koz'} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors text-right text-sm" dir="rtl" />
+                     <p className="text-[10px] text-zinc-600 mt-2">يظهر في جميع الأماكن العامة في الموقع</p>
+                   </div>
+                   
+                   <div className="text-right">
+                     <label className="block text-[11px] font-bold text-zinc-500 mb-2">رابط الصورة المخصصة</label>
+                     <input type="url" defaultValue={user?.photoURL || ''} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors text-left text-xs" dir="ltr" />
+                   </div>
+
+                   <div className="text-right">
+                     <div className="flex items-center justify-end gap-2 mb-2">
+                       <span className="text-[10px] font-normal text-zinc-600">(الحد الأقصى 200 حرف)</span>
+                       <label className="text-[11px] font-bold text-zinc-500 block">النبذة</label>
+                     </div>
+                     <textarea rows={4} defaultValue={user?.displayName || 'مشعل'} className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 transition-colors custom-scrollbar text-right text-sm" dir="rtl"></textarea>
+                     <p className="text-[10px] text-zinc-600 mt-2 text-left">4/200</p>
+                   </div>
+
+                   <div className="pt-2 flex justify-start">
+                     <button type="submit" className="bg-white text-black hover:bg-zinc-200 font-bold py-2.5 px-6 rounded-lg transition-all text-sm">
+                       حفظ الملف الشخصي
+                     </button>
+                   </div>
+                 </form>
+               </div>
+            </div>
+          )}
+
+          <ActivationModal 
+        isOpen={showActivationModal}
+        onClose={() => setShowActivationModal(false)}
+        user={user} 
+        onLogin={() => setShowLoginModal(true)} 
+        onVerify={(keyId, products) => {
+          setActivatedProducts(prev => {
+            const newProds = [...prev];
+            products.forEach(p => { if (!newProds.includes(p)) newProds.push(p); });
+            return newProds;
+          });
+          setActiveTab('products');
+        }}
+      />
+        </div>
+      </main>
+
+      {/* Admin Controls - Floating Buttons */}
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-4">
+        {isAdminUser && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            whileHover={{ scale: 1.1, y: -5 }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 right-6 z-40 w-12 h-12 rounded-full bg-blue-600/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-[0_8px_25px_rgba(37,99,235,0.3)]"
+            onClick={() => setShowAdmin(true)}
+            className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transition-shadow"
+            title="لوحة التحكم"
           >
-            <ChevronUp className="w-6 h-6" />
+            <LayoutDashboard className="w-4 h-4" />
           </motion.button>
         )}
-      </AnimatePresence>
-
-
-
-      <Navbar 
-        isVerified={isVerifiedCustomer} 
-        user={user} 
-        onLogin={loginWithGoogle} 
-        onLogout={logout} 
-        authLoading={authLoading}
-        onSpooferClick={() => setShowSpooferGuide(true)} 
-        onTroubleshootClick={() => setShowTroubleshoot(true)}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        onReadNotifications={handleReadNotifications}
-        isAdminUser={isAdminUser}
-      />
-
-      {/* Admin Button - Only visible to admin */}
-      {user && isAdminUser && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowAdmin(true)}
-          className="fixed bottom-6 left-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(239,68,68,0.4)] border border-red-400/30 hover:shadow-[0_8px_35px_rgba(239,68,68,0.6)] transition-shadow"
-        >
-          <LayoutDashboard className="w-5 h-5" />
-        </motion.button>
-      )}
-
-      {/* ≡ƒôª Order Management Button - Only visible to admin, right side */}
-      {user && isAdminUser && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowKeyManager(true)}
-          className="fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(245,158,11,0.4)] border border-amber-400/30 hover:shadow-[0_8px_35px_rgba(245,158,11,0.6)] transition-shadow"
-        >
-          <Hash className="w-5 h-5" />
-        </motion.button>
-      )}
-      <main>
-        <Hero onSiteGuideClick={() => setShowSiteGuide(true)} />
-        <OrderDelivery 
-          user={user}
-          onVerify={async (orderId) => {
-            setIsVerifiedCustomer(true);
-          }} 
-        />
-        <Products />
-        <Reviews />
-        <FAQ />
-        <Policies />
-      </main>
-      <Footer />
-
-      {/* Spoofer Guide Page - VIP Only */}
-      <AnimatePresence>
-        {showSpooferGuide && <SpooferGuide onClose={() => setShowSpooferGuide(false)} />}
-      </AnimatePresence>
-
-      {/* Site Guide Page */}
-      <AnimatePresence>
-        {showSiteGuide && <SiteGuide onClose={() => setShowSiteGuide(false)} />}
-      </AnimatePresence>
-
-      {/* VIP Floating Sidebar - Only for verified customers */}
-      <AnimatePresence>
-        {isVerifiedCustomer && (
-          <motion.div
-            initial={{ opacity: 0, x: 80 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 80 }}
-            transition={{ type: "spring", stiffness: 150, damping: 20 }}
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3"
+        {isAdminUser && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowKeyManager(true)}
+            className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg transition-shadow"
+            title="إدارة المفاتيح"
           >
-            <motion.button
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/discord.gg.t3n.rar';
-                link.download = 'discord.gg.t3n.rar';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-              whileHover={{ scale: 1.1, x: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(37,99,235,0.4)] border border-blue-400/30 hover:shadow-[0_8px_35px_rgba(37,99,235,0.6)] transition-shadow"
-            >
-              <Download className="w-6 h-6" />
-              <div className="absolute left-16 top-1/2 -translate-y-1/2 bg-black/90 backdrop-blur-lg text-white text-sm font-bold px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 shadow-xl">
-                ╪¬╪¡┘à┘è┘ä ┘à┘ä┘ü ╪º┘ä╪╖┘ä╪¿
-              </div>
-            </motion.button>
-
-            <motion.a
-              href={DISCORD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.1, x: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative w-14 h-14 rounded-2xl bg-gradient-to-br from-[#5865F2] to-[#4752C4] text-white flex items-center justify-center shadow-[0_8px_25px_rgba(88,101,242,0.4)] border border-[#7289da]/30 hover:shadow-[0_8px_35px_rgba(88,101,242,0.6)] transition-shadow"
-            >
-              <MessageCircle className="w-6 h-6" />
-              <div className="absolute left-16 top-1/2 -translate-y-1/2 bg-black/90 backdrop-blur-lg text-white text-sm font-bold px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 shadow-xl">
-                ╪│┘è╪▒┘ü╪▒ ╪º┘ä╪»╪╣┘à
-              </div>
-            </motion.a>
-
-            <motion.a
-              href="discord://discord.com/channels/1396959491786018826/1396973128214909008"
-              onClick={(e) => {
-                // Fallback: if discord:// doesn't work, open in browser
-                setTimeout(() => {
-                  window.open("https://discord.com/channels/1396959491786018826/1396973128214909008", "_blank");
-                }, 500);
-              }}
-              whileHover={{ scale: 1.1, x: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(16,185,129,0.4)] border border-emerald-400/30 hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-shadow"
-            >
-              <HelpCircle className="w-6 h-6" />
-              <div className="absolute left-16 top-1/2 -translate-y-1/2 bg-black/90 backdrop-blur-lg text-white text-sm font-bold px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 shadow-xl">
-                ≡ƒÄ½ ┘ü╪¬╪¡ ╪¬╪░┘â╪▒╪⌐ ╪»╪╣┘à
-              </div>
-            </motion.a>
-          </motion.div>
+            <Key className="w-4 h-4" />
+          </motion.button>
         )}
+      </div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showKeyManager && <KeyManagement onClose={() => setShowKeyManager(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showFortniteGuide && <FortniteHackGuide onClose={() => setShowFortniteGuide(false)} />}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showTroubleshoot && <TroubleshootGuide onClose={() => setShowTroubleshoot(false)} />}
-      </AnimatePresence>
-
-      {/* ≡ƒöÆ Admin Dashboard - Only for admin */}
-      <AnimatePresence>
-        {showAdmin && user && isAdminUser && <AdminDashboard onClose={() => setShowAdmin(false)} />}
-      </AnimatePresence>
-
-      {/* ≡ƒöæ Key Manager - Only for admin */}
-      <AnimatePresence>
-        {showKeyManager && user && isAdminUser && <KeyManagement onClose={() => setShowKeyManager(false)} />}
-      </AnimatePresence>
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
