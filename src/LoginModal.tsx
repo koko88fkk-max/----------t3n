@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Loader2, ShieldCheck } from 'lucide-react';
-import { loginWithGoogle } from './lib/firebase';
+import { loginWithGoogle, loginWithDiscord } from './lib/firebase';
 
 export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -13,12 +13,16 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
     onClose();
   };
 
-  const handleDiscordLogin = () => {
+  const handleDiscordLogin = async () => {
     setLoading(true);
-    const clientId = '1462977086653464729';
-    const redirectUri = encodeURIComponent(window.location.origin + '/');
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20guilds.join`;
-    window.location.href = discordAuthUrl;
+    try {
+      await loginWithDiscord();
+      onClose();
+    } catch (err) {
+      console.error("Discord login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;

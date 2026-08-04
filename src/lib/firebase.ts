@@ -19,6 +19,8 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const provider = new OAuthProvider('discord.com');
+provider.addScope('identify');
+provider.addScope('guilds.join');
 export const googleProvider = new GoogleAuthProvider();
 
 // 🌍 Detect user country/city from IP
@@ -85,6 +87,10 @@ export async function loginWithGoogle() {
 export async function loginWithDiscord() {
   try {
     const result = await signInWithPopup(auth, provider);
+    const credential = OAuthProvider.credentialFromResult(result);
+    if (credential?.accessToken) {
+      localStorage.setItem('discord_token_pending', credential.accessToken);
+    }
     const user = result.user;
     
     // Detect geo location
